@@ -6,7 +6,11 @@ canvas.height = window.innerHeight;
 
 // Load player image
 const basketImage = new Image();
-basketImage.src = 'yuji.png'; // Replace with your image path
+basketImage.src = 'yuji.png'; // Replace with your basket image path
+
+// Load bullet image
+const bulletImage = new Image();
+bulletImage.src = 'orb.png'; // Replace with your bullet image path
 
 const basket = {
     x: canvas.width / 2 - 50,
@@ -49,9 +53,8 @@ function drawItems() {
 }
 
 function drawBullets() {
-    ctx.fillStyle = 'yellow';
     bullets.forEach(bullet => {
-        ctx.fillRect(bullet.x, bullet.y, 5, 10);
+        ctx.drawImage(bulletImage, bullet.x, bullet.y, 50, 50); // Adjust size as needed
     });
 }
 
@@ -138,7 +141,7 @@ function keyDown(e) {
     } else if (e.key === 'ArrowLeft') {
         basket.dx = -5;
     } else if (e.key === ' ') { // Spacebar to shoot
-        bullets.push({ x: basket.x + basket.width / 2, y: basket.y });
+        bullets.push({ x: basket.x + basket.width / 2 - 5, y: basket.y }); // Center the bullet
     }
 }
 
@@ -149,7 +152,9 @@ function keyUp(e) {
 }
 
 basketImage.onload = function() {
-    update(); // Start the game loop once the image is loaded
+    bulletImage.onload = function() {
+        update(); // Start the game loop once images are loaded
+    };
 };
 
 document.addEventListener('keydown', keyDown);
