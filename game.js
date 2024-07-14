@@ -4,16 +4,20 @@ const ctx = canvas.getContext('2d');
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
+// Load player image
+const basketImage = new Image();
+basketImage.src = 'yuji.png'; // Replace with your image path
+
 const basket = {
     x: canvas.width / 2 - 50,
-    y: canvas.height - 30,
+    y: canvas.height - 100,
     width: 100,
-    height: 20,
+    height: 100,
     dx: 0
 };
 
 const items = [];
-const maxItems = 5; // Number of falling items
+const maxItems = 5;
 const itemRadius = 20;
 const itemSpeed = 5;
 
@@ -31,8 +35,7 @@ const bullets = [];
 const bulletSpeed = 10;
 
 function drawBasket() {
-    ctx.fillStyle = 'white';
-    ctx.fillRect(basket.x, basket.y, basket.width, basket.height);
+    ctx.drawImage(basketImage, basket.x, basket.y, basket.width, basket.height);
 }
 
 function drawItems() {
@@ -85,11 +88,9 @@ function updateItems() {
                 bullet.y < item.y + itemRadius &&
                 bullet.y > item.y - itemRadius
             ) {
-                // Reset item and score on hit
                 item.y = 0;
                 item.x = Math.random() * canvas.width;
                 score++;
-                // Remove bullet
                 bullet.isHit = true;
             }
         });
@@ -147,7 +148,9 @@ function keyUp(e) {
     }
 }
 
+basketImage.onload = function() {
+    update(); // Start the game loop once the image is loaded
+};
+
 document.addEventListener('keydown', keyDown);
 document.addEventListener('keyup', keyUp);
-
-update();
