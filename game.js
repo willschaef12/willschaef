@@ -35,7 +35,7 @@ function drawItem() {
 }
 
 function drawScore() {
-    ctx.fillStyle = 'red';
+    ctx.fillStyle = 'white';
     ctx.font = '40px Arial';
     ctx.fillText('Score: ' + score, 10, 40);
 }
