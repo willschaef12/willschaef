@@ -12,6 +12,9 @@ basketImage.src = 'yuji.png'; // Replace with your basket image path
 const bulletImage = new Image();
 bulletImage.src = 'orb.png'; // Replace with your bullet image path
 
+// Load background music
+const music = document.getElementById('background-music');
+
 const basket = {
     x: canvas.width / 2 - 50,
     y: canvas.height - 100,
@@ -135,7 +138,17 @@ function update() {
     requestAnimationFrame(update);
 }
 
-function keyDown(e) {
+// Start the game and play music once images are loaded
+basketImage.onload = function() {
+    bulletImage.onload = function() {
+        music.play().catch(error => {
+            console.log("Error playing music:", error);
+        });
+        update(); // Start the game loop
+    };
+};
+
+document.addEventListener('keydown', function(e) {
     if (e.key === 'ArrowRight') {
         basket.dx = 5;
     } else if (e.key === 'ArrowLeft') {
@@ -143,19 +156,10 @@ function keyDown(e) {
     } else if (e.key === ' ') { // Spacebar to shoot
         bullets.push({ x: basket.x + basket.width / 2 - 5, y: basket.y }); // Center the bullet
     }
-}
+});
 
-function keyUp(e) {
+document.addEventListener('keyup', function(e) {
     if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
         basket.dx = 0;
     }
-}
-
-basketImage.onload = function() {
-    bulletImage.onload = function() {
-        update(); // Start the game loop once images are loaded
-    };
-};
-
-document.addEventListener('keydown', keyDown);
-document.addEventListener('keyup', keyUp);
+});
