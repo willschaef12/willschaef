@@ -4,13 +4,10 @@ const ctx = canvas.getContext('2d');
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
-// Load player image
-const basketImage = new Image();
-basketImage.src = 'yuji.png'; // Replace with your basket image path
-
-// Load bullet image
-const bulletImage = new Image();
-bulletImage.src = 'orb.png'; // Replace with your bullet image path
+// Get preloaded images
+const basketImage = document.getElementById('basketImage');
+const bulletImage = document.getElementById('bulletImage');
+const curseImage = document.getElementById('curseImage');
 
 // Load background music
 const music = document.getElementById('background-music');
@@ -23,42 +20,49 @@ const basket = {
     dx: 0
 };
 
-const items = [];
-const maxItems = 5;
-const itemRadius = 20;
-const itemSpeed = 5;
-
-let score = 0;
-
-// Initialize falling items
-for (let i = 0; i < maxItems; i++) {
-    items.push({
-        x: Math.random() * canvas.width,
-        y: 0
-    });
-}
-
 const bullets = [];
 const bulletSpeed = 10;
+
+// Define the single big enemy with 250 health
+const bigEnemy = {
+    x: canvas.width / 2 - 50,
+    y: 50,
+    width: 100,
+    height: 100,
+    speed: 2,
+    health: 250, // Set health to 250
+    isHit: false
+};
+
+let score = 0;
 
 function drawBasket() {
     ctx.drawImage(basketImage, basket.x, basket.y, basket.width, basket.height);
 }
 
-function drawItems() {
-    items.forEach(item => {
-        ctx.beginPath();
-        ctx.arc(item.x, item.y, itemRadius, 0, Math.PI * 2);
-        ctx.fillStyle = 'red';
-        ctx.fill();
-        ctx.closePath();
+function drawBullets() {
+    bullets.forEach(bullet => {
+        ctx.drawImage(bulletImage, bullet.x, bullet.y, 50, 50);
     });
 }
 
-function drawBullets() {
-    bullets.forEach(bullet => {
-        ctx.drawImage(bulletImage, bullet.x, bullet.y, 50, 50); // Adjust size as needed
-    });
+function drawHealthBar() {
+    const healthBarWidth = 80; // Width of health bar
+    const healthBarHeight = 10; // Height of health bar
+    const healthPercentage = bigEnemy.health / 250; // Assuming max health is 250
+
+    ctx.fillStyle = 'red'; // Background of health bar
+    ctx.fillRect(bigEnemy.x + (bigEnemy.width - healthBarWidth) / 2, bigEnemy.y - 15, healthBarWidth, healthBarHeight);
+
+    ctx.fillStyle = 'green'; // Health portion
+    ctx.fillRect(bigEnemy.x + (bigEnemy.width - healthBarWidth) / 2, bigEnemy.y - 15, healthBarWidth * healthPercentage, healthBarHeight);
+}
+
+function drawBigEnemy() {
+    if (!bigEnemy.isHit) {
+        ctx.drawImage(curseImage, bigEnemy.x, bigEnemy.y, bigEnemy.width, bigEnemy.height);
+        drawHealthBar(); // Draw the health bar above the enemy
+    }
 }
 
 function drawScore() {
@@ -78,38 +82,6 @@ function moveBasket() {
     }
 }
 
-function updateItems() {
-    items.forEach(item => {
-        item.y += itemSpeed;
-
-        if (item.y + itemRadius > canvas.height) {
-            item.y = 0;
-            item.x = Math.random() * canvas.width;
-        }
-
-        bullets.forEach(bullet => {
-            if (
-                bullet.x > item.x - itemRadius &&
-                bullet.x < item.x + itemRadius &&
-                bullet.y < item.y + itemRadius &&
-                bullet.y > item.y - itemRadius
-            ) {
-                item.y = 0;
-                item.x = Math.random() * canvas.width;
-                score++;
-                bullet.isHit = true;
-            }
-        });
-    });
-
-    // Remove hit bullets
-    for (let i = bullets.length - 1; i >= 0; i--) {
-        if (bullets[i].isHit) {
-            bullets.splice(i, 1);
-        }
-    }
-}
-
 function updateBullets() {
     bullets.forEach(bullet => {
         bullet.y -= bulletSpeed; // Move bullet up
@@ -123,29 +95,62 @@ function updateBullets() {
     }
 }
 
+function updateBigEnemy() {
+    if (!bigEnemy.isHit) {
+        bigEnemy.y += bigEnemy.speed;
+
+        // Reset position if it goes off screen
+        if (bigEnemy.y > canvas.height) {
+            bigEnemy.y = 0; // Reset to the top
+            bigEnemy.x = Math.random() * (canvas.width - bigEnemy.width); // Random x position
+        }
+
+        // Check for collision with bullets
+        bullets.forEach(bullet => {
+            if (
+                bullet.x < bigEnemy.x + bigEnemy.width &&
+                bullet.x + 50 > bigEnemy.x &&
+                bullet.y < bigEnemy.y + bigEnemy.height &&
+                bullet.y + 50 > bigEnemy.y
+            ) {
+                bigEnemy.health -= 20; // Decrease health by 20
+                bullet.isHit = true; // Mark bullet as hit
+                
+                if (bigEnemy.health <= 0) {
+                    bigEnemy.isHit = true; // Mark enemy as hit
+                    score += 10; // Increase score
+                }
+            }
+        });
+    }
+}
+
 function update() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     drawBasket();
-    drawItems();
     drawBullets();
+    drawBigEnemy(); // Draw the single big enemy
     drawScore();
 
     moveBasket();
-    updateItems();
     updateBullets();
+    updateBigEnemy(); // Update the single big enemy
 
     requestAnimationFrame(update);
 }
 
-// Start the game and play music once images are loaded
-basketImage.onload = function() {
-    bulletImage.onload = function() {
-        music.play().catch(error => {
-            console.log("Error playing music:", error);
-        });
-        update(); // Start the game loop
-    };
+// Start the game and play music
+function startGame() {
+    music.play().catch(error => {
+        console.log("Error playing music:", error);
+    });
+    update(); // Start the game loop
+}
+
+// Wait for all images to load before starting the game
+window.onload = function() {
+    startGame();
 };
 
 document.addEventListener('keydown', function(e) {
@@ -154,7 +159,7 @@ document.addEventListener('keydown', function(e) {
     } else if (e.key === 'ArrowLeft') {
         basket.dx = -5;
     } else if (e.key === ' ') { // Spacebar to shoot
-        bullets.push({ x: basket.x + basket.width / 2 - 5, y: basket.y }); // Center the bullet
+        bullets.push({ x: basket.x + basket.width / 2 - 25, y: basket.y }); // Center the bullet
     }
 });
 
