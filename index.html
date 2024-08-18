@@ -16,6 +16,27 @@
             background: #000;
             margin: auto;
         }
+        #loadingScreen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            z-index: 1000;
+        }
+        .character {
+            margin: 20px;
+            cursor: pointer;
+        }
+        #gameCanvas {
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -23,6 +44,17 @@
     <img id="basketImage" src="yuji.png" style="display: none;">
     <img id="bulletImage" src="orb.png" style="display: none;">
     <img id="curseImage" src="curse.png" style="display: none;">
+    
+    <div id="loadingScreen">
+        <h1>Select Your Character</h1>
+        <div id="characterSelection">
+            <img src="yuji.png" alt="Character 1" class="character" data-character="character1">
+            <img src="gojo.png" alt="Character 2" class="character" data-character="character2">
+            <!-- Add more characters if needed -->
+        </div>
+        <button id="startGame">Start Game</button>
+    </div>
+
     <canvas id="gameCanvas"></canvas>
     <script src="game.js"></script>
 </body>
