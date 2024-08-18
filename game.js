@@ -1,12 +1,14 @@
 let selectedCharacter = '';
 const characters = {
     character1: {
-        img: 'gojo.png',
+        selectionImg: 'gojo.png',     // Image for character selection
+        fightingImg: 'gojo2.webp', // Image for fighting screen
         width: 100,
         height: 100
     },
     character2: {
-        img: 'yuji.png',
+        selectionImg: 'yuji.png',     // Image for character selection
+        fightingImg: 'yuji_fight.png', // Image for fighting screen
         width: 100,
         height: 100
     }
@@ -58,7 +60,7 @@ function initializeGame() {
     if (selectedCharacter && characters[selectedCharacter]) {
         player.width = characters[selectedCharacter].width;
         player.height = characters[selectedCharacter].height;
-        player.img.src = characters[selectedCharacter].img;
+        player.img.src = characters[selectedCharacter].fightingImg; // Use fighting image
 
         enemy.img.src = 'curse.png'; // Replace with your enemy image
     } else {
