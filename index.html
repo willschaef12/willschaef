@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Will</title>
+    <title>Sorcerers Battle</title>
     <link rel="icon" href="favicon.ico" type="image/x-icon">
     <style>
         body {
@@ -53,7 +53,20 @@
         .character-name {
             margin-top: 10px;
             font-size: 16px; /* Adjust font size as needed */
-            color: white;
+            color: white; /* This will be overridden by the color of individual spans */
+            font-weight: bold;
+        }
+        .name-part {
+            display: inline-block;
+        }
+        .name-part.blue {
+            color: blue;
+        }
+        .name-part.red {
+            color: red;
+         }
+        .name-part.pink {
+            color: rgb(188, 20, 174);
         }
         #startGame {
             margin-top: 20px;
@@ -73,15 +86,20 @@
     <img id="curseImage" src="curse.png" style="display: none;">
     
     <div id="loadingScreen">
-        <h1>Select Your Character</h1>
+        <h1>Sorcerers Battle</h1>
+        <h2>Select Your Character</h2>
         <div id="characterSelection">
             <div class="character-container">
                 <img src="gojo.png" alt="Character 1" class="character" data-character="character1">
-                <div class="character-name">gojo</div>
+                <div class="character-name">
+                    <span class="name-part blue">go</span><span class="name-part red">jo</span>
+                </div>
             </div>
             <div class="character-container">
                 <img src="yuji.png" alt="Character 2" class="character" data-character="character2">
-                <div class="character-name">yuji</div>
+                <div class="character-name">
+                    <span class="name-part pink">yuji</span>
+                </div>
             </div>
             <!-- Add more characters if needed -->
         </div>
