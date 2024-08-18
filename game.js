@@ -4,13 +4,15 @@ const characters = {
         selectionImg: 'gojo.png',     // Image for character selection
         fightingImg: 'gojo2.webp', // Image for fighting screen
         width: 100,
-        height: 100
+        height: 100,
+        speed: 70  // Adjust speed for this character
     },
     character2: {
         selectionImg: 'yuji.png',     // Image for character selection
         fightingImg: 'yuji_fight.png', // Image for fighting screen
         width: 100,
-        height: 100
+        height: 100,
+        speed: 5  // Adjust speed for this character
     }
 };
 
@@ -44,7 +46,8 @@ const player = {
     y: canvas.height / 2,
     width: 100,
     height: 100,
-    img: new Image()
+    img: new Image(),
+    speed: 5  // Default speed
 };
 
 const enemy = {
@@ -60,7 +63,8 @@ function initializeGame() {
     if (selectedCharacter && characters[selectedCharacter]) {
         player.width = characters[selectedCharacter].width;
         player.height = characters[selectedCharacter].height;
-        player.img.src = characters[selectedCharacter].fightingImg; // Use fighting image
+        player.img.src = characters[selectedCharacter].fightingImg;
+        player.speed = characters[selectedCharacter].speed; // Set player speed
 
         enemy.img.src = 'curse.png'; // Replace with your enemy image
     } else {
@@ -111,9 +115,8 @@ function startGame() {
 
 // Control player movement
 document.addEventListener('keydown', function(e) {
-    const moveSpeed = 5;
-    if (e.key === 'ArrowRight') player.x += moveSpeed;
-    if (e.key === 'ArrowLeft') player.x -= moveSpeed;
-    if (e.key === 'ArrowUp') player.y -= moveSpeed;
-    if (e.key === 'ArrowDown') player.y += moveSpeed;
+    if (e.key === 'ArrowRight') player.x += player.speed;
+    if (e.key === 'ArrowLeft') player.x -= player.speed;
+    if (e.key === 'ArrowUp') player.y -= player.speed;
+    if (e.key === 'ArrowDown') player.y += player.speed;
 });
