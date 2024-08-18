@@ -10,6 +10,7 @@
             margin: 0;
             overflow: hidden;
             background: #000;
+            font-family: Arial, sans-serif;
         }
         canvas {
             display: block;
@@ -30,8 +31,26 @@
             color: white;
             z-index: 1000;
         }
+        #characterSelection {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
         .character {
-            margin: 20px;
+            width: 100px; /* Adjust the size as needed */
+            height: 100px;
+            object-fit: cover; /* Ensure images fit within the specified dimensions */
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+        .character.selected {
+            border-color: yellow; /* Highlight selected character */
+        }
+        #startGame {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
             cursor: pointer;
         }
         #gameCanvas {
@@ -48,8 +67,8 @@
     <div id="loadingScreen">
         <h1>Select Your Character</h1>
         <div id="characterSelection">
-            <img src="yuji.png" alt="Character 1" class="character" data-character="character1">
-            <img src="gojo.png" alt="Character 2" class="character" data-character="character2">
+            <img src="gojo.png" alt="Character 1" class="character" data-character="character1">
+            <img src="yuji.png" alt="Character 2" class="character" data-character="character2">
             <!-- Add more characters if needed -->
         </div>
         <button id="startGame">Start Game</button>
