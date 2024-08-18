@@ -37,33 +37,30 @@
             flex-wrap: wrap;
             justify-content: center;
         }
-        .character-container {
+        .character-container, .shop-item {
             text-align: center;
         }
-        .character {
-            width: 100px; /* Adjust the size as needed */
+        .character, .shop-img {
+            width: 100px;
             height: 100px;
-            object-fit: cover; /* Ensure images fit within the specified dimensions */
+            object-fit: cover;
             cursor: pointer;
             border: 2px solid transparent;
         }
-        .character.selected {
-            border-color: yellow; /* Highlight selected character */
+        .character.selected, .shop-item.available {
+            border-color: yellow;
         }
-        .character-name {
+        .character-name, .shop-name {
             margin-top: 10px;
-            font-size: 16px; /* Adjust font size as needed */
-            color: white; /* This will be overridden by the color of individual spans */
-            font-weight: bold;
+            font-size: 16px;
+            color: white;
         }
-        .name-part {
-            display: inline-block;
-        }
-        .name-part.blue {
-            color: blue;
-        }
-        .name-part.red {
-            color: red;
+        #shop {
+            margin-top: 20px;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
         }
         #startGame {
             margin-top: 20px;
@@ -78,7 +75,7 @@
 </head>
 <body>
     <audio id="background-music" src="background.mp3" loop></audio>
-    <img id="basketImage" src="yuji.png" style="display: none;">
+    <img id="basketImage" src="gojo.png" style="display: none;">
     <img id="bulletImage" src="orb.png" style="display: none;">
     <img id="curseImage" src="curse.png" style="display: none;">
     
@@ -88,15 +85,20 @@
         <div id="characterSelection">
             <div class="character-container">
                 <img src="gojo.png" alt="Character 1" class="character" data-character="character1">
-                <div class="character-name">
-                    <span class="name-part blue">Go</span><span class="name-part red">jo</span>
-                </div>
+                <div class="character-name">Gojo</div>
             </div>
             <div class="character-container">
                 <img src="yuji.png" alt="Character 2" class="character" data-character="character2">
-                <div class="character-name">yuji</div>
+                <div class="character-name">Yuji</div>
             </div>
-            <!-- Add more characters if needed -->
+        </div>
+        <h2>Shop</h2>
+        <div id="shop">
+            <div class="shop-item available" data-character="character3">
+                <img src="yuta.png" alt="New Character" class="shop-img">
+                <div class="shop-name">Yuta</div>
+                <button class="buy-button">Buy (100 Gold)</button>
+            </div>
         </div>
         <button id="startGame">Start Game</button>
     </div>
