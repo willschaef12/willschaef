@@ -78,6 +78,16 @@
             font-size: 16px;
             color: red;
         }
+        .blast {
+            position: absolute;
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: rgba(255, 0, 0, 0.7);
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -113,9 +123,10 @@
 
     <div id="fightingScreen" style="display: none;">
         <div id="timer">30</div>
-        <div id="cooldown">reversal red cooldown: 30s</div>
+        <div id="cooldown">Ability Cooldown: 30s</div>
         <button id="abilityButton">Use Reversal Red</button>
         <canvas id="gameCanvas" width="800" height="600"></canvas>
+        <div id="blastEffect" class="blast"></div>
     </div>
 
     <script>
@@ -239,22 +250,19 @@
             canvas = document.getElementById('gameCanvas');
             ctx = canvas.getContext('2d');
 
-            const character = characters[selectedCharacter];
-            if (character) {
-                player.width = character.width;
-                player.height = character.height;
-                player.img.src = character.fightingImg;
-
-                enemy.img.src = 'curse.png';
-
-                if (!ctx) {
-                    console.error('Canvas context not found');
-                }
-
+            const selectedCharacterData = characters[selectedCharacter];
+            if (selectedCharacterData) {
+                player.img.src = selectedCharacterData.fightingImg;
+                player.width = selectedCharacterData.width;
+                player.height = selectedCharacterData.height;
+                player.speed = selectedCharacterData.speed;
                 player.img.onload = function() {
                     drawPlayer();
                 };
 
+                enemy.img.src = 'curse.png';
+                enemy.width = 100;
+                enemy.height = 100;
                 enemy.img.onload = function() {
                     drawEnemy();
                 };
@@ -310,6 +318,7 @@
 
         function useReversalRed() {
             if (isAbilityAvailable && abilityReady) {
+                showBlastEffect(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2);
                 enemy.x = -1000; // Move enemy off-screen to simulate death
                 console.log('Reversal Red used!');
                 abilityReady = false;
@@ -323,6 +332,17 @@
             } else if (!isAbilityAvailable) {
                 console.log('Ability not available yet.');
             }
+        }
+
+        function showBlastEffect(x, y) {
+            const blast = document.getElementById('blastEffect');
+            blast.style.left = `${x}px`;
+            blast.style.top = `${y}px`;
+            blast.style.display = 'block';
+
+            setTimeout(() => {
+                blast.style.display = 'none';
+            }, 500); // Display blast effect for 0.5 seconds
         }
 
         function startTimer() {
