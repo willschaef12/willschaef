@@ -1,488 +1,214 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Sorcerers Battle</title>
     <style>
-        body {
-            margin: 0;
-            overflow: hidden;
-            background: #000;
-            font-family: Arial, sans-serif;
-        }
-        canvas {
-            display: block;
-            background: #000;
-            margin: auto;
-        }
-        #loadingScreen, #fightingScreen, #settingsScreen {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: white;
-        }
-        #loadingScreen {
-            background: rgba(0, 0, 0, 0.8);
-        }
-        #settingsScreen {
-            background: rgba(0, 0, 0, 0.8);
-            display: none;
-        }
-        #settingsButton {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
-        }
-        #backToMenu {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
-            background-color: rgba(0, 0, 0, 0.6);
-            color: white;
-            border: none;
-            border-radius: 5px;
-        }
-        #characterSelection {
-            display: flex;
-            gap: 20px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-        .character-container, .shop-item {
-            text-align: center;
-        }
-        .character, .shop-img {
-            width: 100px;
-            height: 100px;
-            object-fit: cover;
-            cursor: pointer;
-            border: 2px solid transparent;
-        }
-        .character.selected, .shop-item.available {
-            border-color: yellow;
-        }
-        .character-name, .shop-name {
-            margin-top: 10px;
-            font-size: 16px;
-            color: white;
-        }
-        #shop {
-            margin-top: 20px;
-            display: flex;
-            gap: 20px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-        #startGame, #abilityButton {
-            margin-top: 20px;
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
-        }
-        #abilityButton {
-            display: none;
-        }
-        #timer {
-            font-size: 24px;
-        }
-        #cooldown {
-            font-size: 16px;
-            color: red;
-        }
-        .blast {
-            position: absolute;
-            width: 200px;
-            height: 200px;
-            border-radius: 50%;
-            background: rgba(255, 0, 0, 0.7);
-            pointer-events: none;
-            transform: translate(-50%, -50%);
-            display: none;
-        }
-        #brightness, #fps {
-            margin-top: 10px;
-        }
-        .brightness-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            pointer-events: none;
-            transition: opacity 0.3s ease;
-        }
-        #difficulty {
-            margin-top: 10px;
-            font-size: 16px;
-        }
+      body {
+        margin: 0;
+        overflow: hidden;
+        background: #000;
+        font-family: Arial, sans-serif;
+      }
+      canvas {
+        display: block;
+        background: #000;
+        margin: auto;
+      }
+      #loadingScreen,
+      #fightingScreen,
+      #settingsScreen {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: white;
+      }
+      #loadingScreen {
+        background: rgba(0, 0, 0, 0.8);
+      }
+      #settingsScreen {
+        background: rgba(0, 0, 0, 0.8);
+        display: none;
+      }
+      #settingsButton {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        padding: 10px 20px;
+        font-size: 16px;
+        cursor: pointer;
+      }
+      #backToMenu {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        padding: 10px 20px;
+        font-size: 16px;
+        cursor: pointer;
+        background-color: rgba(0, 0, 0, 0.6);
+        color: white;
+        border: none;
+        border-radius: 5px;
+      }
+      #characterSelection {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+      .character-container,
+      .shop-item {
+        text-align: center;
+      }
+      .character,
+      .shop-img {
+        width: 100px;
+        height: 100px;
+        object-fit: cover;
+        cursor: pointer;
+        border: 2px solid transparent;
+      }
+      .character.selected,
+      .shop-item.available {
+        border-color: yellow;
+      }
+      .character-name,
+      .shop-name {
+        margin-top: 10px;
+        font-size: 16px;
+        color: white;
+      }
+      #shop {
+        margin-top: 20px;
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+      #startGame,
+      #abilityButton {
+        margin-top: 20px;
+        padding: 10px 20px;
+        font-size: 16px;
+        cursor: pointer;
+      }
+      #abilityButton {
+        display: none;
+      }
+      #timer {
+        font-size: 24px;
+      }
+      #cooldown {
+        font-size: 16px;
+        color: red;
+      }
+      .blast {
+        position: absolute;
+        width: 200px;
+        height: 200px;
+        border-radius: 50%;
+        background: rgba(255, 0, 0, 0.7);
+        pointer-events: none;
+        transform: translate(-50%, -50%);
+        display: none;
+      }
+      #brightness,
+      #fps {
+        margin-top: 10px;
+      }
+      .brightness-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+      }
+      #difficulty {
+        margin-top: 10px;
+        font-size: 16px;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <audio id="background-music" src="background.mp3" loop></audio>
-    <img id="basketImage" src="gojo.png" style="display: none;">
-    <img id="bulletImage" src="orb.png" style="display: none;">
-    <img id="curseImage" src="curse.png" style="display: none;">
-    <img id="gojo2Image" src="gojo2.webp" style="display: none;">
+    <img id="basketImage" src="gojo.png" style="display: none" />
+    <img id="bulletImage" src="orb.png" style="display: none" />
+    <img id="curseImage" src="curse.png" style="display: none" />
+    <img id="gojo2Image" src="gojo2.webp" style="display: none" />
 
     <div id="loadingScreen">
-        <h1>Sorcerers Battle</h1>
-        <h2>Select Your Character</h2>
-        <div id="characterSelection">
-            <div class="character-container">
-                <img src="gojo.png" alt="Character 1" class="character" data-character="character1">
-                <div class="character-name">Gojo</div>
-            </div>
-            <div class="character-container">
-                <img src="yuji.png" alt="Character 2" class="character" data-character="character2">
-                <div class="character-name">Yuji</div>
-            </div>
+      <h1>Sorcerers Battle</h1>
+      <h2>Select Your Character</h2>
+      <div id="characterSelection">
+        <div class="character-container">
+          <img
+            src="gojo.png"
+            alt="Character 1"
+            class="character"
+            data-character="character1"
+          />
+          <div class="character-name">Gojo</div>
         </div>
-        <h2>Shop</h2>
-        <div id="shop">
-            <div class="shop-item available" data-character="character3">
-                <img src="yuta.png" alt="New Character" class="shop-img">
-                <div class="shop-name">Yuta</div>
-                <button class="buy-button" data-price="100">Buy (100 Gold)</button>
-            </div>
+        <div class="character-container">
+          <img
+            src="yuji.png"
+            alt="Character 2"
+            class="character"
+            data-character="character2"
+          />
+          <div class="character-name">Yuji</div>
         </div>
-        <button id="startGame">Start Game</button>
-        <button id="settingsButton">Settings</button>
+      </div>
+      <h2>Shop</h2>
+      <div id="shop">
+        <div class="shop-item available" data-character="character3">
+          <img src="yuta.png" alt="New Character" class="shop-img" />
+          <div class="shop-name">Yuta</div>
+          <button class="buy-button" data-price="100">Buy (100 Gold)</button>
+        </div>
+      </div>
+      <button id="startGame">Start Game</button>
+      <button id="settingsButton">Settings</button>
     </div>
 
     <div id="settingsScreen">
-        <button id="backToMenu">Back to Menu</button>
-        <h2>Settings</h2>
-        <label for="brightness">Brightness:</label>
-        <input type="range" id="brightness" min="0" max="200" value="100">
-        <span id="brightnessValue">100</span>%
+      <button id="backToMenu">Back to Menu</button>
+      <h2>Settings</h2>
+      <label for="brightness">Brightness:</label>
+      <input type="range" id="brightness" min="0" max="200" value="100" />
+      <span id="brightnessValue">100</span>%
 
-        <label for="fps">FPS:</label>
-        <input type="number" id="fps" min="10" max="60" value="30">
-        <span id="fpsValue">30</span> FPS
+      <label for="fps">FPS:</label>
+      <input type="number" id="fps" min="10" max="60" value="30" />
+      <span id="fpsValue">30</span> FPS
 
-        <label for="difficulty">Difficulty:</label>
-        <select id="difficulty">
-            <option value="easy">Easy</option>
-            <option value="medium" selected>Medium</option>
-            <option value="hard">Hard</option>
-        </select>
+      <label for="difficulty">Difficulty:</label>
+      <select id="difficulty">
+        <option value="easy">Easy</option>
+        <option value="medium" selected>Medium</option>
+        <option value="hard">Hard</option>
+      </select>
     </div>
 
-    <div id="fightingScreen" style="display: none;">
-        <div id="timer">30</div>
-        <div id="cooldown">Ability Cooldown: 30s</div>
-        <button id="abilityButton">Use Reversal Red</button>
-        <canvas id="gameCanvas" width="800" height="600"></canvas>
-        <div id="blastEffect" class="blast"></div>
+    <div id="fightingScreen" style="display: none">
+      <div id="timer">30</div>
+      <div id="cooldown">Ability Cooldown: 30s</div>
+      <button id="abilityButton">Use Reversal Red</button>
+      <canvas id="gameCanvas" width="800" height="600"></canvas>
+      <div id="blastEffect" class="blast"></div>
     </div>
 
     <div id="brightnessOverlay" class="brightness-overlay"></div>
 
-    <script>
-        let selectedCharacter;
-        let player = { x: 100, y: 100, width: 100, height: 100, img: new Image(), speed: 7 };
-        let enemy = { x: 300, y: 300, width: 100, height: 100, img: new Image(), speed: 3 };
-        let bullets = [];
-        const bulletSpeed = 5;
-        let ctx;
-        let canvas;
-        let timer;
-        let cooldownTimer;
-        let isAbilityAvailable = false;
-        let abilityCooldown = 30; // seconds
-        let abilityReady = true; // track if ability is ready
-        let gold = 200; // Example gold amount for shop logic
-        let brightness = 100; // Default brightness
-        let fps = 30; // Default FPS
-        let difficulty = 'medium'; // Default difficulty
-        let frameRate = 1000 / fps; // Frame rate in milliseconds
-
-        const characters = {
-            character1: {
-                selectionImg: 'gojo.png',
-                fightingImg: 'gojo2.webp',
-                width: 100,
-                height: 100,
-                speed: 7,
-                unlocked: true
-            },
-            character2: {
-                selectionImg: 'yuji.png',
-                fightingImg: 'yuji_fight.png',
-                width: 100,
-                height: 100,
-                speed: 5,
-                unlocked: true
-            },
-            character3: {
-                selectionImg: 'yuta.png',
-                fightingImg: 'yuta_fight.png',
-                width: 100,
-                height: 100,
-                speed: 6,
-                unlocked: false
-            }
-        };
-
-        function initialize() {
-            document.getElementById('characterSelection').addEventListener('click', function(e) {
-                if (e.target.classList.contains('character')) {
-                    document.querySelectorAll('.character').forEach(char => char.classList.remove('selected'));
-                    e.target.classList.add('selected');
-                    selectedCharacter = e.target.getAttribute('data-character');
-                    console.log('Selected Character:', selectedCharacter);
-                }
-            });
-
-            document.getElementById('shop').addEventListener('click', function(e) {
-                if (e.target.classList.contains('buy-button')) {
-                    const item = e.target.closest('.shop-item');
-                    const character = item.getAttribute('data-character');
-                    const price = parseInt(e.target.getAttribute('data-price'));
-                    if (gold >= price) {
-                        gold -= price;
-                        characters[character].unlocked = true;
-                        updateShopVisibility();
-                        alert(`You bought ${character}!`);
-                    } else {
-                        alert('Not enough gold!');
-                    }
-                }
-            });
-
-            document.getElementById('startGame').addEventListener('click', function() {
-                if (!selectedCharacter) {
-                    alert('Please select a character!');
-                    return;
-                }
-                document.getElementById('loadingScreen').style.display = 'none';
-                document.getElementById('fightingScreen').style.display = 'block';
-                initializeGame();
-                startTimer();
-            });
-
-            document.getElementById('settingsButton').addEventListener('click', showSettings);
-            document.getElementById('backToMenu').addEventListener('click', backToMenu);
-
-            document.getElementById('brightness').addEventListener('input', function(e) {
-                brightness = e.target.value;
-                document.getElementById('brightnessValue').textContent = brightness;
-                updateBrightness();
-            });
-
-            document.getElementById('fps').addEventListener('input', function(e) {
-                fps = e.target.value;
-                document.getElementById('fpsValue').textContent = fps;
-                frameRate = 1000 / fps;
-            });
-
-            document.getElementById('difficulty').addEventListener('change', function(e) {
-                difficulty = e.target.value;
-                applyDifficultySettings();
-            });
-
-            document.getElementById('abilityButton').addEventListener('click', function() {
-                useReversalRed();
-            });
-
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'ArrowRight') player.x += player.speed;
-                if (e.key === 'ArrowLeft') player.x -= player.speed;
-                if (e.key === 'ArrowUp') player.y -= player.speed;
-                if (e.key === 'ArrowDown') player.y += player.speed;
-                if (e.key === ' ' && abilityReady) { // Spacebar to shoot
-                    bullets.push({ x: player.x + player.width / 2 - 25, y: player.y });
-                }
-                if (e.key === 'r' && isAbilityAvailable && abilityReady) { // 'R' key to use Reversal Red
-                    useReversalRed();
-                }
-            });
-
-            canvas = document.getElementById('gameCanvas');
-            ctx = canvas.getContext('2d');
-
-            player.img.src = characters.character1.fightingImg;
-            enemy.img.src = 'curse.png';
-
-            document.getElementById('background-music').play();
-        }
-
-        function initializeGame() {
-            player.img.src = characters[selectedCharacter].fightingImg;
-            player.width = characters[selectedCharacter].width;
-            player.height = characters[selectedCharacter].height;
-            player.speed = characters[selectedCharacter].speed;
-            player.x = canvas.width / 2 - player.width / 2;
-            player.y = canvas.height - player.height - 10;
-
-            enemy.x = canvas.width / 2 - enemy.width / 2;
-            enemy.y = 10;
-
-            applyDifficultySettings();
-        }
-
-        function updateBrightness() {
-            const overlay = document.getElementById('brightnessOverlay');
-            if (brightness > 100) {
-                const extraBrightness = brightness - 100;
-                overlay.style.background = `rgba(255, 255, 255, ${extraBrightness / 100})`;
-                overlay.style.opacity = 1;
-            } else {
-                overlay.style.opacity = 0;
-            }
-            document.body.style.filter = `brightness(${brightness}%)`;
-        }
-
-        function showSettings() {
-            document.getElementById('loadingScreen').style.display = 'none';
-            document.getElementById('fightingScreen').style.display = 'none';
-            document.getElementById('settingsScreen').style.display = 'flex';
-        }
-
-        function backToMenu() {
-            document.getElementById('settingsScreen').style.display = 'none';
-            document.getElementById('fightingScreen').style.display = 'none';
-            document.getElementById('loadingScreen').style.display = 'flex';
-        }
-
-        function applyDifficultySettings() {
-            switch (difficulty) {
-                case 'easy':
-                    enemy.speed = 2;
-                    break;
-                case 'medium':
-                    enemy.speed = 3;
-                    break;
-                case 'hard':
-                    enemy.speed = 5;
-                    break;
-            }
-        }
-
-        function updateShopVisibility() {
-            document.querySelectorAll('#shop .shop-item').forEach(item => {
-                const character = item.getAttribute('data-character');
-                if (characters[character] && characters[character].unlocked) {
-                    item.classList.remove('available');
-                } else {
-                    item.classList.add('available');
-                }
-            });
-        }
-
-        function useReversalRed() {
-            if (!abilityReady) return;
-            abilityReady = false;
-            const blast = document.getElementById('blastEffect');
-            blast.style.left = `${player.x + player.width / 2}px`;
-            blast.style.top = `${player.y + player.height / 2}px`;
-            blast.style.display = 'block';
-
-            setTimeout(() => {
-                blast.style.display = 'none';
-                abilityReady = true;
-                cooldownTimer = setInterval(updateCooldown, 1000);
-            }, 3000);
-        }
-
-        function startTimer() {
-            let timeLeft = 30;
-            timer = setInterval(() => {
-                document.getElementById('timer').textContent = timeLeft;
-                if (timeLeft <= 0) {
-                    clearInterval(timer);
-                    alert('Game Over!');
-                }
-                timeLeft--;
-            }, 1000);
-        }
-
-        function updateCooldown() {
-            abilityCooldown--;
-            document.getElementById('cooldown').textContent = `Ability Cooldown: ${abilityCooldown}s`;
-            if (abilityCooldown <= 0) {
-                clearInterval(cooldownTimer);
-                document.getElementById('cooldown').textContent = 'Ability Ready!';
-                isAbilityAvailable = true;
-                abilityReady = true;
-                abilityCooldown = 30; // Reset cooldown
-            }
-        }
-
-        function drawPlayer() {
-            ctx.drawImage(player.img, player.x, player.y, player.width, player.height);
-        }
-
-        function drawEnemy() {
-            ctx.drawImage(enemy.img, enemy.x, enemy.y, enemy.width, enemy.height);
-        }
-
-        function drawBullets() {
-            bullets.forEach(bullet => {
-                ctx.drawImage(document.getElementById('bulletImage'), bullet.x, bullet.y, 50, 50);
-            });
-        }
-
-        function updateBullets() {
-            bullets.forEach(bullet => {
-                bullet.y -= bulletSpeed;
-                if (bullet.y < 0) {
-                    bullets.shift(); // Remove bullet if off screen
-                }
-            });
-        }
-
-        function updateEnemy() {
-            enemy.y += enemy.speed;
-            if (enemy.y > canvas.height) {
-                enemy.y = 0;
-                enemy.x = Math.random() * (canvas.width - enemy.width);
-            }
-        }
-
-        function checkCollisions() {
-            bullets.forEach(bullet => {
-                if (bullet.x < enemy.x + enemy.width &&
-                    bullet.x + 50 > enemy.x &&
-                    bullet.y < enemy.y + enemy.height &&
-                    bullet.y + 50 > enemy.y) {
-                    // Collision detected
-                    enemy.x = Math.random() * (canvas.width - enemy.width);
-                    enemy.y = 0;
-                    bullets.shift(); // Remove bullet on collision
-                }
-            });
-        }
-
-        function update() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            drawPlayer();
-            drawEnemy();
-            drawBullets();
-            updateBullets();
-            updateEnemy();
-            checkCollisions();
-            setTimeout(() => requestAnimationFrame(update), frameRate);
-        }
-
-        window.onload = function() {
-            initialize();
-            updateShopVisibility();
-            document.getElementById('background-music').play();
-        };
-    </script>
-</body>
+    <script src="game.js"></script>
+  </body>
 </html>
