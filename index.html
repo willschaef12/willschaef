@@ -16,7 +16,7 @@
             background: #000;
             margin: auto;
         }
-        #loadingScreen, #fightingScreen {
+        #loadingScreen, #fightingScreen, #settingsScreen {
             position: absolute;
             top: 0;
             left: 0;
@@ -30,6 +30,18 @@
         }
         #loadingScreen {
             background: rgba(0, 0, 0, 0.8);
+        }
+        #settingsScreen {
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+        }
+        #settingsButton {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
         }
         #characterSelection {
             display: flex;
@@ -62,7 +74,7 @@
             flex-wrap: wrap;
             justify-content: center;
         }
-        #startGame, #abilityButton {
+        #startGame, #abilityButton, #backToMenu {
             margin-top: 20px;
             padding: 10px 20px;
             font-size: 16px;
@@ -88,6 +100,9 @@
             transform: translate(-50%, -50%);
             display: none;
         }
+        #brightness, #fps {
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
@@ -96,7 +111,7 @@
     <img id="bulletImage" src="orb.png" style="display: none;">
     <img id="curseImage" src="curse.png" style="display: none;">
     <img id="gojo2Image" src="gojo2.webp" style="display: none;">
-    
+
     <div id="loadingScreen">
         <h1>Sorcerers Battle</h1>
         <h2>Select Your Character</h2>
@@ -119,6 +134,20 @@
             </div>
         </div>
         <button id="startGame">Start Game</button>
+        <button id="settingsButton">Settings</button>
+    </div>
+
+    <div id="settingsScreen">
+        <h2>Settings</h2>
+        <label for="brightness">Brightness:</label>
+        <input type="range" id="brightness" min="0" max="200" value="100">
+        <span id="brightnessValue">100</span>%
+
+        <label for="fps">FPS:</label>
+        <input type="number" id="fps" min="10" max="60" value="30">
+        <span id="fpsValue">30</span> FPS
+
+        <button id="backToMenu">Back to Menu</button>
     </div>
 
     <div id="fightingScreen" style="display: none;">
@@ -143,6 +172,9 @@
         let abilityCooldown = 30; // seconds
         let abilityReady = true; // track if ability is ready
         let gold = 200; // Example gold amount for shop logic
+        let brightness = 100; // Default brightness
+        let fps = 30; // Default FPS
+        let frameRate = 1000 / fps; // Frame rate in milliseconds
 
         const characters = {
             character1: {
@@ -212,6 +244,21 @@
                 }
             });
 
+            document.getElementById('settingsButton').addEventListener('click', showSettings);
+            document.getElementById('backToMenu').addEventListener('click', backToMenu);
+
+            document.getElementById('brightness').addEventListener('input', function(e) {
+                brightness = e.target.value;
+                document.getElementById('brightnessValue').textContent = brightness;
+                updateBrightness();
+            });
+
+            document.getElementById('fps').addEventListener('input', function(e) {
+                fps = e.target.value;
+                document.getElementById('fpsValue').textContent = fps;
+                frameRate = 1000 / fps;
+            });
+
             document.getElementById('abilityButton').addEventListener('click', function() {
                 useReversalRed();
             });
@@ -222,85 +269,127 @@
                 if (e.key === 'ArrowUp') player.y -= player.speed;
                 if (e.key === 'ArrowDown') player.y += player.speed;
                 if (e.key === ' ' && abilityReady) { // Spacebar to shoot
-                    bullets.push({
-                        x: player.x + player.width / 2 - 25,
-                        y: player.y
-                    });
+                    bullets.push({ x: player.x + player.width / 2 - 25, y: player.y });
                 }
                 if (e.key === 'r' && isAbilityAvailable && abilityReady) { // 'R' key to use Reversal Red
                     useReversalRed();
                 }
             });
+
+            canvas = document.getElementById('gameCanvas');
+            ctx = canvas.getContext('2d');
+
+            player.img.src = characters.character1.fightingImg;
+            enemy.img.src = 'curse.png';
+
+            document.getElementById('background-music').play();
+        }
+
+        function initializeGame() {
+            player.img.src = characters[selectedCharacter].fightingImg;
+            player.width = characters[selectedCharacter].width;
+            player.height = characters[selectedCharacter].height;
+            player.speed = characters[selectedCharacter].speed;
+            player.x = canvas.width / 2 - player.width / 2;
+            player.y = canvas.height - player.height - 10;
+
+            enemy.x = canvas.width / 2 - enemy.width / 2;
+            enemy.y = 10;
+        }
+
+        function updateBrightness() {
+            document.body.style.filter = `brightness(${brightness}%)`;
+        }
+
+        function showSettings() {
+            document.getElementById('loadingScreen').style.display = 'none';
+            document.getElementById('settingsScreen').style.display = 'block';
+        }
+
+        function backToMenu() {
+            document.getElementById('settingsScreen').style.display = 'none';
+            document.getElementById('loadingScreen').style.display = 'block';
         }
 
         function updateShopVisibility() {
-            document.querySelectorAll('.shop-item').forEach(item => {
+            document.querySelectorAll('#shop .shop-item').forEach(item => {
                 const character = item.getAttribute('data-character');
-                if (characters[character].unlocked) {
-                    item.querySelector('.buy-button').style.display = 'none';
-                    item.classList.remove('locked');
+                if (characters[character] && characters[character].unlocked) {
+                    item.classList.remove('available');
                 } else {
-                    item.querySelector('.buy-button').style.display = 'block';
-                    item.classList.add('locked');
+                    item.classList.add('available');
                 }
             });
         }
 
-        function initializeGame() {
-            canvas = document.getElementById('gameCanvas');
-            ctx = canvas.getContext('2d');
+        function useReversalRed() {
+            if (!abilityReady) return;
+            abilityReady = false;
+            const blast = document.getElementById('blastEffect');
+            blast.style.left = `${player.x + player.width / 2}px`;
+            blast.style.top = `${player.y + player.height / 2}px`;
+            blast.style.display = 'block';
 
-            const selectedCharacterData = characters[selectedCharacter];
-            if (selectedCharacterData) {
-                player.img.src = selectedCharacterData.fightingImg;
-                player.width = selectedCharacterData.width;
-                player.height = selectedCharacterData.height;
-                player.speed = selectedCharacterData.speed;
-                player.img.onload = function() {
-                    drawPlayer();
-                };
+            setTimeout(() => {
+                blast.style.display = 'none';
+                abilityReady = true;
+                cooldownTimer = setInterval(updateCooldown, 1000);
+            }, 3000);
+        }
 
-                enemy.img.src = 'curse.png';
-                enemy.width = 100;
-                enemy.height = 100;
-                enemy.img.onload = function() {
-                    drawEnemy();
-                };
-            } else {
-                console.error('Selected character data not found');
+        function startTimer() {
+            let timeLeft = 30;
+            timer = setInterval(() => {
+                document.getElementById('timer').textContent = timeLeft;
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    alert('Game Over!');
+                }
+                timeLeft--;
+            }, 1000);
+        }
+
+        function updateCooldown() {
+            abilityCooldown--;
+            document.getElementById('cooldown').textContent = `Ability Cooldown: ${abilityCooldown}s`;
+            if (abilityCooldown <= 0) {
+                clearInterval(cooldownTimer);
+                document.getElementById('cooldown').textContent = 'Ability Ready!';
+                isAbilityAvailable = true;
+                abilityReady = true;
+                abilityCooldown = 30; // Reset cooldown
             }
         }
 
-        function drawImage(img, x, y, width, height) {
-            ctx.drawImage(img, x, y, width, height);
-        }
-
         function drawPlayer() {
-            drawImage(player.img, player.x, player.y, player.width, player.height);
+            ctx.drawImage(player.img, player.x, player.y, player.width, player.height);
         }
 
         function drawEnemy() {
-            drawImage(enemy.img, enemy.x, enemy.y, enemy.width, enemy.height);
+            ctx.drawImage(enemy.img, enemy.x, enemy.y, enemy.width, enemy.height);
         }
 
         function drawBullets() {
             bullets.forEach(bullet => {
-                drawImage(document.getElementById('bulletImage'), bullet.x, bullet.y, 50, 50);
+                ctx.drawImage(document.getElementById('bulletImage'), bullet.x, bullet.y, 50, 50);
             });
         }
 
         function updateBullets() {
             bullets.forEach(bullet => {
                 bullet.y -= bulletSpeed;
+                if (bullet.y < 0) {
+                    bullets.shift(); // Remove bullet if off screen
+                }
             });
-            bullets = bullets.filter(bullet => bullet.y > 0);
         }
 
         function updateEnemy() {
-            if (player.x < enemy.x) enemy.x -= enemy.speed;
-            if (player.x > enemy.x) enemy.x += enemy.speed;
-            if (player.y < enemy.y) enemy.y -= enemy.speed;
-            if (player.y > enemy.y) enemy.y += enemy.speed;
+            enemy.y += enemy.speed;
+            if (enemy.y > canvas.height) {
+                enemy.y = 0;
+                enemy.x = Math.random() * (canvas.width - enemy.width);
+            }
         }
 
         function checkCollisions() {
@@ -309,54 +398,12 @@
                     bullet.x + 50 > enemy.x &&
                     bullet.y < enemy.y + enemy.height &&
                     bullet.y + 50 > enemy.y) {
-                    console.log('Hit detected!');
+                    // Collision detected
                     enemy.x = Math.random() * (canvas.width - enemy.width);
-                    enemy.y = Math.random() * (canvas.height - enemy.height);
+                    enemy.y = 0;
+                    bullets.shift(); // Remove bullet on collision
                 }
             });
-        }
-
-        function useReversalRed() {
-            if (isAbilityAvailable && abilityReady) {
-                showBlastEffect(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2);
-                enemy.x = -1000; // Move enemy off-screen to simulate death
-                console.log('Reversal Red used!');
-                abilityReady = false;
-                document.getElementById('abilityButton').style.display = 'none';
-
-                setTimeout(() => {
-                    abilityReady = true;
-                    document.getElementById('abilityButton').style.display = 'block';
-                    console.log('Ability is ready to use again!');
-                }, abilityCooldown * 1000);
-            } else if (!isAbilityAvailable) {
-                console.log('Ability not available yet.');
-            }
-        }
-
-        function showBlastEffect(x, y) {
-            const blast = document.getElementById('blastEffect');
-            blast.style.left = `${x}px`;
-            blast.style.top = `${y}px`;
-            blast.style.display = 'block';
-
-            setTimeout(() => {
-                blast.style.display = 'none';
-            }, 500); // Display blast effect for 0.5 seconds
-        }
-
-        function startTimer() {
-            let timeLeft = 30;
-            timer = setInterval(function() {
-                timeLeft--;
-                document.getElementById('timer').textContent = timeLeft;
-                if (timeLeft <= 0) {
-                    clearInterval(timer);
-                    isAbilityAvailable = true; // Enable ability after the timer ends
-                    document.getElementById('cooldown').textContent = 'Ability Cooldown: 30s';
-                    document.getElementById('abilityButton').style.display = 'block'; // Show ability button
-                }
-            }, 1000);
         }
 
         function update() {
@@ -367,7 +414,7 @@
             updateBullets();
             updateEnemy();
             checkCollisions();
-            requestAnimationFrame(update);
+            setTimeout(() => requestAnimationFrame(update), frameRate);
         }
 
         window.onload = function() {
