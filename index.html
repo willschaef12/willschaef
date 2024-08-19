@@ -62,20 +62,17 @@
             flex-wrap: wrap;
             justify-content: center;
         }
-        #startGame {
+        #startGame, #abilityButton {
             margin-top: 20px;
             padding: 10px 20px;
             font-size: 16px;
             cursor: pointer;
         }
         #abilityButton {
-            margin-top: 20px;
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
+            display: none;
         }
-        #gameCanvas {
-            display: block;
+        #timer {
+            font-size: 24px;
         }
     </style>
 </head>
@@ -84,6 +81,7 @@
     <img id="basketImage" src="gojo.png" style="display: none;">
     <img id="bulletImage" src="orb.png" style="display: none;">
     <img id="curseImage" src="curse.png" style="display: none;">
+    <img id="gojo2Image" src="gojo2.webp" style="display: none;">
     
     <div id="loadingScreen">
         <h1>Sorcerers Battle</h1>
@@ -103,7 +101,7 @@
             <div class="shop-item available" data-character="character3">
                 <img src="yuta.png" alt="New Character" class="shop-img">
                 <div class="shop-name">Yuta</div>
-                <button class="buy-button">Buy (100 Gold)</button>
+                <button class="buy-button" data-price="100">Buy (100 Gold)</button>
             </div>
         </div>
         <button id="startGame">Start Game</button>
@@ -111,7 +109,7 @@
 
     <div id="fightingScreen" style="display: none;">
         <div id="timer">30</div>
-        <button id="abilityButton" style="display: none;">Use Reversal Red</button>
+        <button id="abilityButton">Use Reversal Red</button>
         <canvas id="gameCanvas" width="800" height="600"></canvas>
     </div>
 
@@ -119,7 +117,7 @@
         const characters = {
             character1: {
                 selectionImg: 'gojo.png',
-                fightingImg: 'gojo_fight.png',
+                fightingImg: 'gojo2.webp',
                 width: 100,
                 height: 100,
                 speed: 7,
@@ -144,30 +142,15 @@
         };
 
         let selectedCharacter = null;
-        let gold = 100; // Example initial gold
-        let player = { x: 100, y: 100, width: 100, height: 100, speed: 7, img: new Image() };
-        let enemy = { x: 500, y: 100, width: 100, height: 100, speed: 3, img: new Image() };
+        let player = { x: 100, y: 100, width: 100, height: 100, img: new Image(), speed: 7 };
+        let enemy = { x: 300, y: 300, width: 100, height: 100, img: new Image(), speed: 3 };
         let bullets = [];
-        let bulletSpeed = 10;
+        const bulletSpeed = 5;
+        let ctx;
         let timer;
         let abilityAvailable = false;
 
-        function updateShopVisibility() {
-            document.querySelectorAll('.shop-item').forEach(item => {
-                const character = item.getAttribute('data-character');
-                if (characters[character].unlocked) {
-                    item.querySelector('.buy-button').style.display = 'none';
-                    item.classList.remove('locked');
-                } else {
-                    item.querySelector('.buy-button').style.display = 'block';
-                    item.classList.add('locked');
-                }
-            });
-        }
-
         function initialize() {
-            updateShopVisibility();
-
             document.getElementById('characterSelection').addEventListener('click', function(e) {
                 if (e.target.classList.contains('character')) {
                     document.querySelectorAll('.character').forEach(char => char.classList.remove('selected'));
@@ -200,64 +183,79 @@
                 if (selectedCharacter && characters[selectedCharacter] && characters[selectedCharacter].unlocked) {
                     document.getElementById('loadingScreen').style.display = 'none';
                     document.getElementById('fightingScreen').style.display = 'block';
-                    startGame();
+                    initializeGame();
+                    startTimer();
+                    update();
                 } else {
                     alert('Please select an unlocked character.');
                 }
             });
+
+            document.getElementById('abilityButton').addEventListener('click', function() {
+                if (abilityAvailable) {
+                    console.log('Using Reversal Red!');
+                    // Implement Reversal Red ability logic here
+                }
+            });
+
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'ArrowRight') player.x += player.speed;
+                if (e.key === 'ArrowLeft') player.x -= player.speed;
+                if (e.key === 'ArrowUp') player.y -= player.speed;
+                if (e.key === 'ArrowDown') player.y += player.speed;
+                if (e.key === ' ') { // Spacebar to shoot
+                    bullets.push({
+                        x: player.x + player.width / 2 - 25,
+                        y: player.y
+                    });
+                }
+            });
         }
 
-        function startGame() {
-            initializeGame();
-            startTimer();
-            update();
+        function updateShopVisibility() {
+            document.querySelectorAll('.shop-item').forEach(item => {
+                const character = item.getAttribute('data-character');
+                if (characters[character].unlocked) {
+                    item.querySelector('.buy-button').style.display = 'none';
+                    item.classList.remove('locked');
+                } else {
+                    item.querySelector('.buy-button').style.display = 'block';
+                    item.classList.add('locked');
+                }
+            });
         }
 
         function initializeGame() {
-            if (selectedCharacter && characters[selectedCharacter]) {
-                player.width = characters[selectedCharacter].width;
-                player.height = characters[selectedCharacter].height;
-                player.img.src = characters[selectedCharacter].fightingImg;
-                player.speed = characters[selectedCharacter].speed;
+            const character = characters[selectedCharacter];
+            if (character) {
+                player.width = character.width;
+                player.height = character.height;
+                player.img.src = character.fightingImg;
 
-                enemy.img.src = 'curse.png'; // Set enemy image
+                enemy.img.src = 'curse.png';
+
+                const canvas = document.getElementById('gameCanvas');
+                ctx = canvas.getContext('2d');
+
+                // Ensure canvas and context are correctly set up
+                if (!ctx) {
+                    console.error('Canvas context not found');
+                }
+
+                player.img.onload = function() {
+                    ctx.drawImage(player.img, player.x, player.y, player.width, player.height);
+                };
+
+                enemy.img.onload = function() {
+                    ctx.drawImage(enemy.img, enemy.x, enemy.y, enemy.width, enemy.height);
+                };
             } else {
                 console.error('Selected character is not valid');
             }
         }
 
-        function startTimer() {
-            let timeLeft = 30;
-            document.getElementById('timer').textContent = timeLeft;
-            timer = setInterval(() => {
-                timeLeft--;
-                document.getElementById('timer').textContent = timeLeft;
-                if (timeLeft <= 0) {
-                    clearInterval(timer);
-                    abilityAvailable = true;
-                    document.getElementById('abilityButton').style.display = 'block';
-                }
-            }, 1000);
-        }
-
-        document.getElementById('abilityButton').addEventListener('click', function() {
-            if (abilityAvailable) {
-                console.log('Using Reversal Red ability!');
-                // Implement the ability effect here
-                abilityAvailable = false;
-                document.getElementById('abilityButton').style.display = 'none';
-            } else {
-                alert('Ability not available yet!');
-            }
-        });
-
         function drawImage(img, x, y, width, height) {
-            if (img.complete) {
-                ctx.drawImage(img, x, y, width, height);
-            } else {
-                img.onload = () => ctx.drawImage(img, x, y, width, height);
-                img.onerror = () => console.error('Image failed to load:', img.src);
-            }
+            ctx.drawImage(img, x, y, width, height);
         }
 
         function drawPlayer() {
@@ -303,8 +301,7 @@
                     bullet.y + 50 > enemy.y
                 ) {
                     console.log('Hit detected');
-                    bullets.splice(index, 1); // Remove bullet
-                    // Handle enemy hit
+                    bullets.splice(index, 1);
                 }
             });
         }
@@ -322,28 +319,24 @@
             requestAnimationFrame(update);
         }
 
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'ArrowRight') player.x += player.speed;
-            if (e.key === 'ArrowLeft') player.x -= player.speed;
-            if (e.key === 'ArrowUp') player.y -= player.speed;
-            if (e.key === 'ArrowDown') player.y += player.speed;
-            if (e.key === ' ') { // Spacebar to shoot
-                bullets.push({
-                    x: player.x + player.width / 2 - 25,
-                    y: player.y
-                });
-            }
-        });
+        function startTimer() {
+            let timeLeft = 30;
+            const timerElement = document.getElementById('timer');
+            timerElement.textContent = timeLeft;
+
+            timer = setInterval(function() {
+                timeLeft -= 1;
+                timerElement.textContent = timeLeft;
+
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    abilityAvailable = true;
+                    document.getElementById('abilityButton').style.display = 'block';
+                }
+            }, 1000);
+        }
 
         window.onload = function() {
-            const canvas = document.getElementById('gameCanvas');
-            const ctx = canvas.getContext('2d');
-
-            if (!canvas || !ctx) {
-                console.error('Canvas or context not found');
-                return;
-            }
-
             initialize();
         };
     </script>
