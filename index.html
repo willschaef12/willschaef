@@ -17,7 +17,7 @@
             background: #000;
             margin: auto;
         }
-        #loadingScreen {
+        #loadingScreen, #fightingScreen {
             position: absolute;
             top: 0;
             left: 0;
@@ -30,6 +30,12 @@
             justify-content: center;
             color: white;
             z-index: 1000;
+        }
+        #loadingScreen {
+            display: flex;
+        }
+        #fightingScreen {
+            display: none;
         }
         #characterSelection {
             display: flex;
@@ -68,8 +74,9 @@
             font-size: 16px;
             cursor: pointer;
         }
-        #gameCanvas {
-            display: none;
+        .shop-item.locked {
+            opacity: 0.5;
+            pointer-events: none;
         }
     </style>
 </head>
@@ -97,13 +104,18 @@
             <div class="shop-item available" data-character="character3">
                 <img src="yuta.png" alt="New Character" class="shop-img">
                 <div class="shop-name">Yuta</div>
-                <button class="buy-button">Buy (100 Gold)</button>
+                <button class="buy-button" data-price="100">Buy (100 Gold)</button>
             </div>
         </div>
         <button id="startGame">Start Game</button>
     </div>
 
-    <canvas id="gameCanvas"></canvas>
+    <div id="fightingScreen">
+        <h1>Fighting Screen</h1>
+        <canvas id="gameCanvas"></canvas>
+        <button id="restartGame">Restart Game</button>
+    </div>
+
     <script src="game.js"></script>
 </body>
 </html>

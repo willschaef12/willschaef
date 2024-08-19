@@ -1,32 +1,60 @@
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
 const characters = {
     character1: {
         selectionImg: 'gojo.png',
-        fightingImg: 'gojo_fight.png',
+        fightingImg: 'gojo.png', // Ensure this is the correct fighting image
         width: 100,
         height: 100,
         speed: 7,
-        unlocked: true // Default unlocked character
+        unlocked: true
     },
     character2: {
         selectionImg: 'yuji.png',
-        fightingImg: 'yuji_fight.png',
+        fightingImg: 'yuji.png', // Ensure this is the correct fighting image
         width: 100,
         height: 100,
         speed: 5,
-        unlocked: true // Default unlocked character
+        unlocked: true
     },
     character3: {
         selectionImg: 'yuta.png',
-        fightingImg: 'yuta2.png',
+        fightingImg: 'yuta.png', // Ensure this is the correct fighting image
         width: 100,
         height: 100,
         speed: 6,
-        unlocked: false // Initially locked character
+        unlocked: false
     }
 };
 
+let gold = 100;
+let selectedCharacter = null;
+const bullets = [];
+const bulletSpeed = 10;
+
+const player = {
+    x: 100,
+    y: 100,
+    width: 100,
+    height: 100,
+    img: new Image(),
+    speed: 7
+};
+
+const enemy = {
+    x: 400,
+    y: 100,
+    width: 100,
+    height: 100,
+    img: new Image(),
+    speed: 3
+};
+
+const bulletImage = new Image();
+bulletImage.src = 'orb.png';
+
 function initialize() {
-    // Populate the shop based on the unlocked status
     updateShopVisibility();
 
     document.getElementById('characterSelection').addEventListener('click', function(e) {
@@ -45,7 +73,7 @@ function initialize() {
             const price = parseInt(e.target.getAttribute('data-price'), 10);
 
             if (characters[character] && !characters[character].unlocked) {
-                if (gold >= price) { // Check if enough gold
+                if (gold >= price) {
                     characters[character].unlocked = true;
                     gold -= price;
                     updateShopVisibility();
@@ -60,29 +88,36 @@ function initialize() {
     document.getElementById('startGame').addEventListener('click', function() {
         if (selectedCharacter && characters[selectedCharacter] && characters[selectedCharacter].unlocked) {
             document.getElementById('loadingScreen').style.display = 'none';
-            document.getElementById('gameCanvas').style.display = 'block';
+            document.getElementById('fightingScreen').style.display = 'flex';
             startGame();
         } else {
             alert('Please select an unlocked character.');
         }
     });
+
+    document.getElementById('restartGame').addEventListener('click', function() {
+        document.getElementById('fightingScreen').style.display = 'none';
+        document.getElementById('loadingScreen').style.display = 'flex';
+        selectedCharacter = null;
+        gold = 100;
+        bullets.length = 0;
+        // Reset other game state if needed
+    });
 }
 
-// Function to update the visibility of shop items based on unlocked status
 function updateShopVisibility() {
     document.querySelectorAll('.shop-item').forEach(item => {
         const character = item.getAttribute('data-character');
         if (characters[character].unlocked) {
-            item.querySelector('.buy-button').style.display = 'none'; // Hide buy button for unlocked characters
+            item.querySelector('.buy-button').style.display = 'none';
             item.classList.remove('locked');
         } else {
-            item.querySelector('.buy-button').style.display = 'block'; // Show buy button for locked characters
+            item.querySelector('.buy-button').style.display = 'block';
             item.classList.add('locked');
         }
     });
 }
 
-// Initialize game logic
 function startGame() {
     initializeGame();
     update();
@@ -95,7 +130,17 @@ function initializeGame() {
         player.img.src = characters[selectedCharacter].fightingImg;
         player.speed = characters[selectedCharacter].speed;
 
-        enemy.img.src = 'curse.png'; // Replace with your enemy image
+        enemy.img.src = 'curse.png';
+
+        // Center the player and enemy on the canvas
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        player.x = canvas.width / 4 - player.width / 2;
+        player.y = canvas.height / 2 - player.height / 2;
+
+        enemy.x = canvas.width * 3 / 4 - enemy.width / 2;
+        enemy.y = canvas.height / 2 - enemy.height / 2;
     } else {
         console.error('Selected character is not valid');
     }
@@ -115,7 +160,7 @@ function drawEnemy() {
 
 function drawBullets() {
     bullets.forEach(bullet => {
-        drawImage(document.getElementById('bulletImage'), bullet.x, bullet.y, 50, 50);
+        drawImage(bulletImage, bullet.x, bullet.y, 50, 50);
     });
 }
 
@@ -148,9 +193,8 @@ function checkCollisions() {
             bullet.y + 50 > enemy.y
         ) {
             console.log('Hit detected');
-            bullets.splice(index, 1); // Remove bullet
-            // Handle enemy hit
-            // For example, you can decrease enemy health here
+            bullets.splice(index, 1);
+            // Handle enemy hit, e.g., reduce health
         }
     });
 }
@@ -168,13 +212,12 @@ function update() {
     requestAnimationFrame(update);
 }
 
-// Control player movement
 document.addEventListener('keydown', function(e) {
     if (e.key === 'ArrowRight') player.x += player.speed;
     if (e.key === 'ArrowLeft') player.x -= player.speed;
     if (e.key === 'ArrowUp') player.y -= player.speed;
     if (e.key === 'ArrowDown') player.y += player.speed;
-    if (e.key === ' ') { // Spacebar to shoot
+    if (e.key === ' ') {
         bullets.push({
             x: player.x + player.width / 2 - 25,
             y: player.y
@@ -182,13 +225,6 @@ document.addEventListener('keydown', function(e) {
     }
 });
 
-document.addEventListener('keyup', function(e) {
-    if (e.key === 'ArrowRight' || e.key === 'ArrowLeft' || e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-        player.dx = 0;
-    }
-});
-
-// Wait for all images to load before starting the game
 window.onload = function() {
     initialize();
 };
