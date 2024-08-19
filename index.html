@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sorcerers Battle</title>
-    <link rel="icon" href="favicon.ico" type="image/x-icon">
     <style>
         body {
             margin: 0;
@@ -23,19 +22,14 @@
             left: 0;
             width: 100vw;
             height: 100vh;
-            background: rgba(0, 0, 0, 0.8);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             color: white;
-            z-index: 1000;
         }
         #loadingScreen {
-            display: flex;
-        }
-        #fightingScreen {
-            display: none;
+            background: rgba(0, 0, 0, 0.8);
         }
         #characterSelection {
             display: flex;
@@ -74,9 +68,14 @@
             font-size: 16px;
             cursor: pointer;
         }
-        .shop-item.locked {
-            opacity: 0.5;
-            pointer-events: none;
+        #abilityButton {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        #gameCanvas {
+            display: block;
         }
     </style>
 </head>
@@ -104,18 +103,249 @@
             <div class="shop-item available" data-character="character3">
                 <img src="yuta.png" alt="New Character" class="shop-img">
                 <div class="shop-name">Yuta</div>
-                <button class="buy-button" data-price="100">Buy (100 Gold)</button>
+                <button class="buy-button">Buy (100 Gold)</button>
             </div>
         </div>
         <button id="startGame">Start Game</button>
     </div>
 
-    <div id="fightingScreen">
-        <h1>Fighting Screen</h1>
-        <canvas id="gameCanvas"></canvas>
-        <button id="restartGame">Restart Game</button>
+    <div id="fightingScreen" style="display: none;">
+        <div id="timer">30</div>
+        <button id="abilityButton" style="display: none;">Use Reversal Red</button>
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
     </div>
 
-    <script src="game.js"></script>
+    <script>
+        const characters = {
+            character1: {
+                selectionImg: 'gojo.png',
+                fightingImg: 'gojo_fight.png',
+                width: 100,
+                height: 100,
+                speed: 7,
+                unlocked: true
+            },
+            character2: {
+                selectionImg: 'yuji.png',
+                fightingImg: 'yuji_fight.png',
+                width: 100,
+                height: 100,
+                speed: 5,
+                unlocked: true
+            },
+            character3: {
+                selectionImg: 'yuta.png',
+                fightingImg: 'yuta_fight.png',
+                width: 100,
+                height: 100,
+                speed: 6,
+                unlocked: false
+            }
+        };
+
+        let selectedCharacter = null;
+        let gold = 100; // Example initial gold
+        let player = { x: 100, y: 100, width: 100, height: 100, speed: 7, img: new Image() };
+        let enemy = { x: 500, y: 100, width: 100, height: 100, speed: 3, img: new Image() };
+        let bullets = [];
+        let bulletSpeed = 10;
+        let timer;
+        let abilityAvailable = false;
+
+        function updateShopVisibility() {
+            document.querySelectorAll('.shop-item').forEach(item => {
+                const character = item.getAttribute('data-character');
+                if (characters[character].unlocked) {
+                    item.querySelector('.buy-button').style.display = 'none';
+                    item.classList.remove('locked');
+                } else {
+                    item.querySelector('.buy-button').style.display = 'block';
+                    item.classList.add('locked');
+                }
+            });
+        }
+
+        function initialize() {
+            updateShopVisibility();
+
+            document.getElementById('characterSelection').addEventListener('click', function(e) {
+                if (e.target.classList.contains('character')) {
+                    document.querySelectorAll('.character').forEach(char => char.classList.remove('selected'));
+                    e.target.classList.add('selected');
+                    selectedCharacter = e.target.getAttribute('data-character');
+                    console.log('Selected Character:', selectedCharacter);
+                }
+            });
+
+            document.getElementById('shop').addEventListener('click', function(e) {
+                if (e.target.classList.contains('buy-button')) {
+                    const item = e.target.parentElement;
+                    const character = item.getAttribute('data-character');
+                    const price = parseInt(e.target.getAttribute('data-price'), 10);
+
+                    if (characters[character] && !characters[character].unlocked) {
+                        if (gold >= price) {
+                            characters[character].unlocked = true;
+                            gold -= price;
+                            updateShopVisibility();
+                            console.log('Bought:', character);
+                        } else {
+                            alert('Not enough gold!');
+                        }
+                    }
+                }
+            });
+
+            document.getElementById('startGame').addEventListener('click', function() {
+                if (selectedCharacter && characters[selectedCharacter] && characters[selectedCharacter].unlocked) {
+                    document.getElementById('loadingScreen').style.display = 'none';
+                    document.getElementById('fightingScreen').style.display = 'block';
+                    startGame();
+                } else {
+                    alert('Please select an unlocked character.');
+                }
+            });
+        }
+
+        function startGame() {
+            initializeGame();
+            startTimer();
+            update();
+        }
+
+        function initializeGame() {
+            if (selectedCharacter && characters[selectedCharacter]) {
+                player.width = characters[selectedCharacter].width;
+                player.height = characters[selectedCharacter].height;
+                player.img.src = characters[selectedCharacter].fightingImg;
+                player.speed = characters[selectedCharacter].speed;
+
+                enemy.img.src = 'curse.png'; // Set enemy image
+            } else {
+                console.error('Selected character is not valid');
+            }
+        }
+
+        function startTimer() {
+            let timeLeft = 30;
+            document.getElementById('timer').textContent = timeLeft;
+            timer = setInterval(() => {
+                timeLeft--;
+                document.getElementById('timer').textContent = timeLeft;
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    abilityAvailable = true;
+                    document.getElementById('abilityButton').style.display = 'block';
+                }
+            }, 1000);
+        }
+
+        document.getElementById('abilityButton').addEventListener('click', function() {
+            if (abilityAvailable) {
+                console.log('Using Reversal Red ability!');
+                // Implement the ability effect here
+                abilityAvailable = false;
+                document.getElementById('abilityButton').style.display = 'none';
+            } else {
+                alert('Ability not available yet!');
+            }
+        });
+
+        function drawImage(img, x, y, width, height) {
+            if (img.complete) {
+                ctx.drawImage(img, x, y, width, height);
+            } else {
+                img.onload = () => ctx.drawImage(img, x, y, width, height);
+                img.onerror = () => console.error('Image failed to load:', img.src);
+            }
+        }
+
+        function drawPlayer() {
+            drawImage(player.img, player.x, player.y, player.width, player.height);
+        }
+
+        function drawEnemy() {
+            drawImage(enemy.img, enemy.x, enemy.y, enemy.width, enemy.height);
+        }
+
+        function drawBullets() {
+            bullets.forEach(bullet => {
+                drawImage(document.getElementById('bulletImage'), bullet.x, bullet.y, 50, 50);
+            });
+        }
+
+        function updateBullets() {
+            bullets.forEach((bullet, index) => {
+                bullet.y -= bulletSpeed;
+                if (bullet.y < 0) {
+                    bullets.splice(index, 1);
+                }
+            });
+        }
+
+        function updateEnemy() {
+            if (player.x < enemy.x) enemy.x -= enemy.speed;
+            if (player.x > enemy.x) enemy.x += enemy.speed;
+            if (player.y < enemy.y) enemy.y -= enemy.speed;
+            if (player.y > enemy.y) enemy.y += enemy.speed;
+
+            if (Math.abs(player.x - enemy.x) < 50 && Math.abs(player.y - enemy.y) < 50) {
+                console.log('Enemy is close to player');
+            }
+        }
+
+        function checkCollisions() {
+            bullets.forEach((bullet, index) => {
+                if (
+                    bullet.x < enemy.x + enemy.width &&
+                    bullet.x + 50 > enemy.x &&
+                    bullet.y < enemy.y + enemy.height &&
+                    bullet.y + 50 > enemy.y
+                ) {
+                    console.log('Hit detected');
+                    bullets.splice(index, 1); // Remove bullet
+                    // Handle enemy hit
+                }
+            });
+        }
+
+        function update() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            drawPlayer();
+            drawEnemy();
+            drawBullets();
+            updateBullets();
+            updateEnemy();
+            checkCollisions();
+
+            requestAnimationFrame(update);
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowRight') player.x += player.speed;
+            if (e.key === 'ArrowLeft') player.x -= player.speed;
+            if (e.key === 'ArrowUp') player.y -= player.speed;
+            if (e.key === 'ArrowDown') player.y += player.speed;
+            if (e.key === ' ') { // Spacebar to shoot
+                bullets.push({
+                    x: player.x + player.width / 2 - 25,
+                    y: player.y
+                });
+            }
+        });
+
+        window.onload = function() {
+            const canvas = document.getElementById('gameCanvas');
+            const ctx = canvas.getContext('2d');
+
+            if (!canvas || !ctx) {
+                console.error('Canvas or context not found');
+                return;
+            }
+
+            initialize();
+        };
+    </script>
 </body>
 </html>
