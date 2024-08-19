@@ -1,144 +1,154 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sorcerers Battle</title>
     <style>
-      body {
-        margin: 0;
-        overflow: hidden;
-        background: #000;
-        font-family: Arial, sans-serif;
-      }
-      canvas {
-        display: block;
-        background: #000;
-        margin: auto;
-      }
-      #loadingScreen,
-      #fightingScreen,
-      #settingsScreen {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        color: white;
-      }
-      #loadingScreen {
-        background: rgba(0, 0, 0, 0.8);
-      }
-      #settingsScreen {
-        background: rgba(0, 0, 0, 0.8);
-        display: none;
-      }
-      #settingsButton {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        padding: 10px 20px;
-        font-size: 16px;
-        cursor: pointer;
-      }
-      #backToMenu {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        padding: 10px 20px;
-        font-size: 16px;
-        cursor: pointer;
-        background-color: rgba(0, 0, 0, 0.6);
-        color: white;
-        border: none;
-        border-radius: 5px;
-      }
-      #characterSelection {
-        display: flex;
-        gap: 20px;
-        flex-wrap: wrap;
-        justify-content: center;
-      }
-      .character-container,
-      .shop-item {
-        text-align: center;
-      }
-      .character,
-      .shop-img {
-        width: 100px;
-        height: 100px;
-        object-fit: cover;
-        cursor: pointer;
-        border: 2px solid transparent;
-      }
-      .character.selected,
-      .shop-item.available {
-        border-color: yellow;
-      }
-      .character-name,
-      .shop-name {
-        margin-top: 10px;
-        font-size: 16px;
-        color: white;
-      }
-      #shop {
-        margin-top: 20px;
-        display: flex;
-        gap: 20px;
-        flex-wrap: wrap;
-        justify-content: center;
-      }
-      #startGame,
-      #abilityButton {
-        margin-top: 20px;
-        padding: 10px 20px;
-        font-size: 16px;
-        cursor: pointer;
-      }
-      #abilityButton {
-        display: none;
-      }
-      #timer {
-        font-size: 24px;
-      }
-      #cooldown {
-        font-size: 16px;
-        color: red;
-      }
-      .blast {
-        position: absolute;
-        width: 200px;
-        height: 200px;
-        border-radius: 50%;
-        background: rgba(255, 0, 0, 0.7);
-        pointer-events: none;
-        transform: translate(-50%, -50%);
-        display: none;
-      }
-      #brightness,
-      #fps {
-        margin-top: 10px;
-      }
-      .brightness-overlay {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
-        pointer-events: none;
-        transition: opacity 0.3s ease;
-      }
-      #difficulty {
-        margin-top: 10px;
-        font-size: 16px;
-      }
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: #000;
+            font-family: Arial, sans-serif;
+        }
+        canvas {
+            display: block;
+            background: #000;
+            margin: auto;
+        }
+        #loadingScreen,
+        #fightingScreen,
+        #settingsScreen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+        #loadingScreen {
+            background: rgba(0, 0, 0, 0.8);
+        }
+        #settingsScreen {
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+        }
+        #settingsButton {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        #backToMenu {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: rgba(0, 0, 0, 0.6);
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+        #characterSelection {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .character-container,
+        .shop-item {
+            text-align: center;
+        }
+        .character,
+        .shop-img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+        .character.selected,
+        .shop-item.available {
+            border-color: yellow;
+        }
+        .character-name,
+        .shop-name {
+            margin-top: 10px;
+            font-size: 16px;
+            color: white;
+        }
+        #shop {
+            margin-top: 20px;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        #startGame,
+        #abilityButton {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        #abilityButton {
+            display: none;
+        }
+        #timer {
+            font-size: 24px;
+        }
+        #cooldown {
+            font-size: 16px;
+            color: red;
+        }
+        .blast {
+            position: absolute;
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: rgba(255, 0, 0, 0.7);
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+            display: none;
+        }
+        #brightness,
+        #fps {
+            margin-top: 10px;
+        }
+        .brightness-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        #difficulty {
+            margin-top: 10px;
+            font-size: 16px;
+        }
+        .character-text {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            color: white;
+            font-size: 18px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 5px;
+            border-radius: 5px;
+        }
     </style>
-  </head>
-  <body>
+</head>
+<body>
     <audio id="background-music" src="background.mp3" loop></audio>
     <img id="basketImage" src="gojo.png" style="display: none" />
     <img id="bulletImage" src="orb.png" style="display: none" />
@@ -146,69 +156,302 @@
     <img id="gojo2Image" src="gojo2.webp" style="display: none" />
 
     <div id="loadingScreen">
-      <h1>Sorcerers Battle</h1>
-      <h2>Select Your Character</h2>
-      <div id="characterSelection">
-        <div class="character-container">
-          <img
-            src="gojo.png"
-            alt="Character 1"
-            class="character"
-            data-character="character1"
-          />
-          <div class="character-name">Gojo</div>
+        <h1>Sorcerers Battle</h1>
+        <h2>Select Your Character</h2>
+        <div id="characterSelection">
+            <div class="character-container">
+                <img
+                    src="gojo.png"
+                    alt="Character 1"
+                    class="character"
+                    data-character="character1"
+                />
+                <div class="character-name">Gojo</div>
+            </div>
+            <div class="character-container">
+                <img
+                    src="yuji.png"
+                    alt="Character 2"
+                    class="character"
+                    data-character="character2"
+                />
+                <div class="character-name">Yuji</div>
+            </div>
         </div>
-        <div class="character-container">
-          <img
-            src="yuji.png"
-            alt="Character 2"
-            class="character"
-            data-character="character2"
-          />
-          <div class="character-name">Yuji</div>
+        <h2>Shop</h2>
+        <div id="shop">
+            <div class="shop-item available" data-character="character3">
+                <img src="yuta.png" alt="New Character" class="shop-img" />
+                <div class="shop-name">Yuta</div>
+                <button class="buy-button" data-price="100">Buy (100 Gold)</button>
+            </div>
         </div>
-      </div>
-      <h2>Shop</h2>
-      <div id="shop">
-        <div class="shop-item available" data-character="character3">
-          <img src="yuta.png" alt="New Character" class="shop-img" />
-          <div class="shop-name">Yuta</div>
-          <button class="buy-button" data-price="100">Buy (100 Gold)</button>
-        </div>
-      </div>
-      <button id="startGame">Start Game</button>
-      <button id="settingsButton">Settings</button>
+        <button id="startGame">Start Game</button>
+        <button id="settingsButton">Settings</button>
     </div>
 
     <div id="settingsScreen">
-      <button id="backToMenu">Back to Menu</button>
-      <h2>Settings</h2>
-      <label for="brightness">Brightness:</label>
-      <input type="range" id="brightness" min="0" max="200" value="100" />
-      <span id="brightnessValue">100</span>%
+        <button id="backToMenu">Back to Menu</button>
+        <h2>Settings</h2>
+        <label for="brightness">Brightness:</label>
+        <input type="range" id="brightness" min="0" max="200" value="100" />
+        <span id="brightnessValue">100</span>%
 
-      <label for="fps">FPS:</label>
-      <input type="number" id="fps" min="10" max="60" value="30" />
-      <span id="fpsValue">30</span> FPS
+        <label for="fps">FPS:</label>
+        <input type="number" id="fps" min="10" max="60" value="30" />
+        <span id="fpsValue">30</span> FPS
 
-      <label for="difficulty">Difficulty:</label>
-      <select id="difficulty">
-        <option value="easy">Easy</option>
-        <option value="medium" selected>Medium</option>
-        <option value="hard">Hard</option>
-      </select>
+        <label for="difficulty">Difficulty:</label>
+        <select id="difficulty">
+            <option value="easy">Easy</option>
+            <option value="medium" selected>Medium</option>
+            <option value="hard">Hard</option>
+        </select>
     </div>
 
     <div id="fightingScreen" style="display: none">
-      <div id="timer">30</div>
-      <div id="cooldown">Ability Cooldown: 30s</div>
-      <button id="abilityButton">Use Reversal Red</button>
-      <canvas id="gameCanvas" width="800" height="600"></canvas>
-      <div id="blastEffect" class="blast"></div>
+        <div id="timer">30</div>
+        <div id="cooldown">Ability Cooldown: 30s</div>
+        <button id="abilityButton">Use Reversal Red</button>
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        <div id="blastEffect" class="blast"></div>
+        <div id="characterText" class="character-text">Gojo says: Ready for battle!</div>
     </div>
 
     <div id="brightnessOverlay" class="brightness-overlay"></div>
 
-    <script src="game.js"></script>
-  </body>
+    <script>
+        let selectedCharacter;
+        let player = { x: 100, y: 100, width: 100, height: 100, img: new Image(), speed: 7 };
+        let enemy = { x: 300, y: 300, width: 100, height: 100, img: new Image(), speed: 3 };
+        let bullets = [];
+        const bulletSpeed = 5;
+        let ctx;
+        let canvas;
+        let timer;
+        let cooldownTimer;
+        let isAbilityAvailable = false;
+        let abilityCooldown = 30; // seconds
+        let abilityReady = true; // track if ability is ready
+        let gold = 200; // Example gold amount for shop logic
+        let brightness = 100; // Default brightness
+        let fps = 30; // Default FPS
+        let difficulty = 'medium'; // Default difficulty
+        let frameRate = 1000 / fps; // Frame rate in milliseconds
+
+        const characters = {
+            character1: {
+                selectionImg: 'gojo.png',
+                fightingImg: 'gojo2.webp',
+                width: 100,
+                height: 100,
+                speed: 7,
+                unlocked: true
+            },
+            character2: {
+                selectionImg: 'yuji.png',
+                fightingImg: 'yuji_fight.png',
+                width: 100,
+                height: 100,
+                speed: 5,
+                unlocked: true
+            },
+            character3: {
+                selectionImg: 'yuta.png',
+                fightingImg: 'yuta_fight.png',
+                width: 100,
+                height: 100,
+                speed: 6,
+                unlocked: false
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            canvas = document.getElementById('gameCanvas');
+            ctx = canvas.getContext('2d');
+            initializeEventListeners();
+            showLoadingScreen();
+            setupSettings();
+        });
+
+        function initializeEventListeners() {
+            const charactersImages = document.querySelectorAll('.character');
+            charactersImages.forEach(img => {
+                img.addEventListener('click', (e) => {
+                    document.querySelectorAll('.character').forEach(char => char.classList.remove('selected'));
+                    e.target.classList.add('selected');
+                    selectedCharacter = e.target.dataset.character;
+                });
+            });
+
+            document.getElementById('startGame').addEventListener('click', () => {
+                startGame();
+            });
+
+            document.getElementById('settingsButton').addEventListener('click', () => {
+                document.getElementById('loadingScreen').style.display = 'none';
+                document.getElementById('settingsScreen').style.display = 'flex';
+            });
+
+            document.getElementById('backToMenu').addEventListener('click', () => {
+                document.getElementById('settingsScreen').style.display = 'none';
+                document.getElementById('loadingScreen').style.display = 'flex';
+            });
+
+            document.getElementById('brightness').addEventListener('input', (e) => {
+                brightness = e.target.value;
+                document.getElementById('brightnessValue').textContent = brightness;
+                document.getElementById('brightnessOverlay').style.opacity = brightness / 100;
+            });
+
+            document.getElementById('fps').addEventListener('input', (e) => {
+                fps = e.target.value;
+                document.getElementById('fpsValue').textContent = fps;
+                frameRate = 1000 / fps;
+            });
+
+            document.getElementById('difficulty').addEventListener('change', (e) => {
+                difficulty = e.target.value;
+                console.log(`Difficulty set to: ${difficulty}`);
+            });
+
+            document.getElementById('abilityButton').addEventListener('click', () => {
+                if (abilityReady) {
+                    useAbility();
+                }
+            });
+
+            document.querySelectorAll('.buy-button').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const characterKey = e.target.parentElement.dataset.character;
+                    if (gold >= parseInt(e.target.dataset.price)) {
+                        characters[characterKey].unlocked = true;
+                        e.target.parentElement.classList.add('available');
+                        gold -= parseInt(e.target.dataset.price);
+                        console.log(`Bought ${characterKey}. Remaining gold: ${gold}`);
+                    } else {
+                        console.log('Not enough gold!');
+                    }
+                });
+            });
+        }
+
+        function showLoadingScreen() {
+            document.getElementById('loadingScreen').style.display = 'flex';
+            document.getElementById('fightingScreen').style.display = 'none';
+        }
+
+        function startGame() {
+            document.getElementById('loadingScreen').style.display = 'none';
+            document.getElementById('fightingScreen').style.display = 'flex';
+            initializeGame();
+        }
+
+        function initializeGame() {
+            player.img.src = characters[selectedCharacter].fightingImg;
+            player.width = characters[selectedCharacter].width;
+            player.height = characters[selectedCharacter].height;
+            player.speed = characters[selectedCharacter].speed;
+            player.x = canvas.width / 2 - player.width / 2;
+            player.y = canvas.height - player.height - 10;
+
+            enemy.img.src = 'curse.png';
+            enemy.width = 100;
+            enemy.height = 100;
+            enemy.x = canvas.width / 2 - enemy.width / 2;
+            enemy.y = 10;
+
+            gojoSpeaks('Nah id win!');
+            startTimers();
+            gameLoop();
+        }
+
+        function startTimers() {
+            let timeLeft = 30;
+            timer = setInterval(() => {
+                timeLeft--;
+                document.getElementById('timer').textContent = timeLeft;
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    endGame();
+                }
+            }, 1000);
+
+            cooldownTimer = setInterval(() => {
+                if (!abilityReady) {
+                    abilityCooldown--;
+                    document.getElementById('cooldown').textContent = `Ability Cooldown: ${abilityCooldown}s`;
+                    if (abilityCooldown <= 0) {
+                        abilityReady = true;
+                        document.getElementById('cooldown').textContent = 'Ability Ready!';
+                    }
+                }
+            }, 1000);
+        }
+
+        function endGame() {
+            // Logic for ending the game
+            console.log('Game Over');
+        }
+
+        function gameLoop() {
+            setTimeout(() => {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                drawPlayer();
+                drawEnemy();
+                drawBullets();
+                gameLoop();
+            }, frameRate);
+        }
+
+        function drawPlayer() {
+            ctx.drawImage(player.img, player.x, player.y, player.width, player.height);
+        }
+
+        function drawEnemy() {
+            ctx.drawImage(enemy.img, enemy.x, enemy.y, enemy.width, enemy.height);
+        }
+
+        function drawBullets() {
+            bullets.forEach(bullet => {
+                ctx.drawImage(bullet.img, bullet.x, bullet.y, bullet.width, bullet.height);
+            });
+        }
+
+        function useAbility() {
+            if (!abilityReady) return;
+
+            abilityReady = false;
+            abilityCooldown = 30;
+            document.getElementById('cooldown').textContent = `Ability Cooldown: ${abilityCooldown}s`;
+            
+            // Example effect: blast effect
+            const blast = document.getElementById('blastEffect');
+            blast.style.display = 'block';
+            blast.style.top = `${player.y + player.height / 2}px`;
+            blast.style.left = `${player.x + player.width / 2}px`;
+            setTimeout(() => blast.style.display = 'none', 500);
+
+            // Apply ability logic here
+
+            setTimeout(() => {
+                abilityReady = true;
+                document.getElementById('cooldown').textContent = 'Ability Ready!';
+            }, 30000); // 30 seconds cooldown
+        }
+
+        function gojoSpeaks(message) {
+            document.getElementById('characterText').textContent = `Gojo: ${message}`;
+        }
+
+        function setupSettings() {
+            document.getElementById('brightness').value = brightness;
+            document.getElementById('brightnessValue').textContent = brightness;
+            document.getElementById('fps').value = fps;
+            document.getElementById('fpsValue').textContent = fps;
+            document.getElementById('difficulty').value = difficulty;
+            document.getElementById('brightnessOverlay').style.opacity = brightness / 100;
+        }
+    </script>
+</body>
 </html>
