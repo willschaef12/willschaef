@@ -1,291 +1,92 @@
-let selectedCharacter;
-let player = {
-  x: 100,
-  y: 100,
-  width: 100,
-  height: 100,
-  img: new Image(),
-  speed: 7,
-};
-let enemy = {
-  x: 300,
-  y: 300,
-  width: 100,
-  height: 100,
-  img: new Image(),
-  speed: 3,
-};
+let selectedAttackImage = 'orb.png'; // Default image
+let abilityReady = true;
+let abilityCooldown = 0;
 let bullets = [];
-const bulletSpeed = 5;
-let ctx;
-let canvas; // Declare canvas as a global variable
-let timer;
-let abilityAvailable = false;
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const player = { x: 100, y: 100, width: 50, height: 50 };
 
-const characters = {
-  character1: {
-    selectionImg: "gojo.png",
-    fightingImg: "gojo2.png",
-    width: 100,
-    height: 100,
-    speed: 7,
-    unlocked: true,
-  },
-  character2: {
-    selectionImg: "yuji.png",
-    fightingImg: "yuji_fight.png",
-    width: 100,
-    height: 100,
-    speed: 5,
-    unlocked: true,
-  },
-  character3: {
-    selectionImg: "yuta.png",
-    fightingImg: "yuta_fight.png",
-    width: 100,
-    height: 100,
-    speed: 6,
-    unlocked: false,
-  },
-};
-
-function initialize() {
-  document
-    .getElementById("characterSelection")
-    .addEventListener("click", function (e) {
-      if (e.target.classList.contains("character")) {
-        document
-          .querySelectorAll(".character")
-          .forEach((char) => char.classList.remove("selected"));
-        e.target.classList.add("selected");
-        selectedCharacter = e.target.getAttribute("data-character");
-        console.log("Selected Character:", selectedCharacter);
-      }
-    });
-
-  document.getElementById("shop").addEventListener("click", function (e) {
-    if (e.target.classList.contains("buy-button")) {
-      const item = e.target.parentElement;
-      const character = item.getAttribute("data-character");
-      const price = parseInt(e.target.getAttribute("data-price"), 10);
-
-      if (characters[character] && !characters[character].unlocked) {
-        if (gold >= price) {
-          characters[character].unlocked = true;
-          gold -= price;
-          updateShopVisibility();
-          console.log("Bought:", character);
-        } else {
-          alert("Not enough gold!");
-        }
-      }
-    }
-  });
-
-  document.getElementById("startGame").addEventListener("click", function () {
-    if (
-      selectedCharacter &&
-      characters[selectedCharacter] &&
-      characters[selectedCharacter].unlocked
-    ) {
-      document.getElementById("loadingScreen").style.display = "none";
-      document.getElementById("fightingScreen").style.display = "block";
-      initializeGame();
-      startTimer();
-    } else {
-      alert("Please select an unlocked character.");
-    }
-  });
-
-  document
-    .getElementById("abilityButton")
-    .addEventListener("click", function () {
-      if (abilityAvailable) {
-        useReversalRed();
-      }
-    });
-
-  document.addEventListener("keydown", function (e) {
-    if (e.key === "ArrowRight") player.x += player.speed;
-    if (e.key === "ArrowLeft") player.x -= player.speed;
-    if (e.key === "ArrowUp") player.y -= player.speed;
-    if (e.key === "ArrowDown") player.y += player.speed;
-    if (e.key === " ") {
-      // Spacebar to shoot
-      bullets.push({ x: player.x + player.width / 2 - 25, y: player.y });
-    }
-  });
-}
-
-function updateShopVisibility() {
-  document.querySelectorAll(".shop-item").forEach((item) => {
-    const character = item.getAttribute("data-character");
-    if (characters[character].unlocked) {
-      item.querySelector(".buy-button").style.display = "none";
-      item.classList.remove("locked");
-    } else {
-      item.querySelector(".buy-button").style.display = "block";
-      item.classList.add("locked");
-    }
-  });
-}
-
+// Initialize the game
 function initializeGame() {
-  const character = characters[selectedCharacter];
-  if (character) {
-    player.width = character.width;
-    player.height = character.height;
-    player.img.src = character.fightingImg;
-    enemy.img.src = "curse.png"; // Ensure this path is correct
+    document.getElementById('imageSelectionScreen').style.display = 'flex'; // Show image selection screen
 
-    canvas = document.getElementById("gameCanvas");
-    ctx = canvas.getContext("2d");
+    initializeEventListeners();
+    requestAnimationFrame(gameLoop);
+}
 
-    if (!ctx) {
-      console.error("Canvas context not found");
-      return;
-    }
+// Event listeners
+function initializeEventListeners() {
+    document.querySelectorAll('.attack-img-option').forEach(img => {
+        img.addEventListener('click', (e) => {
+            document.querySelectorAll('.attack-img-option').forEach(option => option.classList.remove('selected'));
+            e.target.closest('.attack-img-option').classList.add('selected');
+            selectedAttackImage = e.target.closest('.attack-img-option').dataset.image;
+        });
+    });
 
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    document.getElementById('confirmSelection').addEventListener('click', () => {
+        document.getElementById('imageSelectionScreen').style.display = 'none'; // Hide image selection screen
+    });
 
-    player.x = canvas.width / 4 - player.width / 2;
-    player.y = canvas.height / 2 - player.height / 2;
+    document.addEventListener('keydown', (e) => {
+        if (e.code === 'Space') {
+            useAbility(); // Use ability when spacebar is pressed
+        }
+    });
+}
 
-    enemy.x = (canvas.width * 3) / 4 - enemy.width / 2;
-    enemy.y = canvas.height / 2 - enemy.height / 2;
+// Create a bullet and add it to the bullets array
+function useAbility() {
+    if (!abilityReady) return;
 
-    // Ensure the images are loaded before drawing
-    player.img.onload = () => {
-      drawPlayer();
-      update(); // Start the game loop here
+    abilityReady = false;
+    abilityCooldown = 30;
+    document.getElementById('cooldown').textContent = `Ability Cooldown: ${abilityCooldown}s`;
+
+    const bulletImg = new Image();
+    bulletImg.src = selectedAttackImage;
+    const newBullet = {
+        x: player.x + player.width / 2 - 15, // Centering bullet
+        y: player.y,
+        img: bulletImg,
+        speed: 5
     };
-    enemy.img.onload = () => drawEnemy();
+    bullets.push(newBullet);
 
-    if (selectedCharacter === "character1") {
-      // Assuming 'character1' is Gojo
-      showGojoIntro();
-    }
-  } else {
-    console.error("Selected character is not valid");
-  }
+    // Show blast effect (for demonstration)
+    const blast = document.getElementById('blastEffect');
+    blast.style.display = 'block';
+    blast.style.top = `${player.y + player.height / 2}px`;
+    blast.style.left = `${player.x + player.width / 2}px`;
+    setTimeout(() => blast.style.display = 'none', 500);
+
+    setTimeout(() => {
+        abilityReady = true;
+        document.getElementById('cooldown').textContent = 'Ability Ready!';
+    }, 30000);
 }
 
-function drawImage(img, x, y, width, height) {
-  ctx.drawImage(img, x, y, width, height);
+// Update the game state and render everything
+function gameLoop() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
+
+    // Draw player
+    ctx.fillStyle = 'blue';
+    ctx.fillRect(player.x, player.y, player.width, player.height);
+
+    // Update and draw bullets
+    bullets.forEach((bullet, index) => {
+        bullet.y -= bullet.speed; // Move the bullet up
+        ctx.drawImage(bullet.img, bullet.x, bullet.y, 30, 30); // Draw the bullet
+
+        // Remove bullets that are out of bounds
+        if (bullet.y < 0) {
+            bullets.splice(index, 1);
+        }
+    });
+
+    requestAnimationFrame(gameLoop);
 }
 
-function drawPlayer() {
-  drawImage(player.img, player.x, player.y, player.width, player.height);
-}
-
-function drawEnemy() {
-  drawImage(enemy.img, enemy.x, enemy.y, enemy.width, enemy.height);
-}
-
-function drawBullets() {
-  bullets.forEach((bullet) => {
-    drawImage(
-      document.getElementById("bulletImage"),
-      bullet.x,
-      bullet.y,
-      50,
-      50
-    );
-  });
-}
-
-function updateBullets() {
-  bullets.forEach((bullet, index) => {
-    bullet.y -= bulletSpeed;
-    if (bullet.y < 0) {
-      bullets.splice(index, 1);
-    }
-  });
-}
-
-function updateEnemy() {
-  if (player.x < enemy.x) enemy.x -= enemy.speed;
-  if (player.x > enemy.x) enemy.x += enemy.speed;
-  if (player.y < enemy.y) enemy.y -= enemy.speed;
-  if (player.y > enemy.y) enemy.y += enemy.speed;
-
-  if (Math.abs(player.x - enemy.x) < 50 && Math.abs(player.y - enemy.y) < 50) {
-    console.log("Enemy is close to player");
-  }
-}
-
-function checkCollisions() {
-  bullets.forEach((bullet, index) => {
-    if (
-      bullet.x < enemy.x + enemy.width &&
-      bullet.x + 50 > enemy.x &&
-      bullet.y < enemy.y + enemy.height &&
-      bullet.y + 50 > enemy.y
-    ) {
-      console.log("Hit detected");
-      bullets.splice(index, 1);
-    }
-  });
-}
-
-function update() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  drawPlayer();
-  drawEnemy();
-  drawBullets();
-  updateBullets();
-  updateEnemy();
-  checkCollisions();
-
-  requestAnimationFrame(update);
-}
-
-function startTimer() {
-  let timeLeft = 30;
-  const timerElement = document.getElementById("timer");
-  timerElement.textContent = timeLeft;
-
-  timer = setInterval(function () {
-    timeLeft -= 1;
-    timerElement.textContent = timeLeft;
-
-    if (timeLeft <= 0) {
-      clearInterval(timer);
-      abilityAvailable = true;
-      document.getElementById("abilityButton").style.display = "block";
-    }
-  }, 1000);
-}
-
-function showGojoIntro() {
-  const introDiv = document.createElement("div");
-  introDiv.style.position = "absolute";
-  introDiv.style.top = "50%";
-  introDiv.style.left = "50%";
-  introDiv.style.transform = "translate(-50%, -50%)";
-  introDiv.style.backgroundColor = "rgba(0, 0, 0, 0.8)";
-  introDiv.style.color = "white";
-  introDiv.style.padding = "20px";
-  introDiv.style.borderRadius = "10px";
-  introDiv.style.textAlign = "center";
-  introDiv.innerHTML = `
-        <img src="gojo.png" alt="Gojo" style="width: 100px; height: 100px; object-fit: cover;">
-        <p>Hi, I'm Gojo. It looks like you chose me to fight. I'll be sure to make this a good fight!</p>
-    `;
-  document.body.appendChild(introDiv);
-
-  setTimeout(() => {
-    introDiv.remove();
-  }, 5000); // Remove after 5 seconds
-}
-
-function useReversalRed() {
-  console.log("Reversal Red ability used!");
-  // Implement the ability's effect here
-}
-
-window.onload = function () {
-  initialize();
-};
+// Start the game
+initializeGame();
