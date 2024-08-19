@@ -103,6 +103,15 @@
         #brightness, #fps {
             margin-top: 10px;
         }
+        .brightness-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
     </style>
 </head>
 <body>
@@ -157,6 +166,8 @@
         <canvas id="gameCanvas" width="800" height="600"></canvas>
         <div id="blastEffect" class="blast"></div>
     </div>
+
+    <div id="brightnessOverlay" class="brightness-overlay"></div>
 
     <script>
         let selectedCharacter;
@@ -298,6 +309,14 @@
         }
 
         function updateBrightness() {
+            const overlay = document.getElementById('brightnessOverlay');
+            if (brightness > 100) {
+                const extraBrightness = brightness - 100;
+                overlay.style.background = `rgba(255, 255, 255, ${extraBrightness / 100})`;
+                overlay.style.opacity = 1;
+            } else {
+                overlay.style.opacity = 0;
+            }
             document.body.style.filter = `brightness(${brightness}%)`;
         }
 
