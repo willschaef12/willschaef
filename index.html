@@ -124,6 +124,10 @@
             pointer-events: none;
             transition: opacity 0.3s ease;
         }
+        #difficulty {
+            margin-top: 10px;
+            font-size: 16px;
+        }
     </style>
 </head>
 <body>
@@ -168,6 +172,13 @@
         <label for="fps">FPS:</label>
         <input type="number" id="fps" min="10" max="60" value="30">
         <span id="fpsValue">30</span> FPS
+
+        <label for="difficulty">Difficulty:</label>
+        <select id="difficulty">
+            <option value="easy">Easy</option>
+            <option value="medium" selected>Medium</option>
+            <option value="hard">Hard</option>
+        </select>
     </div>
 
     <div id="fightingScreen" style="display: none;">
@@ -196,6 +207,7 @@
         let gold = 200; // Example gold amount for shop logic
         let brightness = 100; // Default brightness
         let fps = 30; // Default FPS
+        let difficulty = 'medium'; // Default difficulty
         let frameRate = 1000 / fps; // Frame rate in milliseconds
 
         const characters = {
@@ -237,19 +249,16 @@
 
             document.getElementById('shop').addEventListener('click', function(e) {
                 if (e.target.classList.contains('buy-button')) {
-                    const item = e.target.parentElement;
+                    const item = e.target.closest('.shop-item');
                     const character = item.getAttribute('data-character');
-                    const price = parseInt(e.target.getAttribute('data-price'), 10);
-
-                    if (characters[character] && !characters[character].unlocked) {
-                        if (gold >= price) {
-                            characters[character].unlocked = true;
-                            gold -= price;
-                            updateShopVisibility();
-                            console.log('Bought:', character);
-                        } else {
-                            alert('Not enough gold!');
-                        }
+                    const price = parseInt(e.target.getAttribute('data-price'));
+                    if (gold >= price) {
+                        gold -= price;
+                        characters[character].unlocked = true;
+                        updateShopVisibility();
+                        alert(`You bought ${character}!`);
+                    } else {
+                        alert('Not enough gold!');
                     }
                 }
             });
@@ -278,6 +287,11 @@
                 fps = e.target.value;
                 document.getElementById('fpsValue').textContent = fps;
                 frameRate = 1000 / fps;
+            });
+
+            document.getElementById('difficulty').addEventListener('change', function(e) {
+                difficulty = e.target.value;
+                applyDifficultySettings();
             });
 
             document.getElementById('abilityButton').addEventListener('click', function() {
@@ -316,6 +330,8 @@
 
             enemy.x = canvas.width / 2 - enemy.width / 2;
             enemy.y = 10;
+
+            applyDifficultySettings();
         }
 
         function updateBrightness() {
@@ -332,12 +348,28 @@
 
         function showSettings() {
             document.getElementById('loadingScreen').style.display = 'none';
-            document.getElementById('settingsScreen').style.display = 'block';
+            document.getElementById('fightingScreen').style.display = 'none';
+            document.getElementById('settingsScreen').style.display = 'flex';
         }
 
         function backToMenu() {
             document.getElementById('settingsScreen').style.display = 'none';
-            document.getElementById('loadingScreen').style.display = 'block';
+            document.getElementById('fightingScreen').style.display = 'none';
+            document.getElementById('loadingScreen').style.display = 'flex';
+        }
+
+        function applyDifficultySettings() {
+            switch (difficulty) {
+                case 'easy':
+                    enemy.speed = 2;
+                    break;
+                case 'medium':
+                    enemy.speed = 3;
+                    break;
+                case 'hard':
+                    enemy.speed = 5;
+                    break;
+            }
         }
 
         function updateShopVisibility() {
