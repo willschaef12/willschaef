@@ -74,6 +74,10 @@
         #timer {
             font-size: 24px;
         }
+        #cooldown {
+            font-size: 16px;
+            color: red;
+        }
     </style>
 </head>
 <body>
@@ -109,6 +113,7 @@
 
     <div id="fightingScreen" style="display: none;">
         <div id="timer">30</div>
+        <div id="cooldown">Ability Cooldown: 30s</div>
         <button id="abilityButton">Use Reversal Red</button>
         <canvas id="gameCanvas" width="800" height="600"></canvas>
     </div>
@@ -122,7 +127,10 @@
         let ctx;
         let canvas;
         let timer;
-        let abilityAvailable = false;
+        let cooldownTimer;
+        let isAbilityAvailable = false;
+        let abilityCooldown = 30; // seconds
+        let abilityReady = true; // track if ability is ready
         let gold = 200; // Example gold amount for shop logic
 
         const characters = {
@@ -194,10 +202,7 @@
             });
 
             document.getElementById('abilityButton').addEventListener('click', function() {
-                if (abilityAvailable) {
-                    console.log('Using Reversal Red!');
-                    // Implement Reversal Red ability logic here
-                }
+                useReversalRed();
             });
 
             document.addEventListener('keydown', function(e) {
@@ -205,11 +210,14 @@
                 if (e.key === 'ArrowLeft') player.x -= player.speed;
                 if (e.key === 'ArrowUp') player.y -= player.speed;
                 if (e.key === 'ArrowDown') player.y += player.speed;
-                if (e.key === ' ') { // Spacebar to shoot
+                if (e.key === ' ' && abilityReady) { // Spacebar to shoot
                     bullets.push({
                         x: player.x + player.width / 2 - 25,
                         y: player.y
                     });
+                }
+                if (e.key === 'r' && isAbilityAvailable && abilityReady) { // 'R' key to use Reversal Red
+                    useReversalRed();
                 }
             });
         }
@@ -251,7 +259,7 @@
                     drawEnemy();
                 };
             } else {
-                console.error('Selected character is not valid');
+                console.error('Selected character data not found');
             }
         }
 
@@ -281,7 +289,6 @@
         }
 
         function updateEnemy() {
-            // Simple AI: move enemy towards player
             if (player.x < enemy.x) enemy.x -= enemy.speed;
             if (player.x > enemy.x) enemy.x += enemy.speed;
             if (player.y < enemy.y) enemy.y -= enemy.speed;
@@ -301,15 +308,21 @@
             });
         }
 
-        function update() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            drawPlayer();
-            drawEnemy();
-            drawBullets();
-            updateBullets();
-            updateEnemy();
-            checkCollisions();
-            requestAnimationFrame(update);
+        function useReversalRed() {
+            if (isAbilityAvailable && abilityReady) {
+                enemy.x = -1000; // Move enemy off-screen to simulate death
+                console.log('Reversal Red used!');
+                abilityReady = false;
+                document.getElementById('abilityButton').style.display = 'none';
+
+                setTimeout(() => {
+                    abilityReady = true;
+                    document.getElementById('abilityButton').style.display = 'block';
+                    console.log('Ability is ready to use again!');
+                }, abilityCooldown * 1000);
+            } else if (!isAbilityAvailable) {
+                console.log('Ability not available yet.');
+            }
         }
 
         function startTimer() {
@@ -319,10 +332,22 @@
                 document.getElementById('timer').textContent = timeLeft;
                 if (timeLeft <= 0) {
                     clearInterval(timer);
-                    document.getElementById('fightingScreen').style.display = 'none';
-                    document.getElementById('loadingScreen').style.display = 'block';
+                    isAbilityAvailable = true; // Enable ability after the timer ends
+                    document.getElementById('cooldown').textContent = 'Ability Cooldown: 30s';
+                    document.getElementById('abilityButton').style.display = 'block'; // Show ability button
                 }
             }, 1000);
+        }
+
+        function update() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawPlayer();
+            drawEnemy();
+            drawBullets();
+            updateBullets();
+            updateEnemy();
+            checkCollisions();
+            requestAnimationFrame(update);
         }
 
         window.onload = function() {
