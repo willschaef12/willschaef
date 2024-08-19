@@ -114,6 +114,17 @@
     </div>
 
     <script>
+        let selectedCharacter;
+        let player = { x: 100, y: 100, width: 100, height: 100, img: new Image(), speed: 7 };
+        let enemy = { x: 300, y: 300, width: 100, height: 100, img: new Image(), speed: 3 };
+        let bullets = [];
+        const bulletSpeed = 5;
+        let ctx;
+        let canvas;
+        let timer;
+        let abilityAvailable = false;
+        let gold = 200; // Example gold amount for shop logic
+
         const characters = {
             character1: {
                 selectionImg: 'gojo.png',
@@ -140,15 +151,6 @@
                 unlocked: false
             }
         };
-
-        let selectedCharacter = null;
-        let player = { x: 100, y: 100, width: 100, height: 100, img: new Image(), speed: 7 };
-        let enemy = { x: 300, y: 300, width: 100, height: 100, img: new Image(), speed: 3 };
-        let bullets = [];
-        const bulletSpeed = 5;
-        let ctx;
-        let timer;
-        let abilityAvailable = false;
 
         function initialize() {
             document.getElementById('characterSelection').addEventListener('click', function(e) {
@@ -226,6 +228,9 @@
         }
 
         function initializeGame() {
+            canvas = document.getElementById('gameCanvas');
+            ctx = canvas.getContext('2d');
+
             const character = characters[selectedCharacter];
             if (character) {
                 player.width = character.width;
@@ -234,20 +239,16 @@
 
                 enemy.img.src = 'curse.png';
 
-                const canvas = document.getElementById('gameCanvas');
-                ctx = canvas.getContext('2d');
-
-                // Ensure canvas and context are correctly set up
                 if (!ctx) {
                     console.error('Canvas context not found');
                 }
 
                 player.img.onload = function() {
-                    ctx.drawImage(player.img, player.x, player.y, player.width, player.height);
+                    drawPlayer();
                 };
 
                 enemy.img.onload = function() {
-                    ctx.drawImage(enemy.img, enemy.x, enemy.y, enemy.width, enemy.height);
+                    drawEnemy();
                 };
             } else {
                 console.error('Selected character is not valid');
@@ -273,71 +274,61 @@
         }
 
         function updateBullets() {
-            bullets.forEach((bullet, index) => {
+            bullets.forEach(bullet => {
                 bullet.y -= bulletSpeed;
-                if (bullet.y < 0) {
-                    bullets.splice(index, 1);
-                }
             });
+            bullets = bullets.filter(bullet => bullet.y > 0);
         }
 
         function updateEnemy() {
+            // Simple AI: move enemy towards player
             if (player.x < enemy.x) enemy.x -= enemy.speed;
             if (player.x > enemy.x) enemy.x += enemy.speed;
             if (player.y < enemy.y) enemy.y -= enemy.speed;
             if (player.y > enemy.y) enemy.y += enemy.speed;
-
-            if (Math.abs(player.x - enemy.x) < 50 && Math.abs(player.y - enemy.y) < 50) {
-                console.log('Enemy is close to player');
-            }
         }
 
         function checkCollisions() {
-            bullets.forEach((bullet, index) => {
-                if (
-                    bullet.x < enemy.x + enemy.width &&
+            bullets.forEach(bullet => {
+                if (bullet.x < enemy.x + enemy.width &&
                     bullet.x + 50 > enemy.x &&
                     bullet.y < enemy.y + enemy.height &&
-                    bullet.y + 50 > enemy.y
-                ) {
-                    console.log('Hit detected');
-                    bullets.splice(index, 1);
+                    bullet.y + 50 > enemy.y) {
+                    console.log('Hit detected!');
+                    enemy.x = Math.random() * (canvas.width - enemy.width);
+                    enemy.y = Math.random() * (canvas.height - enemy.height);
                 }
             });
         }
 
         function update() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-
             drawPlayer();
             drawEnemy();
             drawBullets();
             updateBullets();
             updateEnemy();
             checkCollisions();
-
             requestAnimationFrame(update);
         }
 
         function startTimer() {
             let timeLeft = 30;
-            const timerElement = document.getElementById('timer');
-            timerElement.textContent = timeLeft;
-
             timer = setInterval(function() {
-                timeLeft -= 1;
-                timerElement.textContent = timeLeft;
-
+                timeLeft--;
+                document.getElementById('timer').textContent = timeLeft;
                 if (timeLeft <= 0) {
                     clearInterval(timer);
-                    abilityAvailable = true;
-                    document.getElementById('abilityButton').style.display = 'block';
+                    document.getElementById('fightingScreen').style.display = 'none';
+                    document.getElementById('loadingScreen').style.display = 'block';
                 }
             }, 1000);
         }
 
         window.onload = function() {
             initialize();
+            updateShopVisibility();
+            document.getElementById('background-music').play();
         };
     </script>
 </body>
