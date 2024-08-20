@@ -222,13 +222,13 @@
 
     <script>
         let selectedCharacter;
-        let player = { x: 100, y: 100, width: 100, height: 100, img: new Image(), speed: 20 }; // Increased speed
-        let enemy = { x: 300, y: 300, width: 100, height: 100, img: new Image(), speed: 3, health: 100 }; // Added health
+        let player = { x: 100, y: 100, width: 100, height: 100, img: new Image(), speed: 20 };
+        let enemy = { x: 300, y: 300, width: 100, height: 100, img: new Image(), speed: 5, health: 100 };
         let bullets = [];
-        const bulletSpeed = 5;
         const bulletWidth = 20;
         const bulletHeight = 20;
-        const bulletDamage = 10; // Damage per bullet
+        const bulletSpeed = 10;
+        const bulletDamage = 20; // Damage dealt per bullet
         let ctx;
         let canvas;
         let timer;
@@ -241,7 +241,6 @@
         let fps = 30; // Default FPS
         let difficulty = 'medium'; // Default difficulty
         let frameRate = 1000 / fps; // Frame rate in milliseconds
-        const bulletImageSrc = 'orb.png';
 
         const characters = {
             character1: {
@@ -263,7 +262,8 @@
                 fightingImg: 'yuta2.webp',
                 width: 100,
                 height: 100,
-                speed: 12,
+                speed: 10,
+                unlocked: false
             }
         };
 
@@ -336,24 +336,9 @@
                 });
             });
 
-            // Movement and shooting controls
             document.addEventListener('keydown', (e) => {
-                switch(e.code) {
-                    case 'ArrowUp':
-                        player.y -= player.speed;
-                        break;
-                    case 'ArrowDown':
-                        player.y += player.speed;
-                        break;
-                    case 'ArrowLeft':
-                        player.x -= player.speed;
-                        break;
-                    case 'ArrowRight':
-                        player.x += player.speed;
-                        break;
-                    case 'Space':
-                        shootBullet();
-                        break;
+                if (e.code === 'Space') {
+                    shootBullet();
                 }
             });
         }
@@ -382,7 +367,7 @@
             enemy.height = 100;
             enemy.x = canvas.width / 2 - enemy.width / 2;
             enemy.y = 10;
-            enemy.health = 100; // Initialize enemy health
+            enemy.health = 100;
 
             gojoSpeaks('Nah id win!');
             startTimers();
@@ -434,28 +419,66 @@
         }
 
         function drawEnemy() {
-            ctx.drawImage(enemy.img, enemy.x, enemy.y, enemy.width, enemy.height);
-            ctx.fillStyle = 'red';
-            ctx.fillRect(enemy.x, enemy.y - 10, (enemy.health / 100) * enemy.width, 5); // Health bar
+            if (enemy.health > 0) {
+                ctx.drawImage(enemy.img, enemy.x, enemy.y, enemy.width, enemy.height);
+            }
         }
 
         function drawBullets() {
             bullets.forEach(bullet => {
-                ctx.drawImage(bullet.img, bullet.x, bullet.y, bulletWidth, bulletHeight);
-                bullet.y -= bulletSpeed; // Move bullet up
+                ctx.drawImage(bullet.img, bullet.x, bullet.y, bullet.width, bullet.height);
             });
+        }
 
-            // Remove bullets that are off-screen
-            bullets = bullets.filter(bullet => bullet.y + bulletHeight > 0);
+        function moveEnemy() {
+            if (enemy.health <= 0) return; // Stop moving if the enemy is dead
+
+            const dx = player.x - enemy.x;
+            const dy = player.y - enemy.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+
+            if (distance > 0) {
+                enemy.x += (dx / distance) * enemy.speed;
+                enemy.y += (dy / distance) * enemy.speed;
+            }
         }
 
         function shootBullet() {
             const bullet = {
                 x: player.x + player.width / 2 - bulletWidth / 2,
                 y: player.y,
+                width: bulletWidth,
+                height: bulletHeight,
                 img: document.getElementById('bulletImage')
             };
             bullets.push(bullet);
+        }
+
+        function checkBulletCollisions() {
+            bullets = bullets.filter(bullet => {
+                bullet.y -= bulletSpeed;
+
+                // Check if the bullet is out of bounds
+                if (bullet.y < 0) return false;
+
+                // Check collision with enemy
+                if (enemy.health > 0 &&
+                    bullet.x < enemy.x + enemy.width &&
+                    bullet.x + bullet.width > enemy.x &&
+                    bullet.y < enemy.y + enemy.height &&
+                    bullet.y + bullet.height > enemy.y) {
+                    enemy.health -= bulletDamage;
+                    return false; // Remove the bullet after it hits the enemy
+                }
+
+                return true; // Keep the bullet if it hasn't hit the enemy
+            });
+
+            if (enemy.health <= 0) {
+                enemy.health = 0; // Ensure health is not negative
+                document.getElementById('characterText').textContent = 'Enemy defeated!';
+                enemy.img.src = ''; // Hide the enemy by clearing the image source
+            }
         }
 
         function useAbility() {
@@ -464,7 +487,7 @@
             abilityReady = false;
             abilityCooldown = 30;
             document.getElementById('cooldown').textContent = `Ability Cooldown: ${abilityCooldown}s`;
-            
+
             // Example effect: blast effect
             const blast = document.getElementById('blastEffect');
             blast.style.display = 'block';
@@ -482,35 +505,6 @@
 
         function gojoSpeaks(message) {
             document.getElementById('characterText').textContent = `Gojo: ${message}`;
-        }
-
-        function moveEnemy() {
-            const dx = player.x - enemy.x;
-            const dy = player.y - enemy.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-            
-            if (distance > 0) {
-                enemy.x += (dx / distance) * enemy.speed;
-                enemy.y += (dy / distance) * enemy.speed;
-            }
-        }
-
-        function checkBulletCollisions() {
-            bullets.forEach(bullet => {
-                if (bullet.x < enemy.x + enemy.width &&
-                    bullet.x + bulletWidth > enemy.x &&
-                    bullet.y < enemy.y + enemy.height &&
-                    bullet.y + bulletHeight > enemy.y) {
-                    
-                    // Collision detected
-                    enemy.health -= bulletDamage; // Apply damage
-                    if (enemy.health <= 0) {
-                        enemy.health = 0;
-                        endGame(); // End the game if enemy is defeated
-                    }
-                    bullets = bullets.filter(b => b !== bullet); // Remove bullet after collision
-                }
-            });
         }
 
         function setupSettings() {
