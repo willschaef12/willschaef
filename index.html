@@ -222,12 +222,13 @@
 
     <script>
         let selectedCharacter;
-        let player = { x: 100, y: 100, width: 100, height: 100, img: new Image(), speed: 10 }; // Increased speed
-        let enemy = { x: 300, y: 300, width: 100, height: 100, img: new Image(), speed: 3 };
+        let player = { x: 100, y: 100, width: 100, height: 100, img: new Image(), speed: 20 }; // Increased speed
+        let enemy = { x: 300, y: 300, width: 100, height: 100, img: new Image(), speed: 3, health: 100 }; // Added health
         let bullets = [];
         const bulletSpeed = 5;
         const bulletWidth = 20;
         const bulletHeight = 20;
+        const bulletDamage = 10; // Damage per bullet
         let ctx;
         let canvas;
         let timer;
@@ -248,7 +249,7 @@
                 fightingImg: 'gojo2.webp',
                 width: 100,
                 height: 100,
-                speed: 20, // Adjust speed here if needed
+                speed: 20,
             },
             character2: {
                 selectionImg: 'yuji.png',
@@ -381,6 +382,7 @@
             enemy.height = 100;
             enemy.x = canvas.width / 2 - enemy.width / 2;
             enemy.y = 10;
+            enemy.health = 100; // Initialize enemy health
 
             gojoSpeaks('Nah id win!');
             startTimers();
@@ -422,6 +424,7 @@
                 drawEnemy();
                 drawBullets();
                 moveEnemy();
+                checkBulletCollisions();
                 gameLoop();
             }, frameRate);
         }
@@ -432,6 +435,8 @@
 
         function drawEnemy() {
             ctx.drawImage(enemy.img, enemy.x, enemy.y, enemy.width, enemy.height);
+            ctx.fillStyle = 'red';
+            ctx.fillRect(enemy.x, enemy.y - 10, (enemy.health / 100) * enemy.width, 5); // Health bar
         }
 
         function drawBullets() {
@@ -488,6 +493,24 @@
                 enemy.x += (dx / distance) * enemy.speed;
                 enemy.y += (dy / distance) * enemy.speed;
             }
+        }
+
+        function checkBulletCollisions() {
+            bullets.forEach(bullet => {
+                if (bullet.x < enemy.x + enemy.width &&
+                    bullet.x + bulletWidth > enemy.x &&
+                    bullet.y < enemy.y + enemy.height &&
+                    bullet.y + bulletHeight > enemy.y) {
+                    
+                    // Collision detected
+                    enemy.health -= bulletDamage; // Apply damage
+                    if (enemy.health <= 0) {
+                        enemy.health = 0;
+                        endGame(); // End the game if enemy is defeated
+                    }
+                    bullets = bullets.filter(b => b !== bullet); // Remove bullet after collision
+                }
+            });
         }
 
         function setupSettings() {
