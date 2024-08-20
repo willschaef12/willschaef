@@ -207,7 +207,7 @@
 
     <div id="fightingScreen" style="display: none">
         <div id="timer">30</div>
-        <div id="cooldown">Ability Cooldown: 30s</div>
+        <div id="cooldown">Reversal red: 30s</div>
         <button id="reversalRedButton">Reversal Red</button>
         <canvas id="gameCanvas" width="800" height="600"></canvas>
         <div id="blastEffect" class="blast"></div>
@@ -257,10 +257,143 @@
                 fightingImg: 'yuta_fight.png',
                 width: 100,
                 height: 100,
-                speed: 6,
+                speed: 8,
                 unlocked: false
             }
         };
+
+        function startGame(character) {
+            document.getElementById('loadingScreen').style.display = 'none';
+            document.getElementById('fightingScreen').style.display = 'flex';
+
+            player.img.src = characters[character].fightingImg;
+            player.speed = characters[character].speed;
+            enemy.x = canvas.width / 2;
+            enemy.y = canvas.height / 2;
+            enemy.health = 100;
+
+            isAbilityAvailable = false;
+            abilityReady = true;
+            timer = 30;
+            cooldownTimer = abilityCooldown;
+
+            document.getElementById('reversalRedButton').style.display = 'none';
+            document.getElementById('timer').textContent = timer;
+            document.getElementById('cooldown').textContent = `reversal red: ${cooldownTimer}s`;
+
+            update();
+        }
+
+        function update() {
+            if (!player || !enemy) return;
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            ctx.drawImage(player.img, player.x, player.y, player.width, player.height);
+            ctx.drawImage(enemy.img, enemy.x, enemy.y, enemy.width, enemy.height);
+
+            bullets.forEach(bullet => {
+                bullet.x += bullet.dx * bulletSpeed;
+                bullet.y += bullet.dy * bulletSpeed;
+                ctx.drawImage(bullet.img, bullet.x, bullet.y, bullet.width, bullet.height);
+
+                if (isCollision(bullet, enemy)) {
+                    enemy.health -= 10;
+                    if (enemy.health <= 0) {
+                        enemy.health = 0;
+                        enemyDisappeared();
+                    }
+                    bullets = bullets.filter(b => b !== bullet);
+                }
+            });
+
+            enemy.x += (player.x - enemy.x) * 0.01 * enemy.speed;
+            enemy.y += (player.y - enemy.y) * 0.01 * enemy.speed;
+
+            if (abilityReady) {
+                cooldownTimer -= 1 / frameRate;
+                if (cooldownTimer <= 0) {
+                    cooldownTimer = 0;
+                    isAbilityAvailable = true;
+                    document.getElementById('reversalRedButton').style.display = 'block';
+                }
+                document.getElementById('cooldown').textContent = `reversal red: ${Math.ceil(cooldownTimer)}s`;
+            }
+
+            timer -= 1 / frameRate;
+            if (timer <= 0) {
+                timer = 0;
+                document.getElementById('timer').textContent = `Time's up!`;
+            } else {
+                document.getElementById('timer').textContent = `Time: ${Math.ceil(timer)}`;
+            }
+
+            requestAnimationFrame(update);
+        }
+
+        function isCollision(obj1, obj2) {
+            return obj1.x < obj2.x + obj2.width &&
+                   obj1.x + obj1.width > obj2.x &&
+                   obj1.y < obj2.y + obj2.height &&
+                   obj1.y + obj1.height > obj2.y;
+        }
+
+        function enemyDisappeared() {
+            enemy.x = -100;
+            enemy.y = -100;
+        }
+
+        function activateReversalRed() {
+            if (!isAbilityAvailable) return;
+
+            isAbilityAvailable = false;
+            abilityReady = false;
+            cooldownTimer = abilityCooldown;
+            document.getElementById('reversalRedButton').style.display = 'none';
+
+            const blast = document.getElementById('blastEffect');
+            blast.style.left = `${player.x + player.width / 2}px`;
+            blast.style.top = `${player.y + player.height / 2}px`;
+            blast.style.display = 'block';
+
+            setTimeout(() => {
+                blast.style.display = 'none';
+                if (isCollision({x: enemy.x, y: enemy.y, width: enemy.width, height: enemy.height}, {x: player.x, y: player.y, width: player.width, height: player.height})) {
+                    enemyDisappeared();
+                }
+            }, 500);
+        }
+
+        document.addEventListener('keydown', (event) => {
+            switch (event.code) {
+                case 'ArrowUp':
+                    player.y -= player.speed;
+                    break;
+                case 'ArrowDown':
+                    player.y += player.speed;
+                    break;
+                case 'ArrowLeft':
+                    player.x -= player.speed;
+                    break;
+                case 'ArrowRight':
+                    player.x += player.speed;
+                    break;
+                case 'Space':
+                    if (timer <= 0) {
+                        activateReversalRed();
+                    } else {
+                        // Logic to shoot regular bullets
+                        // Example: shootBullet();
+                    }
+                    break;
+            }
+        });
+
+        document.getElementById('reversalRedButton').addEventListener('click', () => {
+            if (timer <= 0) {
+                activateReversalRed();
+            }
+        });
 
         document.addEventListener('DOMContentLoaded', () => {
             canvas = document.getElementById('gameCanvas');
@@ -308,12 +441,6 @@
                 });
             });
 
-            document.getElementById('reversalRedButton').addEventListener('click', () => {
-                if (isAbilityAvailable) {
-                    activateReversalRed();
-                }
-            });
-
             document.getElementById('brightness').addEventListener('input', (event) => {
                 brightness = event.target.value;
                 document.getElementById('brightnessValue').textContent = brightness;
@@ -328,128 +455,6 @@
 
             document.getElementById('difficulty').addEventListener('change', (event) => {
                 difficulty = event.target.value;
-            });
-
-            function startGame(character) {
-                document.getElementById('loadingScreen').style.display = 'none';
-                document.getElementById('fightingScreen').style.display = 'flex';
-
-                player.img.src = characters[character].fightingImg;
-                player.speed = characters[character].speed;
-                enemy.x = canvas.width / 2;
-                enemy.y = canvas.height / 2;
-                enemy.health = 100;
-
-                isAbilityAvailable = false;
-                abilityReady = true;
-                timer = 30;
-                cooldownTimer = abilityCooldown;
-
-                document.getElementById('reversalRedButton').style.display = 'none';
-                document.getElementById('timer').textContent = timer;
-                document.getElementById('cooldown').textContent = `Ability Cooldown: ${cooldownTimer}s`;
-
-                update();
-            }
-
-            function update() {
-                if (!player || !enemy) return;
-                
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-                ctx.drawImage(player.img, player.x, player.y, player.width, player.height);
-                ctx.drawImage(enemy.img, enemy.x, enemy.y, enemy.width, enemy.height);
-
-                bullets.forEach(bullet => {
-                    bullet.x += bullet.dx * bulletSpeed;
-                    bullet.y += bullet.dy * bulletSpeed;
-                    ctx.drawImage(bullet.img, bullet.x, bullet.y, bullet.width, bullet.height);
-
-                    if (isCollision(bullet, enemy)) {
-                        enemy.health -= 10;
-                        if (enemy.health <= 0) {
-                            enemy.health = 0;
-                            enemyDisappeared();
-                        }
-                        bullets = bullets.filter(b => b !== bullet);
-                    }
-                });
-
-                enemy.x += (player.x - enemy.x) * 0.01 * enemy.speed;
-                enemy.y += (player.y - enemy.y) * 0.01 * enemy.speed;
-
-                if (abilityReady) {
-                    cooldownTimer -= 1 / frameRate;
-                    if (cooldownTimer <= 0) {
-                        cooldownTimer = 0;
-                        isAbilityAvailable = true;
-                        document.getElementById('reversalRedButton').style.display = 'block';
-                    }
-                    document.getElementById('cooldown').textContent = `Ability Cooldown: ${Math.ceil(cooldownTimer)}s`;
-                }
-
-                timer -= 1 / frameRate;
-                if (timer <= 0) {
-                    timer = 0;
-                    document.getElementById('timer').textContent = `Time's up!`;
-                } else {
-                    document.getElementById('timer').textContent = `Time: ${Math.ceil(timer)}`;
-                }
-
-                requestAnimationFrame(update);
-            }
-
-            function isCollision(obj1, obj2) {
-                return obj1.x < obj2.x + obj2.width &&
-                       obj1.x + obj1.width > obj2.x &&
-                       obj1.y < obj2.y + obj2.height &&
-                       obj1.y + obj1.height > obj2.y;
-            }
-
-            function enemyDisappeared() {
-                enemy.x = -100;
-                enemy.y = -100;
-            }
-
-            function activateReversalRed() {
-                isAbilityAvailable = false;
-                abilityReady = false;
-                cooldownTimer = abilityCooldown;
-                document.getElementById('reversalRedButton').style.display = 'none';
-
-                const blast = document.getElementById('blastEffect');
-                blast.style.left = `${player.x + player.width / 2}px`;
-                blast.style.top = `${player.y + player.height / 2}px`;
-                blast.style.display = 'block';
-
-                setTimeout(() => {
-                    blast.style.display = 'none';
-                    if (isCollision({x: enemy.x, y: enemy.y, width: enemy.width, height: enemy.height}, {x: player.x, y: player.y, width: player.width, height: player.height})) {
-                        enemyDisappeared();
-                    }
-                }, 500);
-            }
-
-            document.addEventListener('keydown', (event) => {
-                switch (event.code) {
-                    case 'ArrowUp':
-                        player.y -= player.speed;
-                        break;
-                    case 'ArrowDown':
-                        player.y += player.speed;
-                        break;
-                    case 'ArrowLeft':
-                        player.x -= player.speed;
-                        break;
-                    case 'ArrowRight':
-                        player.x += player.speed;
-                        break;
-                    case 'Space':
-                        if (abilityReady) {
-                            activateReversalRed();
-                        }
-                        break;
-                }
             });
         });
     </script>
