@@ -215,7 +215,7 @@
         <button id="abilityButton">Use Reversal Red</button>
         <canvas id="gameCanvas" width="800" height="600"></canvas>
         <div id="blastEffect" class="blast"></div>
-        <div id="characterText" class="character-text">Gojo says: Ready for battle!</div>
+        <div id="characterText" class="character-text">Gojo says: Nah id win</div>
     </div>
 
     <div id="brightnessOverlay" class="brightness-overlay"></div>
@@ -266,53 +266,90 @@
             }
         };
 
-        document.addEventListener('DOMContentLoaded', () => {
-            canvas = document.getElementById('gameCanvas');
-            ctx = canvas.getContext('2d');
-            initializeEventListeners();
-            showLoadingScreen();
-            setupSettings();
-        });
+        const bulletImageSrc = 'orb.png'; // Path to the bullet image
+        const bulletWidth = 20;
+        const bulletHeight = 20;
 
-        function initializeEventListeners() {
-            const charactersImages = document.querySelectorAll('.character');
-            charactersImages.forEach(img => {
-                img.addEventListener('click', (e) => {
-                    document.querySelectorAll('.character').forEach(char => char.classList.remove('selected'));
-                    e.target.classList.add('selected');
-                    selectedCharacter = e.target.dataset.character;
-                });
-            });
+        function createBullet(x, y) {
+            return {
+                x: x,
+                y: y,
+                width: bulletWidth,
+                height: bulletHeight,
+                img: new Image(),
+                speed: bulletSpeed
+            };
+        }
 
-            document.getElementById('startGame').addEventListener('click', () => {
-                startGame();
-            });
+        function initializeBullets() {
+            bullets = [];
+        }
 
-            document.getElementById('settingsButton').addEventListener('click', () => {
-                document.getElementById('loadingScreen').style.display = 'none';
-                document.getElementById('settingsScreen').style.display = 'flex';
-            });
-
-            document.getElementById('backToMenu').addEventListener('click', () => {
-                document.getElementById('settingsScreen').style.display = 'none';
-                document.getElementById('loadingScreen').style.display = 'flex';
-            });
-
+        function setupSettings() {
             document.getElementById('brightness').addEventListener('input', (e) => {
                 brightness = e.target.value;
-                document.getElementById('brightnessValue').textContent = brightness;
+                document.getElementById('brightnessValue').innerText = brightness;
                 document.getElementById('brightnessOverlay').style.opacity = brightness / 100;
             });
 
             document.getElementById('fps').addEventListener('input', (e) => {
                 fps = e.target.value;
-                document.getElementById('fpsValue').textContent = fps;
                 frameRate = 1000 / fps;
+                document.getElementById('fpsValue').innerText = fps;
             });
 
             document.getElementById('difficulty').addEventListener('change', (e) => {
                 difficulty = e.target.value;
-                console.log(`Difficulty set to: ${difficulty}`);
+            });
+        }
+
+        function initializeEventListeners() {
+            document.addEventListener('keydown', (e) => {
+                if (e.code === 'Space') {
+                    shootBullet();
+                }
+            });
+
+            document.getElementById('settingsButton').addEventListener('click', () => {
+                document.getElementById('settingsScreen').style.display = 'flex';
+                document.getElementById('loadingScreen').style.display = 'none';
+                document.getElementById('fightingScreen').style.display = 'none';
+            });
+
+            document.getElementById('backToMenu').addEventListener('click', () => {
+                document.getElementById('settingsScreen').style.display = 'none';
+                document.getElementById('loadingScreen').style.display = 'flex';
+                document.getElementById('fightingScreen').style.display = 'none';
+            });
+
+            document.getElementById('startGame').addEventListener('click', () => {
+                if (selectedCharacter) {
+                    document.getElementById('loadingScreen').style.display = 'none';
+                    document.getElementById('fightingScreen').style.display = 'flex';
+                    document.getElementById('abilityButton').style.display = 'inline-block';
+                    startGame();
+                }
+            });
+
+            document.querySelectorAll('.character').forEach(img => {
+                img.addEventListener('click', (e) => {
+                    document.querySelectorAll('.character').forEach(c => c.classList.remove('selected'));
+                    e.target.classList.add('selected');
+                    selectedCharacter = e.target.getAttribute('data-character');
+                });
+            });
+
+            document.querySelectorAll('.buy-button').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const price = parseInt(e.target.getAttribute('data-price'));
+                    if (gold >= price) {
+                        const characterId = e.target.parentElement.getAttribute('data-character');
+                        characters[characterId].unlocked = true;
+                        gold -= price;
+                        e.target.parentElement.classList.remove('available');
+                        e.target.style.display = 'none';
+                    }
+                });
             });
 
             document.getElementById('abilityButton').addEventListener('click', () => {
@@ -320,88 +357,42 @@
                     useAbility();
                 }
             });
-
-            document.querySelectorAll('.buy-button').forEach(button => {
-                button.addEventListener('click', (e) => {
-                    const characterKey = e.target.parentElement.dataset.character;
-                    if (gold >= parseInt(e.target.dataset.price)) {
-                        characters[characterKey].unlocked = true;
-                        e.target.parentElement.classList.add('available');
-                        gold -= parseInt(e.target.dataset.price);
-                        console.log(`Bought ${characterKey}. Remaining gold: ${gold}`);
-                    } else {
-                        console.log('Not enough gold!');
-                    }
-                });
-            });
-        }
-
-        function showLoadingScreen() {
-            document.getElementById('loadingScreen').style.display = 'flex';
-            document.getElementById('fightingScreen').style.display = 'none';
         }
 
         function startGame() {
-            document.getElementById('loadingScreen').style.display = 'none';
-            document.getElementById('fightingScreen').style.display = 'flex';
-            initializeGame();
-        }
-
-        function initializeGame() {
             player.img.src = characters[selectedCharacter].fightingImg;
-            player.width = characters[selectedCharacter].width;
-            player.height = characters[selectedCharacter].height;
-            player.speed = characters[selectedCharacter].speed;
-            player.x = canvas.width / 2 - player.width / 2;
-            player.y = canvas.height - player.height - 10;
-
             enemy.img.src = 'curse.png';
-            enemy.width = 100;
-            enemy.height = 100;
-            enemy.x = canvas.width / 2 - enemy.width / 2;
-            enemy.y = 10;
-
-            gojoSpeaks('Nah id win!');
-            startTimers();
+            document.getElementById('timer').innerText = '30';
+            initializeBullets();
             gameLoop();
         }
 
-        function startTimers() {
-            let timeLeft = 30;
-            timer = setInterval(() => {
-                timeLeft--;
-                document.getElementById('timer').textContent = timeLeft;
-                if (timeLeft <= 0) {
-                    clearInterval(timer);
-                    endGame();
-                }
-            }, 1000);
-
-            cooldownTimer = setInterval(() => {
-                if (!abilityReady) {
-                    abilityCooldown--;
-                    document.getElementById('cooldown').textContent = `Ability Cooldown: ${abilityCooldown}s`;
-                    if (abilityCooldown <= 0) {
-                        abilityReady = true;
-                        document.getElementById('cooldown').textContent = 'Ability Ready!';
-                    }
-                }
-            }, 1000);
+        function shootBullet() {
+            if (!abilityReady) return; // Optionally check if the ability is ready
+            
+            const bullet = createBullet(player.x + player.width / 2 - bulletWidth / 2, player.y);
+            bullet.img.src = bulletImageSrc;
+            bullets.push(bullet);
         }
 
-        function endGame() {
-            // Logic for ending the game
-            console.log('Game Over');
-        }
+        function updateBullets() {
+            bullets = bullets.filter(bullet => {
+                bullet.y -= bullet.speed; // Move bullet up
 
-        function gameLoop() {
-            setTimeout(() => {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                drawPlayer();
-                drawEnemy();
-                drawBullets();
-                gameLoop();
-            }, frameRate);
+                // Check for collision with enemy
+                if (bullet.x < enemy.x + enemy.width &&
+                    bullet.x + bullet.width > enemy.x &&
+                    bullet.y < enemy.y + enemy.height &&
+                    bullet.y + bullet.height > enemy.y) {
+                    // Hit detected
+                    console.log('Hit!');
+                    // Optionally apply damage to enemy or end the game
+                    return false; // Remove bullet after hit
+                }
+
+                // Remove bullet if it goes off screen
+                return bullet.y + bullet.height > 0;
+            });
         }
 
         function drawPlayer() {
@@ -419,39 +410,39 @@
         }
 
         function useAbility() {
-            if (!abilityReady) return;
-
             abilityReady = false;
-            abilityCooldown = 30;
-            document.getElementById('cooldown').textContent = `Ability Cooldown: ${abilityCooldown}s`;
-            
-            // Example effect: blast effect
-            const blast = document.getElementById('blastEffect');
-            blast.style.display = 'block';
-            blast.style.top = `${player.y + player.height / 2}px`;
-            blast.style.left = `${player.x + player.width / 2}px`;
-            setTimeout(() => blast.style.display = 'none', 500);
+            document.getElementById('cooldown').innerText = `Ability Cooldown: ${abilityCooldown}s`;
+            document.getElementById('blastEffect').style.display = 'block';
+            setTimeout(() => {
+                document.getElementById('blastEffect').style.display = 'none';
+            }, 1000);
 
-            // Apply ability logic here
-
+            // Reset ability after cooldown
             setTimeout(() => {
                 abilityReady = true;
-                document.getElementById('cooldown').textContent = 'Ability Ready!';
-            }, 30000); // 30 seconds cooldown
+                document.getElementById('cooldown').innerText = 'Ability Ready';
+            }, abilityCooldown * 1000);
         }
 
-        function gojoSpeaks(message) {
-            document.getElementById('characterText').textContent = `Gojo: ${message}`;
+        function gameLoop() {
+            setTimeout(() => {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                drawPlayer();
+                drawEnemy();
+                updateBullets();
+                drawBullets();
+                gameLoop();
+            }, frameRate);
         }
 
-        function setupSettings() {
-            document.getElementById('brightness').value = brightness;
-            document.getElementById('brightnessValue').textContent = brightness;
-            document.getElementById('fps').value = fps;
-            document.getElementById('fpsValue').textContent = fps;
-            document.getElementById('difficulty').value = difficulty;
-            document.getElementById('brightnessOverlay').style.opacity = brightness / 100;
-        }
+        document.addEventListener('DOMContentLoaded', () => {
+            canvas = document.getElementById('gameCanvas');
+            ctx = canvas.getContext('2d');
+            initializeEventListeners();
+            setupSettings();
+            document.getElementById('bulletImage').src = bulletImageSrc;
+            document.getElementById('characterText').innerText = 'Gojo says: Nah id win'; // Example text
+        });
     </script>
 </body>
 </html>

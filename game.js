@@ -1,4 +1,4 @@
-let selectedAttackImage = 'orb.png'; // Default image
+let selectedAttackImage = '.png'; // Default image
 let abilityReady = true;
 let abilityCooldown = 0;
 let bullets = [];
