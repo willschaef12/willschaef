@@ -16,9 +16,7 @@
             background: #000;
             margin: auto;
         }
-        #loadingScreen,
-        #fightingScreen,
-        #settingsScreen {
+        #loadingScreen, #fightingScreen, #settingsScreen {
             position: absolute;
             top: 0;
             left: 0;
@@ -37,8 +35,7 @@
             background: rgba(0, 0, 0, 0.8);
             display: none;
         }
-        #settingsButton,
-        #backToMenu {
+        #settingsButton, #backToMenu {
             position: absolute;
             top: 10px;
             right: 10px;
@@ -58,24 +55,20 @@
             flex-wrap: wrap;
             justify-content: center;
         }
-        .character-container,
-        .shop-item {
+        .character-container, .shop-item {
             text-align: center;
         }
-        .character,
-        .shop-img {
+        .character, .shop-img {
             width: 100px;
             height: 100px;
             object-fit: cover;
             cursor: pointer;
             border: 2px solid transparent;
         }
-        .character.selected,
-        .shop-item.available {
+        .character.selected, .shop-item.available {
             border-color: yellow;
         }
-        .character-name,
-        .shop-name {
+        .character-name, .shop-name {
             margin-top: 10px;
             font-size: 16px;
             color: white;
@@ -87,17 +80,13 @@
             flex-wrap: wrap;
             justify-content: center;
         }
-        #startGame,
-        #abilityButton,
-        #reversalRedButton,
-        #lapseBlueButton {
+        #startGame, #abilityButton, #reversalRedButton, #lapseBlueButton {
             margin-top: 20px;
             padding: 10px 20px;
             font-size: 16px;
             cursor: pointer;
         }
-        #reversalRedButton,
-        #lapseBlueButton {
+        #reversalRedButton, #lapseBlueButton {
             display: none;
         }
         #lapseBlueLabel {
@@ -127,8 +116,7 @@
         .lapse-blue {
             background: rgba(0, 0, 255, 0.7);
         }
-        #brightness,
-        #fps {
+        #brightness, #fps {
             margin-top: 10px;
         }
         .brightness-overlay {
@@ -158,11 +146,6 @@
 </head>
 <body>
     <audio id="background-music" src="background.mp3" loop></audio>
-    <img id="basketImage" src="gojo.png" style="display: none;" />
-    <img id="bulletImage" src="orb.png" style="display: none;" />
-    <img id="curseImage" src="curse.png" style="display: none;" />
-    <img id="gojo2Image" src="gojo2.webp" style="display: none;" />
-    <img id="lapseBlueImage" src="lapse_blue.png" style="display: none;" />
 
     <div id="loadingScreen">
         <h1>Sorcerers Battle</h1>
@@ -210,7 +193,7 @@
 
     <div id="fightingScreen" style="display: none;">
         <div id="timer">30</div>
-        <div id="cooldown">Reversal red: 30s</div>
+        <div id="cooldown">Reversal Red: 30s</div>
         <button id="reversalRedButton">Reversal Red</button>
         <div id="lapseBlueLabel">Lapse Blue</div>
         <button id="lapseBlueButton">Lapse Blue</button>
@@ -222,230 +205,6 @@
 
     <div id="brightnessOverlay" class="brightness-overlay"></div>
 
-    <script>
-        let selectedCharacter;
-        let player = { x: 100, y: 100, width: 100, height: 100, img: new Image(), speed: 10 };
-        let enemy = { x: 300, y: 300, width: 100, height: 100, img: new Image(), speed: 3, health: 100 };
-        let bullets = [];
-        const bulletSpeed = 5;
-        let ctx;
-        let canvas;
-        let timer;
-        let cooldownTimer;
-        let isAbilityAvailable = true;
-        let abilityCooldown = 30;
-        let abilityReady = true;
-        let gold = 200;
-        let brightness = 100;
-        let fps = 30;
-        let frameRate = 1000 / fps;
-        let isLapseBlueActive = false;
-        const lapseBlueDuration = 5000;
-        let lapseBlueTimer = 0;
-
-        const characters = {
-            character1: { selectionImg: 'gojo.png', fightingImg: 'gojo2.webp', width: 100, height: 100, speed: 10, unlocked: true },
-            character2: { selectionImg: 'yuji.png', fightingImg: 'yuji.png', width: 100, height: 100, speed: 10, unlocked: true },
-            character3: { selectionImg: 'yuta.png', fightingImg: 'yuta.png', width: 100, height: 100, speed: 10, unlocked: false },
-        };
-
-        function setupCanvas() {
-            canvas = document.getElementById('gameCanvas');
-            ctx = canvas.getContext('2d');
-        }
-
-        function update() {
-            if (!ctx) return;
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            ctx.drawImage(player.img, player.x, player.y, player.width, player.height);
-            ctx.drawImage(enemy.img, enemy.x, enemy.y, enemy.width, enemy.height);
-
-            bullets.forEach(bullet => {
-                bullet.x += bullet.dx * bulletSpeed;
-                bullet.y += bullet.dy * bulletSpeed;
-                ctx.drawImage(bullet.img, bullet.x, bullet.y, bullet.width, bullet.height);
-
-                if (isCollision(bullet, enemy)) {
-                    enemy.health -= 10;
-                    if (enemy.health <= 0) {
-                        enemy.health = 0;
-                        enemyDisappeared();
-                    }
-                    bullets = bullets.filter(b => b !== bullet);
-                }
-            });
-
-            if (isLapseBlueActive) {
-                if (Date.now() > lapseBlueTimer) {
-                    enemy.speed = characters[selectedCharacter].speed;
-                    isLapseBlueActive = false;
-                }
-            } else {
-                enemy.x += (player.x - enemy.x) * 0.01 * enemy.speed;
-                enemy.y += (player.y - enemy.y) * 0.01 * enemy.speed;
-            }
-
-            // Update timer and cooldown display
-            if (abilityReady) {
-                cooldownTimer -= 1 / frameRate;
-                if (cooldownTimer <= 0) {
-                    document.getElementById('cooldown').innerText = 'Reversal Red: NaNas';
-                    abilityReady = true;
-                } else {
-                    document.getElementById('cooldown').innerText = `Reversal Red: ${Math.ceil(cooldownTimer)}s`;
-                }
-            }
-
-            // Request next frame
-            requestAnimationFrame(update);
-        }
-
-        function isCollision(obj1, obj2) {
-            return !(obj1.x + obj1.width < obj2.x || 
-                     obj1.x > obj2.x + obj2.width || 
-                     obj1.y + obj1.height < obj2.y || 
-                     obj1.y > obj2.y + obj2.height);
-        }
-
-        function activateReversalRed() {
-            if (!isAbilityAvailable) return;
-
-            isAbilityAvailable = false;
-            abilityReady = false;
-            cooldownTimer = abilityCooldown;
-            document.getElementById('reversalRedButton').style.display = 'none';
-
-            const blast = document.getElementById('blastEffect');
-            blast.style.left = `${player.x + player.width / 2}px`;
-            blast.style.top = `${player.y + player.height / 2}px`;
-            blast.style.display = 'block';
-
-            setTimeout(() => {
-                blast.style.display = 'none';
-            }, 500);
-
-            // Check for collision
-            if (isCollision(blast, enemy)) {
-                enemy.health -= 20;
-                if (enemy.health <= 0) {
-                    enemy.health = 0;
-                    enemyDisappeared();
-                }
-            }
-        }
-
-        function activateLapseBlue() {
-            if (!isAbilityAvailable) return;
-
-            isAbilityAvailable = false;
-            abilityReady = false;
-            cooldownTimer = abilityCooldown;
-            document.getElementById('lapseBlueButton').style.display = 'none';
-
-            const lapseBlue = document.getElementById('lapseBlueEffect');
-            lapseBlue.style.left = `${player.x + player.width / 2}px`;
-            lapseBlue.style.top = `${player.y + player.height / 2}px`;
-            lapseBlue.style.display = 'block';
-
-            pullEnemyTowardsPlayer();
-
-            enemy.speed = 0;
-            isLapseBlueActive = true;
-            lapseBlueTimer = Date.now() + lapseBlueDuration;
-
-            setTimeout(() => {
-                lapseBlue.style.display = 'none';
-                enemy.speed = characters[selectedCharacter].speed;
-                isLapseBlueActive = false;
-            }, lapseBlueDuration);
-        }
-
-        function pullEnemyTowardsPlayer() {
-            const dx = player.x - enemy.x;
-            const dy = player.y - enemy.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-            const normX = dx / distance;
-            const normY = dy / distance;
-            enemy.x += normX * enemy.speed * 0.5;
-            enemy.y += normY * enemy.speed * 0.5;
-        }
-
-        function enemyDisappeared() {
-            console.log('Enemy defeated!');
-        }
-
-        function initialize() {
-            setupCanvas();
-            document.getElementById('startGame').addEventListener('click', () => {
-                document.getElementById('loadingScreen').style.display = 'none';
-                document.getElementById('fightingScreen').style.display = 'block';
-                document.getElementById('reversalRedButton').style.display = 'block';
-                document.getElementById('lapseBlueButton').style.display = 'block';
-                document.getElementById('lapseBlueLabel').style.display = 'block'; // Show Lapse Blue label
-
-                // Load player and enemy images
-                player.img.src = characters[selectedCharacter].fightingImg;
-                enemy.img.src = 'curse.png'; // Assuming this is the enemy image
-
-                // Start the update loop
-                update();
-            });
-
-            document.getElementById('reversalRedButton').addEventListener('click', activateReversalRed);
-            document.getElementById('lapseBlueButton').addEventListener('click', activateLapseBlue);
-
-            document.getElementById('settingsButton').addEventListener('click', () => {
-                document.getElementById('settingsScreen').style.display = 'block';
-                document.getElementById('loadingScreen').style.display = 'none';
-            });
-
-            document.getElementById('backToMenu').addEventListener('click', () => {
-                document.getElementById('settingsScreen').style.display = 'none';
-                document.getElementById('loadingScreen').style.display = 'flex';
-            });
-
-            document.getElementById('brightness').addEventListener('input', (event) => {
-                brightness = event.target.value;
-                document.getElementById('brightnessValue').innerText = brightness;
-                document.getElementById('brightnessOverlay').style.opacity = (100 - brightness) / 100;
-            });
-
-            document.getElementById('fps').addEventListener('input', (event) => {
-                fps = event.target.value;
-                document.getElementById('fpsValue').innerText = fps;
-                frameRate = 1000 / fps;
-            });
-
-            document.getElementById('difficulty').addEventListener('change', (event) => {
-                console.log(`Difficulty set to ${event.target.value}`);
-            });
-
-            document.querySelectorAll('.character').forEach(char => {
-                char.addEventListener('click', () => {
-                    selectedCharacter = char.getAttribute('data-character');
-                    document.querySelectorAll('.character').forEach(c => c.classList.remove('selected'));
-                    char.classList.add('selected');
-                });
-            });
-
-            document.querySelectorAll('.buy-button').forEach(button => {
-                button.addEventListener('click', () => {
-                    const character = button.getAttribute('data-character');
-                    const price = button.getAttribute('data-price');
-                    if (gold >= price) {
-                        gold -= price;
-                        characters[character].unlocked = true;
-                        document.querySelector(`.shop-item[data-character="${character}"]`).classList.add('available');
-                        console.log(`Bought ${character} for ${price} gold`);
-                    } else {
-                        console.log('Not enough gold');
-                    }
-                });
-            });
-        }
-
-        window.onload = initialize;
-    </script>
+    <script src="game.js"></script>
 </body>
 </html>

@@ -1,167 +1,157 @@
-let player = {
-  x: 100, y: 100, width: 100, height: 100, img: new Image(), speed: 10
-};
-let enemy = {
-  x: 300, y: 300, width: 100, height: 100, img: new Image(), speed: 3, health: 100
-};
-const bulletSpeed = 5;
+let selectedCharacter;
+let player = { x: 100, y: 100, width: 100, height: 100, img: new Image(), speed: 10 };
+let enemy = { x: 300, y: 300, width: 100, height: 100, img: new Image(), speed: 3, health: 100 };
 let bullets = [];
+const bulletSpeed = 5;
 let ctx;
 let canvas;
 let timer;
 let cooldownTimer;
-let abilityReady = true;
+let isAbilityAvailable = true;
 let abilityCooldown = 30;
-let redBlastReady = false; // Track if the red blast ability is ready
-const redBlastDuration = 500; // Duration of the red blast effect in milliseconds
-let frameRate = 1000 / 30; // FPS
+let frameRate = 1000 / 30;
+let isLapseBlueActive = false;
+const lapseBlueDuration = 5000;
+let lapseBlueTimer = 0;
+let brightness = 100;
+let fps = 30;
 
-document.addEventListener('DOMContentLoaded', () => {
-  canvas = document.getElementById('gameCanvas');
-  ctx = canvas.getContext('2d');
-  initializeEventListeners();
-  showLoadingScreen();
-  setupSettings();
-});
+const characters = {
+    character1: { selectionImg: 'gojo.png', fightingImg: 'gojo2.webp', width: 100, height: 100, speed: 10, unlocked: true },
+    character2: { selectionImg: 'yuji.png', fightingImg: 'yuji.png', width: 100, height: 100, speed: 10, unlocked: true },
+    character3: { selectionImg: 'yuta.png', fightingImg: 'yuta.png', width: 100, height: 100, speed: 10, unlocked: false },
+};
 
-function initializeEventListeners() {
-  document.getElementById('startGame').addEventListener('click', () => {
-      startGame();
-  });
-
-  document.getElementById('abilityButton').addEventListener('click', () => {
-      if (abilityReady) {
-          useAbility();
-      }
-  });
+function setupCanvas() {
+    canvas = document.getElementById('gameCanvas');
+    ctx = canvas.getContext('2d');
 }
 
-function showLoadingScreen() {
-  document.getElementById('loadingScreen').style.display = 'flex';
-  document.getElementById('fightingScreen').style.display = 'none';
+function update() {
+    if (!ctx) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    ctx.drawImage(player.img, player.x, player.y, player.width, player.height);
+    ctx.drawImage(enemy.img, enemy.x, enemy.y, enemy.width, enemy.height);
+
+    bullets.forEach((bullet, index) => {
+        ctx.fillStyle = 'white';
+        ctx.fillRect(bullet.x, bullet.y, 10, 10);
+        bullet.x += bullet.dx;
+        bullet.y += bullet.dy;
+
+        if (bullet.x < 0 || bullet.x > canvas.width || bullet.y < 0 || bullet.y > canvas.height) {
+            bullets.splice(index, 1);
+        }
+    });
+
+    if (isLapseBlueActive) {
+        lapseBlueTimer -= frameRate;
+        if (lapseBlueTimer <= 0) {
+            isLapseBlueActive = false;
+            document.getElementById('lapseBlueEffect').style.display = 'none';
+        }
+    }
+
+    document.getElementById('timer').textContent = Math.ceil(timer / 1000);
+    document.getElementById('cooldown').textContent = `Reversal Red: ${Math.ceil(cooldownTimer / 1000)}s`;
+
+    if (!isAbilityAvailable) {
+        cooldownTimer -= frameRate / 1000;
+        if (cooldownTimer <= 0) {
+            isAbilityAvailable = true;
+            document.getElementById('reversalRedButton').disabled = false;
+        }
+    }
+
+    requestAnimationFrame(update);
 }
 
 function startGame() {
-  document.getElementById('loadingScreen').style.display = 'none';
-  document.getElementById('fightingScreen').style.display = 'flex';
-  initializeGame();
+    document.getElementById('loadingScreen').style.display = 'none';
+    document.getElementById('fightingScreen').style.display = 'block';
+    document.getElementById('background-music').play();
+
+    setupCanvas();
+    player.img.src = characters[selectedCharacter].fightingImg;
+    enemy.img.src = 'curse.png'; // Updated to use curse.png for the enemy
+    timer = 30000; // 30 seconds
+    cooldownTimer = abilityCooldown;
+    update();
 }
 
-function initializeGame() {
-  player.img.src = 'gojo2.webp';
-  player.x = canvas.width / 2 - player.width / 2;
-  player.y = canvas.height - player.height - 10;
-
-  enemy.img.src = 'curse.png';
-  enemy.x = canvas.width / 2 - enemy.width / 2;
-  enemy.y = 10;
-
-  startTimers();
-  gameLoop();
+function selectCharacter(characterId) {
+    if (characters[characterId].unlocked) {
+        selectedCharacter = characterId;
+        document.querySelectorAll('.character').forEach(el => el.classList.remove('selected'));
+        document.querySelector(`img[data-character="${characterId}"]`).classList.add('selected');
+    }
 }
 
-function startTimers() {
-  let timeLeft = 30;
-  timer = setInterval(() => {
-      timeLeft--;
-      document.getElementById('timer').textContent = timeLeft;
-      if (timeLeft <= 0) {
-          clearInterval(timer);
-          activateRedBlast(); // Trigger the red blast ability when the timer hits zero
-      }
-  }, 1000);
-
-  cooldownTimer = setInterval(() => {
-      if (!abilityReady) {
-          abilityCooldown--;
-          document.getElementById('cooldown').textContent = `Ability Cooldown: ${abilityCooldown}s`;
-          if (abilityCooldown <= 0) {
-              abilityReady = true;
-              document.getElementById('cooldown').textContent = 'Ability Ready!';
-              abilityCooldown = 30; // Reset cooldown time for next use
-          }
-      }
-  }, 1000);
+function buyCharacter(characterId) {
+    if (characters[characterId]) {
+        characters[characterId].unlocked = true;
+        document.querySelector(`.shop-item[data-character="${characterId}"]`).classList.add('available');
+    }
 }
 
-function useAbility() {
-  if (!abilityReady) return;
-
-  abilityReady = false;
-  abilityCooldown = 30;
-  document.getElementById('cooldown').textContent = `Ability Cooldown: ${abilityCooldown}s`;
-
-  // Example effect: blast effect
-  const blast = document.getElementById('blastEffect');
-  blast.style.display = 'block';
-  blast.style.top = `${player.y + player.height / 2}px`;
-  blast.style.left = `${player.x + player.width / 2}px`;
-  setTimeout(() => blast.style.display = 'none', 500);
+function handleKeydown(event) {
+    const speed = player.speed;
+    switch (event.key) {
+        case 'w': player.y -= speed; break;
+        case 's': player.y += speed; break;
+        case 'a': player.x -= speed; break;
+        case 'd': player.x += speed; break;
+        case ' ':
+            if (isAbilityAvailable) {
+                bullets.push({
+                    x: player.x + player.width / 2,
+                    y: player.y + player.height / 2,
+                    dx: bulletSpeed,
+                    dy: 0
+                });
+                isAbilityAvailable = false;
+                cooldownTimer = abilityCooldown;
+                document.getElementById('reversalRedButton').disabled = true;
+            }
+            break;
+        case 'b':
+            if (!isLapseBlueActive) {
+                isLapseBlueActive = true;
+                lapseBlueTimer = lapseBlueDuration;
+                document.getElementById('lapseBlueEffect').style.display = 'block';
+            }
+            break;
+    }
 }
 
-function activateRedBlast() {
-  // Trigger the red blast effect
-  const blast = document.getElementById('blastEffect');
-  blast.style.backgroundColor = 'rgba(255, 0, 0, 0.7)'; // Red color
-  blast.style.display = 'block';
-  blast.style.top = `${player.y + player.height / 2}px`;
-  blast.style.left = `${player.x + player.width / 2}px`;
-
-  // Check collision with enemy and apply damage
-  if (isColliding(blast, enemy)) {
-      enemy.health = 0; // Set enemy health to zero
-      removeEnemy(); // Remove enemy from canvas
-  }
-
-  setTimeout(() => {
-      blast.style.display = 'none';
-      redBlastReady = false; // Reset red blast readiness
-  }, redBlastDuration);
+function updateBrightness(value) {
+    brightness = value;
+    document.getElementById('brightnessOverlay').style.opacity = value / 100;
 }
 
-function removeEnemy() {
-  enemy.x = -100; // Move enemy out of canvas
-  enemy.y = -100;
+function updateFPS(value) {
+    fps = value;
+    frameRate = 1000 / fps;
 }
 
-function isColliding(a, b) {
-  return !(a.x + a.width < b.x ||
-      a.x > b.x + b.width ||
-      a.y + a.height < b.y ||
-      a.y > b.y + b.height);
-}
+document.getElementById('startGame').addEventListener('click', startGame);
+document.getElementById('settingsButton').addEventListener('click', () => {
+    document.getElementById('settingsScreen').style.display = 'flex';
+    document.getElementById('loadingScreen').style.display = 'none';
+});
+document.getElementById('backToMenu').addEventListener('click', () => {
+    document.getElementById('settingsScreen').style.display = 'none';
+    document.getElementById('loadingScreen').style.display = 'flex';
+});
+document.getElementById('brightness').addEventListener('input', (e) => updateBrightness(e.target.value));
+document.getElementById('fps').addEventListener('input', (e) => updateFPS(e.target.value));
 
-function gameLoop() {
-  setTimeout(() => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      drawPlayer();
-      drawEnemy();
-      drawBullets();
-      gameLoop();
-  }, frameRate);
-}
+document.querySelectorAll('.character').forEach(el => {
+    el.addEventListener('click', () => selectCharacter(el.dataset.character));
+});
+document.querySelectorAll('.buy-button').forEach(button => {
+    button.addEventListener('click', () => buyCharacter(button.dataset.character));
+});
 
-function drawPlayer() {
-  ctx.drawImage(player.img, player.x, player.y, player.width, player.height);
-}
-
-function drawEnemy() {
-  if (enemy.health > 0) {
-      ctx.drawImage(enemy.img, enemy.x, enemy.y, enemy.width, enemy.height);
-  }
-}
-
-function drawBullets() {
-  bullets.forEach(bullet => {
-      ctx.drawImage(bullet.img, bullet.x, bullet.y, bullet.width, bullet.height);
-  });
-}
-
-function setupSettings() {
-  document.getElementById('brightness').value = brightness;
-  document.getElementById('brightnessValue').textContent = brightness;
-  document.getElementById('fps').value = fps;
-  document.getElementById('fpsValue').textContent = fps;
-  document.getElementById('difficulty').value = difficulty;
-  document.getElementById('brightnessOverlay').style.opacity = brightness / 100;
-}
+document.addEventListener('keydown', handleKeydown);
