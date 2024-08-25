@@ -19,12 +19,14 @@ let fps = 30;
 const characters = {
     character1: { selectionImg: 'gojo.png', fightingImg: 'gojo2.webp', width: 100, height: 100, speed: 10, unlocked: true },
     character2: { selectionImg: 'yuji.png', fightingImg: 'yuji.png', width: 100, height: 100, speed: 10, unlocked: true },
-    character3: { selectionImg: 'yuta.png', fightingImg: 'yuta.png', width: 100, height: 100, speed: 10, unlocked: false },
+    character3: { selectionImg: 'yuta.png', fightingImg: 'yuta.png', width: 100, height: 100, speed: 10, unlocked: false }
 };
 
 function setupCanvas() {
     canvas = document.getElementById('gameCanvas');
-    ctx = canvas.getContext('2d');
+    if (canvas) {
+        ctx = canvas.getContext('2d');
+    }
 }
 
 function update() {
@@ -53,7 +55,6 @@ function update() {
         }
     }
 
-    document.getElementById('timer').textContent = Math.ceil(timer / 1000);
     document.getElementById('cooldown').textContent = `Reversal Red: ${Math.ceil(cooldownTimer / 1000)}s`;
 
     if (!isAbilityAvailable) {
@@ -74,8 +75,8 @@ function startGame() {
 
     setupCanvas();
     player.img.src = characters[selectedCharacter].fightingImg;
-    enemy.img.src = 'curse.png'; // Updated to use curse.png for the enemy
-    timer = 30000; // 30 seconds
+    enemy.img.src = 'curse.png';
+    timer = 30000;
     cooldownTimer = abilityCooldown;
     update();
 }
@@ -122,36 +123,58 @@ function handleKeydown(event) {
                 document.getElementById('lapseBlueEffect').style.display = 'block';
             }
             break;
+        case 'r':
+            activateReversalRed();
+            break;
     }
 }
 
-function updateBrightness(value) {
-    brightness = value;
-    document.getElementById('brightnessOverlay').style.opacity = value / 100;
+function activateReversalRed() {
+    if (isAbilityAvailable) {
+        const blastEffect = document.getElementById('blastEffect');
+        blastEffect.style.left = `${player.x + player.width / 2}px`;
+        blastEffect.style.top = `${player.y + player.height / 2}px`;
+        blastEffect.style.display = 'block';
+
+        setTimeout(() => {
+            blastEffect.style.display = 'none';
+        }, 1000); 
+
+        isAbilityAvailable = false;
+        cooldownTimer = abilityCooldown;
+        document.getElementById('reversalRedButton').disabled = true;
+    }
 }
 
-function updateFPS(value) {
-    fps = value;
-    frameRate = 1000 / fps;
-}
+document.getElementById('reversalRedButton').addEventListener('click', activateReversalRed);
 
 document.getElementById('startGame').addEventListener('click', startGame);
-document.getElementById('settingsButton').addEventListener('click', () => {
-    document.getElementById('settingsScreen').style.display = 'flex';
-    document.getElementById('loadingScreen').style.display = 'none';
-});
-document.getElementById('backToMenu').addEventListener('click', () => {
-    document.getElementById('settingsScreen').style.display = 'none';
-    document.getElementById('loadingScreen').style.display = 'flex';
-});
-document.getElementById('brightness').addEventListener('input', (e) => updateBrightness(e.target.value));
-document.getElementById('fps').addEventListener('input', (e) => updateFPS(e.target.value));
 
 document.querySelectorAll('.character').forEach(el => {
     el.addEventListener('click', () => selectCharacter(el.dataset.character));
 });
+
 document.querySelectorAll('.buy-button').forEach(button => {
-    button.addEventListener('click', () => buyCharacter(button.dataset.character));
+    button.addEventListener('click', () => {
+        const characterId = button.parentElement.dataset.character;
+        buyCharacter(characterId);
+    });
+});
+
+document.getElementById('brightness').addEventListener('input', (e) => {
+    brightness = e.target.value;
+    document.getElementById('brightnessValue').textContent = brightness;
+    document.getElementById('brightnessOverlay').style.backgroundColor = `rgba(0, 0, 0, ${(200 - brightness) / 200})`;
+});
+
+document.getElementById('fps').addEventListener('input', (e) => {
+    fps = e.target.value;
+    document.getElementById('fpsValue').textContent = fps;
+    frameRate = 1000 / fps;
+});
+
+document.getElementById('difficulty').addEventListener('change', (e) => {
+    // Handle difficulty change if needed
 });
 
 document.addEventListener('keydown', handleKeydown);

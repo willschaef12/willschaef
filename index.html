@@ -94,8 +94,6 @@
             font-size: 18px;
             margin-bottom: 10px;
         }
-    
-        
         #cooldown {
             font-size: 16px;
             color: red;
@@ -111,9 +109,20 @@
         }
         .blast {
             background: rgba(255, 0, 0, 0.7);
+            animation: expand 1s forwards;
         }
         .lapse-blue {
             background: rgba(0, 0, 255, 0.7);
+        }
+        @keyframes expand {
+            0% {
+                transform: scale(0);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(2);
+                opacity: 0;
+            }
         }
         #brightness, #fps {
             margin-top: 10px;
