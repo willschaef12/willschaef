@@ -1,5 +1,5 @@
 let selectedCharacter;
-let player = { x: 100, y: 100, width: 100, height: 100, img: new Image(), speed: 10 };
+let player = { x: 100, y: 100, width: 100, height: 100, img: new Image(), speed: 200 }; // Speed is now in pixels per second
 let enemy = { x: 300, y: 300, width: 100, height: 100, img: new Image(), speed: 3, health: 100 };
 let bullets = [];
 const bulletSpeed = 5;
@@ -14,6 +14,18 @@ const lapseBlueDuration = 5000;
 let lapseBlueTimer = 0;
 let brightness = 100;
 let fps = 30;
+
+// Movement keys state
+const keys = {
+    w: false,
+    s: false,
+    a: false,
+    d: false,
+    ArrowUp: false,
+    ArrowDown: false,
+    ArrowLeft: false,
+    ArrowRight: false
+};
 
 // Character data
 const characters = {
@@ -31,11 +43,24 @@ function setupCanvas() {
 
 function update() {
     if (!ctx) return;
+    
+    // Clear the canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+    // Update player position
+    const deltaTime = frameRate / 1000; // Convert to seconds
+    const movement = player.speed * deltaTime;
+
+    if (keys.w || keys.ArrowUp) player.y -= movement;
+    if (keys.s || keys.ArrowDown) player.y += movement;
+    if (keys.a || keys.ArrowLeft) player.x -= movement;
+    if (keys.d || keys.ArrowRight) player.x += movement;
+
+    // Draw player and enemy
     ctx.drawImage(player.img, player.x, player.y, player.width, player.height);
     ctx.drawImage(enemy.img, enemy.x, enemy.y, enemy.width, enemy.height);
 
+    // Update bullets
     bullets.forEach((bullet, index) => {
         ctx.fillStyle = 'white';
         ctx.fillRect(bullet.x, bullet.y, 10, 10);
@@ -47,6 +72,7 @@ function update() {
         }
     });
 
+    // Handle lapse blue effect
     if (isLapseBlueActive) {
         lapseBlueTimer -= frameRate;
         if (lapseBlueTimer <= 0) {
@@ -85,14 +111,12 @@ function buyCharacter(characterId) {
     }
 }
 
-// Function to handle the "Reversal Red" attack
 function activateReversalRed() {
     const blastEffect = document.getElementById('blastEffect');
     blastEffect.style.left = `${player.x + player.width / 2}px`;
     blastEffect.style.top = `${player.y + player.height / 2}px`;
     blastEffect.style.display = 'block';
 
-    // Hide the blast effect after a short delay
     setTimeout(() => {
         blastEffect.style.display = 'none';
     }, 1000); // Adjust this duration to fit the effect's visibility duration
@@ -100,16 +124,10 @@ function activateReversalRed() {
 
 // Handle keydown events
 function handleKeydown(event) {
-    const speed = player.speed;
+    if (event.key in keys) {
+        keys[event.key] = true;
+    }
     switch (event.key) {
-        case 'w': player.y -= speed; break;
-        case 's': player.y += speed; break;
-        case 'a': player.x -= speed; break;
-        case 'd': player.x += speed; break;
-        case 'ArrowUp': player.y -= speed; break;
-        case 'ArrowDown': player.y += speed; break;
-        case 'ArrowLeft': player.x -= speed; break;
-        case 'ArrowRight': player.x += speed; break;
         case ' ':
             if (isAbilityAvailable) {
                 bullets.push({
@@ -135,6 +153,12 @@ function handleKeydown(event) {
         case 'r':
             activateReversalRed();
             break;
+    }
+}
+
+function handleKeyup(event) {
+    if (event.key in keys) {
+        keys[event.key] = false;
     }
 }
 
@@ -171,3 +195,4 @@ document.getElementById('difficulty').addEventListener('change', (e) => {
 });
 
 document.addEventListener('keydown', handleKeydown);
+document.addEventListener('keyup', handleKeyup);
