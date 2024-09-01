@@ -55,8 +55,6 @@ function update() {
         }
     }
 
-    document.getElementById('cooldown').textContent = `Reversal Red: ${Math.ceil(abilityCooldown)}s`; // Not used in this version
-
     requestAnimationFrame(update);
 }
 
