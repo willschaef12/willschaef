@@ -6,9 +6,8 @@ const bulletSpeed = 5;
 let ctx;
 let canvas;
 let timer;
-let cooldownTimer;
 let isAbilityAvailable = true;
-let abilityCooldown = 30;
+let abilityCooldown = 30; // Not used in this version
 let frameRate = 1000 / 30;
 let isLapseBlueActive = false;
 const lapseBlueDuration = 5000;
@@ -16,6 +15,7 @@ let lapseBlueTimer = 0;
 let brightness = 100;
 let fps = 30;
 
+// Character data
 const characters = {
     character1: { selectionImg: 'gojo.png', fightingImg: 'gojo2.webp', width: 100, height: 100, speed: 10, unlocked: true },
     character2: { selectionImg: 'yuji.png', fightingImg: 'yuji.png', width: 100, height: 100, speed: 10, unlocked: true },
@@ -55,15 +55,7 @@ function update() {
         }
     }
 
-    document.getElementById('cooldown').textContent = `Reversal Red: ${Math.ceil(cooldownTimer / 1000)}s`;
-
-    if (!isAbilityAvailable) {
-        cooldownTimer -= frameRate / 1000;
-        if (cooldownTimer <= 0) {
-            isAbilityAvailable = true;
-            document.getElementById('reversalRedButton').disabled = false;
-        }
-    }
+    document.getElementById('cooldown').textContent = `Reversal Red: ${Math.ceil(abilityCooldown)}s`; // Not used in this version
 
     requestAnimationFrame(update);
 }
@@ -77,7 +69,6 @@ function startGame() {
     player.img.src = characters[selectedCharacter].fightingImg;
     enemy.img.src = 'curse.png';
     timer = 30000;
-    cooldownTimer = abilityCooldown;
     update();
 }
 
@@ -96,6 +87,20 @@ function buyCharacter(characterId) {
     }
 }
 
+// Function to handle the "Reversal Red" attack
+function activateReversalRed() {
+    const blastEffect = document.getElementById('blastEffect');
+    blastEffect.style.left = `${player.x + player.width / 2}px`;
+    blastEffect.style.top = `${player.y + player.height / 2}px`;
+    blastEffect.style.display = 'block';
+
+    // Hide the blast effect after a short delay
+    setTimeout(() => {
+        blastEffect.style.display = 'none';
+    }, 1000); // Adjust this duration to fit the effect's visibility duration
+}
+
+// Handle keydown events
 function handleKeydown(event) {
     const speed = player.speed;
     switch (event.key) {
@@ -116,7 +121,9 @@ function handleKeydown(event) {
                     dy: 0
                 });
                 isAbilityAvailable = false;
-                cooldownTimer = abilityCooldown;
+                setTimeout(() => {
+                    isAbilityAvailable = true;
+                }, abilityCooldown * 1000); // Reset ability availability
                 document.getElementById('reversalRedButton').disabled = true;
             }
             break;
@@ -133,24 +140,7 @@ function handleKeydown(event) {
     }
 }
 
-
-function activateReversalRed() {
-    if (isAbilityAvailable) {
-        const blastEffect = document.getElementById('blastEffect');
-        blastEffect.style.left = `${player.x + player.width / 2}px`;
-        blastEffect.style.top = `${player.y + player.height / 2}px`;
-        blastEffect.style.display = 'block';
-
-        setTimeout(() => {
-            blastEffect.style.display = 'none';
-        }, 1000); 
-
-        isAbilityAvailable = false;
-        cooldownTimer = abilityCooldown;
-        document.getElementById('reversalRedButton').disabled = true;
-    }
-}
-
+// Event listeners
 document.getElementById('reversalRedButton').addEventListener('click', activateReversalRed);
 
 document.getElementById('startGame').addEventListener('click', startGame);
