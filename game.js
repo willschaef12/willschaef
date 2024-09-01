@@ -1,5 +1,5 @@
 let selectedCharacter;
-let player = { x: 100, y: 100, width: 100, height: 100, img: new Image(), speed: 200 }; // Speed is now in pixels per second
+let player = { x: 100, y: 100, width: 100, height: 100, img: new Image(), speed: 5 };
 let enemy = { x: 300, y: 300, width: 100, height: 100, img: new Image(), speed: 3, health: 100 };
 let bullets = [];
 const bulletSpeed = 5;
@@ -7,25 +7,14 @@ let ctx;
 let canvas;
 let timer;
 let isAbilityAvailable = true;
-let abilityCooldown = 30; // Not used in this version
-let frameRate = 1000 / 30;
+let abilityCooldown = 30; // in seconds
+let frameRate = 1000 / 60; // 60 FPS
 let isLapseBlueActive = false;
-const lapseBlueDuration = 5000;
+const lapseBlueDuration = 5000; // in milliseconds
 let lapseBlueTimer = 0;
 let brightness = 100;
-let fps = 30;
-
-// Movement keys state
-const keys = {
-    w: false,
-    s: false,
-    a: false,
-    d: false,
-    ArrowUp: false,
-    ArrowDown: false,
-    ArrowLeft: false,
-    ArrowRight: false
-};
+let fps = 60;
+let keys = {};
 
 // Character data
 const characters = {
@@ -41,20 +30,17 @@ function setupCanvas() {
     }
 }
 
+function detectCollision(rect1, rect2) {
+    return !(rect1.x > rect2.x + rect2.width ||
+             rect1.x + rect1.width < rect2.x ||
+             rect1.y > rect2.y + rect2.height ||
+             rect1.y + rect1.height < rect2.y);
+}
+
 function update() {
     if (!ctx) return;
-    
-    // Clear the canvas
+
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Update player position
-    const deltaTime = frameRate / 1000; // Convert to seconds
-    const movement = player.speed * deltaTime;
-
-    if (keys.w || keys.ArrowUp) player.y -= movement;
-    if (keys.s || keys.ArrowDown) player.y += movement;
-    if (keys.a || keys.ArrowLeft) player.x -= movement;
-    if (keys.d || keys.ArrowRight) player.x += movement;
 
     // Draw player and enemy
     ctx.drawImage(player.img, player.x, player.y, player.width, player.height);
@@ -67,10 +53,61 @@ function update() {
         bullet.x += bullet.dx;
         bullet.y += bullet.dy;
 
+        // Check collision with enemy
+        if (detectCollision(bullet, enemy)) {
+            enemy.health -= 10; // Reduce enemy's health
+            console.log('Bullet hit enemy! Enemy health:', enemy.health);
+            const healthDisplay = document.getElementById('enemyHealth');
+            if (healthDisplay) {
+                healthDisplay.textContent = `Enemy Health: ${enemy.health}`;
+            }
+            bullets.splice(index, 1); // Remove bullet on hit
+
+            // Check if enemy is defeated
+            if (enemy.health <= 0) {
+                enemy.health = 0;
+                console.log('Enemy defeated!');
+                if (healthDisplay) {
+                    healthDisplay.textContent = 'Enemy Health: 0';
+                }
+                // Optionally, handle enemy defeat (e.g., end game, display message)
+            }
+        }
+
+        // Remove bullets that go off-screen
         if (bullet.x < 0 || bullet.x > canvas.width || bullet.y < 0 || bullet.y > canvas.height) {
             bullets.splice(index, 1);
         }
     });
+
+    // Check collision with Reversal Red blast
+    const blastEffect = document.getElementById('blastEffect');
+    if (blastEffect.style.display === 'block') {
+        const blastRect = {
+            x: parseInt(blastEffect.style.left),
+            y: parseInt(blastEffect.style.top),
+            width: 200,
+            height: 200
+        };
+
+        if (detectCollision(blastRect, enemy)) {
+            enemy.health -= 20; // Damage amount
+            console.log('Reversal Red hit enemy! Enemy health:', enemy.health);
+            const healthDisplay = document.getElementById('enemyHealth');
+            if (healthDisplay) {
+                healthDisplay.textContent = `Enemy Health: ${enemy.health}`;
+            }
+            document.getElementById('blastEffect').style.display = 'none'; // Hide blast effect
+            if (enemy.health <= 0) {
+                enemy.health = 0;
+                console.log('Enemy defeated by Reversal Red!');
+                if (healthDisplay) {
+                    healthDisplay.textContent = 'Enemy Health: 0';
+                }
+                // Optionally, handle enemy defeat (e.g., end game, display message)
+            }
+        }
+    }
 
     // Handle lapse blue effect
     if (isLapseBlueActive) {
@@ -117,17 +154,25 @@ function activateReversalRed() {
     blastEffect.style.top = `${player.y + player.height / 2}px`;
     blastEffect.style.display = 'block';
 
+    // Hide the blast effect after a short delay
     setTimeout(() => {
         blastEffect.style.display = 'none';
     }, 1000); // Adjust this duration to fit the effect's visibility duration
 }
 
-// Handle keydown events
 function handleKeydown(event) {
-    if (event.key in keys) {
-        keys[event.key] = true;
-    }
+    keys[event.key] = true;
+
+    const speed = player.speed;
     switch (event.key) {
+        case 'w': player.y -= speed; break;
+        case 's': player.y += speed; break;
+        case 'a': player.x -= speed; break;
+        case 'd': player.x += speed; break;
+        case 'ArrowUp': player.y -= speed; break;
+        case 'ArrowDown': player.y += speed; break;
+        case 'ArrowLeft': player.x -= speed; break;
+        case 'ArrowRight': player.x += speed; break;
         case ' ':
             if (isAbilityAvailable) {
                 bullets.push({
@@ -157,9 +202,7 @@ function handleKeydown(event) {
 }
 
 function handleKeyup(event) {
-    if (event.key in keys) {
-        keys[event.key] = false;
-    }
+    keys[event.key] = false;
 }
 
 // Event listeners
