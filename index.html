@@ -89,6 +89,7 @@
       anakin: true
     };
     let selectedTower = null;
+    let waveNumber = 1;
 
     function goToShop() {
       document.getElementById("homeScreen").style.display = "none";
@@ -145,7 +146,6 @@
       }
     }
 
-    // --- Game Setup ---
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
 
@@ -156,14 +156,21 @@
 
     const pathY = 240;
 
+    const towerStats = {
+      luke:    { fireRate: 30, damage: 1, range: 100 },
+      anakin:  { fireRate: 60, damage: 2, range: 110 },
+      obiwan:  { fireRate: 90, damage: 4, range: 120 }
+    };
+
     class Tower {
       constructor(x, y, type) {
         this.x = x;
         this.y = y;
         this.type = type;
-        this.fireRate = 60;
+        this.fireRate = towerStats[type].fireRate;
         this.cooldown = 0;
-        this.damage = 1;
+        this.damage = towerStats[type].damage;
+        this.range = towerStats[type].range;
       }
 
       draw() {
@@ -191,7 +198,7 @@
           const dx = enemy.x - this.x;
           const dy = enemy.y - this.y;
           const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < 100) {
+          if (dist < this.range) {
             bullets.push(new Bullet(this.x + tileSize / 2, this.y + tileSize / 2, enemy, this.damage));
             this.cooldown = this.fireRate;
             break;
@@ -213,12 +220,12 @@
     }
 
     class Enemy {
-      constructor() {
+      constructor(health, speed) {
         this.x = 0;
         this.y = pathY;
-        this.speed = 1;
-        this.maxHealth = 5;
-        this.health = this.maxHealth;
+        this.speed = speed;
+        this.maxHealth = health;
+        this.health = health;
       }
 
       update() {
@@ -228,7 +235,6 @@
       draw() {
         ctx.fillStyle = "red";
         ctx.fillRect(this.x, this.y, tileSize, tileSize);
-
         ctx.fillStyle = "darkred";
         ctx.fillRect(this.x, this.y - 10, tileSize, 5);
         ctx.fillStyle = "lime";
@@ -242,7 +248,7 @@
         this.y = y;
         this.target = target;
         this.damage = damage;
-        this.speed = 3;
+        this.speed = 4;
       }
 
       update() {
@@ -272,6 +278,12 @@
       const x = Math.floor((e.clientX - rect.left) / tileSize) * tileSize;
       const y = Math.floor((e.clientY - rect.top) / tileSize) * tileSize;
 
+      // Block placement on enemy path
+      if (y === pathY) {
+        alert("You can't place a tower on the enemy path!");
+        return;
+      }
+
       towers.push(new Tower(x, y, selectedTower));
     });
 
@@ -292,13 +304,25 @@
     let frame = 0;
     function gameLoop() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-
       ctx.fillStyle = "#333";
       ctx.fillRect(0, pathY, canvas.width, tileSize);
 
       frame++;
-      if (frame % 180 === 0) {
-        enemies.push(new Enemy());
+
+      if (frame % 60 === 0 && enemies.length === 0) {
+        for (let i = 0; i < waveNumber; i++) {
+          enemies.push(new Enemy(5 + waveNumber * 2, 1 + waveNumber * 0.1));
+        }
+        waveNumber++;
+      }
+
+      // Draw range if tower is selected
+      if (selectedTower) {
+        canvas.style.cursor = "crosshair";
+        canvas.addEventListener("mousemove", drawRangeCircle);
+      } else {
+        canvas.style.cursor = "default";
+        canvas.removeEventListener("mousemove", drawRangeCircle);
       }
 
       towers.forEach(t => {
@@ -325,6 +349,18 @@
       }
 
       requestAnimationFrame(gameLoop);
+    }
+
+    function drawRangeCircle(e) {
+      const rect = canvas.getBoundingClientRect();
+      const x = Math.floor((e.clientX - rect.left) / tileSize) * tileSize + tileSize / 2;
+      const y = Math.floor((e.clientY - rect.top) / tileSize) * tileSize + tileSize / 2;
+      const radius = towerStats[selectedTower]?.range || 0;
+
+      ctx.beginPath();
+      ctx.strokeStyle = "rgba(255,255,0,0.3)";
+      ctx.arc(x, y, radius, 0, Math.PI * 2);
+      ctx.stroke();
     }
   </script>
 </body>
