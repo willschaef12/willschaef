@@ -15,15 +15,26 @@
       align-items: center;
     }
 
-    #controls {
+    button {
+      padding: 12px 20px;
       margin: 10px;
+      font-size: 16px;
+      background: #222;
+      color: white;
+      border: 2px solid #555;
+      cursor: pointer;
     }
 
-    button {
-      margin: 0 5px;
-      padding: 10px 15px;
-      font-size: 16px;
-      cursor: pointer;
+    #homeScreen, #shopScreen, #gameContainer {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    #homeScreen {
+      display: flex;
+      margin-top: 100px;
     }
 
     canvas {
@@ -31,22 +42,110 @@
       border: 4px solid #555;
     }
 
+    #controls {
+      margin: 10px;
+    }
+
     #goldDisplay {
+      font-size: 18px;
       margin-bottom: 10px;
-      font-size: 20px;
     }
   </style>
 </head>
 <body>
-  <div id="controls">
-    <span id="goldDisplay">Gold: 100</span>
-    <button onclick="selectTower('luke')">Buy Luke (50)</button>
-    <button onclick="selectTower('anakin')">Buy Anakin (50)</button>
+
+  <!-- Home Screen -->
+  <div id="homeScreen">
+    <h1>Star Wars Tower Defense</h1>
+    <p>Defend the galaxy by placing powerful heroes!</p>
+    <button onclick="goToShop()">Go to Shop</button>
+    <button onclick="startGame()">Start Game</button>
   </div>
 
-  <canvas id="gameCanvas" width="640" height="480"></canvas>
+  <!-- Shop Screen -->
+  <div id="shopScreen">
+    <h2>Shop - Buy Characters</h2>
+    <p id="shopGold">Gold: 100</p>
+    <button onclick="buyCharacter('obiwan', 75)">Buy Obi-Wan (75)</button>
+    <br>
+    <button onclick="returnToHome()">Back to Home</button>
+  </div>
+
+  <!-- Game Screen -->
+  <div id="gameContainer">
+    <div id="controls">
+      <span id="goldDisplay">Gold: 100</span>
+      <button id="buyLukeBtn" onclick="selectTower('luke')" disabled>Place Luke</button>
+      <button id="buyAnakinBtn" onclick="selectTower('anakin')" disabled>Place Anakin</button>
+      <button id="buyObiwanBtn" onclick="selectTower('obiwan')" disabled>Place Obi-Wan</button>
+    </div>
+    <canvas id="gameCanvas" width="640" height="480"></canvas>
+  </div>
 
   <script>
+    let gold = 100;
+    let ownedCharacters = {
+      luke: true,
+      anakin: true
+    };
+    let selectedTower = null;
+
+    function goToShop() {
+      document.getElementById("homeScreen").style.display = "none";
+      document.getElementById("shopScreen").style.display = "flex";
+      updateShopGold();
+    }
+
+    function returnToHome() {
+      document.getElementById("shopScreen").style.display = "none";
+      document.getElementById("homeScreen").style.display = "flex";
+    }
+
+    function updateShopGold() {
+      document.getElementById("shopGold").innerText = `Gold: ${gold}`;
+    }
+
+    function buyCharacter(name, cost) {
+      if (gold >= cost && !ownedCharacters[name]) {
+        gold -= cost;
+        ownedCharacters[name] = true;
+        updateShopGold();
+        updateGoldDisplay();
+        enableCharacterButton(name);
+        alert(`${name.charAt(0).toUpperCase() + name.slice(1)} unlocked!`);
+      } else {
+        alert("Not enough gold or already purchased.");
+      }
+    }
+
+    function enableCharacterButton(name) {
+      if (name === "luke") document.getElementById("buyLukeBtn").disabled = false;
+      if (name === "anakin") document.getElementById("buyAnakinBtn").disabled = false;
+      if (name === "obiwan") document.getElementById("buyObiwanBtn").disabled = false;
+    }
+
+    function startGame() {
+      document.getElementById("homeScreen").style.display = "none";
+      document.getElementById("shopScreen").style.display = "none";
+      document.getElementById("gameContainer").style.display = "flex";
+      updateGoldDisplay();
+      enableCharacterButton("luke");
+      enableCharacterButton("anakin");
+      if (ownedCharacters["obiwan"]) enableCharacterButton("obiwan");
+      gameLoop();
+    }
+
+    function updateGoldDisplay() {
+      document.getElementById("goldDisplay").innerText = `Gold: ${gold}`;
+    }
+
+    function selectTower(name) {
+      if (ownedCharacters[name]) {
+        selectedTower = name;
+      }
+    }
+
+    // --- Game Setup ---
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
 
@@ -55,14 +154,7 @@
     const enemies = [];
     const bullets = [];
 
-    let gold = 100;
-    let selectedTower = null;
-
     const pathY = 240;
-
-    function selectTower(name) {
-      selectedTower = name;
-    }
 
     class Tower {
       constructor(x, y, type) {
@@ -71,22 +163,22 @@
         this.type = type;
         this.fireRate = 60;
         this.cooldown = 0;
-        this.damage = 1; // ✅ Base damage
+        this.damage = 1;
       }
 
       draw() {
-        ctx.fillStyle = this.type === "luke" ? "green" : "blue";
+        ctx.fillStyle =
+          this.type === "luke" ? "green" :
+          this.type === "anakin" ? "blue" :
+          this.type === "obiwan" ? "beige" : "white";
+
         ctx.fillRect(this.x, this.y, tileSize, tileSize);
 
-        const cooldownRatio = 1 - this.cooldown / this.fireRate;
+        const cdRatio = 1 - this.cooldown / this.fireRate;
         ctx.fillStyle = "gray";
         ctx.fillRect(this.x, this.y - 8, tileSize, 5);
         ctx.fillStyle = "yellow";
-        ctx.fillRect(this.x, this.y - 8, tileSize * cooldownRatio, 5);
-
-        ctx.fillStyle = "white";
-        ctx.font = "10px Arial";
-        ctx.fillText(`${this.type} (${this.damage})`, this.x + 2, this.y + tileSize + 10); // ✅ Show damage
+        ctx.fillRect(this.x, this.y - 8, tileSize * cdRatio, 5);
       }
 
       update() {
@@ -115,7 +207,7 @@
         if (gold >= 50) {
           this.damage++;
           gold -= 50;
-          document.getElementById("goldDisplay").innerText = `Gold: ${gold}`;
+          updateGoldDisplay();
         }
       }
     }
@@ -137,7 +229,6 @@
         ctx.fillStyle = "red";
         ctx.fillRect(this.x, this.y, tileSize, tileSize);
 
-        // Health bar
         ctx.fillStyle = "darkred";
         ctx.fillRect(this.x, this.y - 10, tileSize, 5);
         ctx.fillStyle = "lime";
@@ -181,14 +272,9 @@
       const x = Math.floor((e.clientX - rect.left) / tileSize) * tileSize;
       const y = Math.floor((e.clientY - rect.top) / tileSize) * tileSize;
 
-      if (gold >= 50) {
-        towers.push(new Tower(x, y, selectedTower));
-        gold -= 50;
-        document.getElementById("goldDisplay").innerText = `Gold: ${gold}`;
-      }
+      towers.push(new Tower(x, y, selectedTower));
     });
 
-    // ✅ Right-click to upgrade tower
     canvas.addEventListener("contextmenu", (e) => {
       e.preventDefault();
       const rect = canvas.getBoundingClientRect();
@@ -207,7 +293,6 @@
     function gameLoop() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Draw path
       ctx.fillStyle = "#333";
       ctx.fillRect(0, pathY, canvas.width, tileSize);
 
@@ -216,34 +301,31 @@
         enemies.push(new Enemy());
       }
 
-      for (let tower of towers) {
-        tower.update();
-        tower.draw();
-      }
+      towers.forEach(t => {
+        t.update();
+        t.draw();
+      });
 
-      for (let enemy of enemies) {
-        enemy.update();
-        enemy.draw();
-      }
+      enemies.forEach(e => {
+        e.update();
+        e.draw();
+      });
 
-      for (let bullet of bullets) {
-        bullet.update();
-        bullet.draw();
-      }
+      bullets.forEach(b => {
+        b.update();
+        b.draw();
+      });
 
-      // Remove defeated enemies
       for (let i = enemies.length - 1; i >= 0; i--) {
         if (enemies[i].health <= 0) {
           enemies.splice(i, 1);
           gold += 10;
-          document.getElementById("goldDisplay").innerText = `Gold: ${gold}`;
+          updateGoldDisplay();
         }
       }
 
       requestAnimationFrame(gameLoop);
     }
-
-    gameLoop();
   </script>
 </body>
 </html>
