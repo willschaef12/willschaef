@@ -46,13 +46,14 @@
       margin: 10px;
     }
 
-    #goldDisplay, #healthDisplay, #waveDisplay, #nextWaveTimer {
+    #goldDisplay {
       font-size: 18px;
-      margin: 5px;
+      margin-bottom: 10px;
     }
   </style>
 </head>
 <body>
+
   <!-- Home Screen -->
   <div id="homeScreen">
     <h1>Star Wars Tower Defense</h1>
@@ -74,31 +75,21 @@
   <div id="gameContainer">
     <div id="controls">
       <span id="goldDisplay">Gold: 100</span>
-      <span id="healthDisplay">Base Health: 100</span>
-      <span id="waveDisplay">Wave: 1</span>
-      <span id="nextWaveTimer">Next wave in: 0</span>
-      <br>
       <button id="buyLukeBtn" onclick="selectTower('luke')" disabled>Place Luke</button>
       <button id="buyAnakinBtn" onclick="selectTower('anakin')" disabled>Place Anakin</button>
       <button id="buyObiwanBtn" onclick="selectTower('obiwan')" disabled>Place Obi-Wan</button>
-      <button onclick="togglePause()">Pause/Resume</button>
     </div>
     <canvas id="gameCanvas" width="640" height="480"></canvas>
   </div>
 
   <script>
     let gold = 100;
-    let baseHealth = 100;
-    let waveNumber = 1;
-    let waveCooldown = 300;
-    let isPaused = false;
-
     let ownedCharacters = {
       luke: true,
       anakin: true
     };
-
     let selectedTower = null;
+    let waveNumber = 1;
 
     function goToShop() {
       document.getElementById("homeScreen").style.display = "none";
@@ -129,31 +120,24 @@
     }
 
     function enableCharacterButton(name) {
-      document.getElementById("buy" + name.charAt(0).toUpperCase() + name.slice(1) + "Btn").disabled = false;
+      if (name === "luke") document.getElementById("buyLukeBtn").disabled = false;
+      if (name === "anakin") document.getElementById("buyAnakinBtn").disabled = false;
+      if (name === "obiwan") document.getElementById("buyObiwanBtn").disabled = false;
     }
 
     function startGame() {
       document.getElementById("homeScreen").style.display = "none";
       document.getElementById("shopScreen").style.display = "none";
       document.getElementById("gameContainer").style.display = "flex";
-      updateUI();
-      Object.keys(ownedCharacters).forEach(enableCharacterButton);
+      updateGoldDisplay();
+      enableCharacterButton("luke");
+      enableCharacterButton("anakin");
+      if (ownedCharacters["obiwan"]) enableCharacterButton("obiwan");
       gameLoop();
     }
 
     function updateGoldDisplay() {
       document.getElementById("goldDisplay").innerText = `Gold: ${gold}`;
-    }
-
-    function updateUI() {
-      updateGoldDisplay();
-      document.getElementById("healthDisplay").innerText = `Base Health: ${baseHealth}`;
-      document.getElementById("waveDisplay").innerText = `Wave: ${waveNumber}`;
-      document.getElementById("nextWaveTimer").innerText = `Next wave in: ${Math.floor(waveCooldown / 60)}s`;
-    }
-
-    function togglePause() {
-      isPaused = !isPaused;
     }
 
     function selectTower(name) {
@@ -169,19 +153,14 @@
     const towers = [];
     const enemies = [];
     const bullets = [];
+
     const pathY = 240;
 
     const towerStats = {
-      luke:   { fireRate: 30, damage: 1, range: 100 },
-      anakin: { fireRate: 60, damage: 2, range: 110 },
-      obiwan: { fireRate: 90, damage: 4, range: 120 }
+      luke:    { fireRate: 30, damage: 1, range: 100 },
+      anakin:  { fireRate: 60, damage: 2, range: 110 },
+      obiwan:  { fireRate: 90, damage: 4, range: 120 }
     };
-
-    const enemyTypes = [
-      { name: "stormtrooper", health: 10, speed: 2 },
-      { name: "at-at", health: 40, speed: 0.5 },
-      { name: "sith", health: 30, speed: 1.5, immuneTo: "luke" }
-    ];
 
     class Tower {
       constructor(x, y, type) {
@@ -195,8 +174,13 @@
       }
 
       draw() {
-        ctx.fillStyle = this.type === "luke" ? "green" : this.type === "anakin" ? "blue" : "beige";
+        ctx.fillStyle =
+          this.type === "luke" ? "green" :
+          this.type === "anakin" ? "blue" :
+          this.type === "obiwan" ? "beige" : "white";
+
         ctx.fillRect(this.x, this.y, tileSize, tileSize);
+
         const cdRatio = 1 - this.cooldown / this.fireRate;
         ctx.fillStyle = "gray";
         ctx.fillRect(this.x, this.y - 8, tileSize, 5);
@@ -211,7 +195,6 @@
         }
 
         for (let enemy of enemies) {
-          if (enemy.immuneTo === this.type) continue;
           const dx = enemy.x - this.x;
           const dy = enemy.y - this.y;
           const dist = Math.sqrt(dx * dx + dy * dy);
@@ -237,21 +220,16 @@
     }
 
     class Enemy {
-      constructor(template) {
+      constructor(health, speed) {
         this.x = 0;
         this.y = pathY;
-        this.speed = template.speed;
-        this.maxHealth = template.health;
-        this.health = template.health;
-        this.immuneTo = template.immuneTo;
+        this.speed = speed;
+        this.maxHealth = health;
+        this.health = health;
       }
 
       update() {
         this.x += this.speed;
-        if (this.x > canvas.width) {
-          baseHealth -= 10;
-          enemies.splice(enemies.indexOf(this), 1);
-        }
       }
 
       draw() {
@@ -299,7 +277,13 @@
       const rect = canvas.getBoundingClientRect();
       const x = Math.floor((e.clientX - rect.left) / tileSize) * tileSize;
       const y = Math.floor((e.clientY - rect.top) / tileSize) * tileSize;
-      if (y === pathY) return alert("You can't place a tower on the enemy path!");
+
+      // Block placement on enemy path
+      if (y === pathY) {
+        alert("You can't place a tower on the enemy path!");
+        return;
+      }
+
       towers.push(new Tower(x, y, selectedTower));
     });
 
@@ -308,42 +292,75 @@
       const rect = canvas.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
-      towers.forEach(t => t.contains(x, y) && t.upgrade());
+
+      for (let tower of towers) {
+        if (tower.contains(x, y)) {
+          tower.upgrade();
+          break;
+        }
+      }
     });
 
+    let frame = 0;
     function gameLoop() {
-      if (isPaused) return requestAnimationFrame(gameLoop);
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.fillStyle = "#333";
       ctx.fillRect(0, pathY, canvas.width, tileSize);
 
-      waveCooldown--;
-      if (waveCooldown <= 0 && enemies.length === 0) {
+      frame++;
+
+      if (frame % 60 === 0 && enemies.length === 0) {
         for (let i = 0; i < waveNumber; i++) {
-          const type = enemyTypes[Math.floor(Math.random() * enemyTypes.length)];
-          enemies.push(new Enemy(type));
+          enemies.push(new Enemy(5 + waveNumber * 2, 1 + waveNumber * 0.1));
         }
         waveNumber++;
-        waveCooldown = 300;
       }
 
-      towers.forEach(t => (t.update(), t.draw()));
-      enemies.forEach(e => (e.update(), e.draw()));
-      bullets.forEach(b => (b.update(), b.draw()));
+      // Draw range if tower is selected
+      if (selectedTower) {
+        canvas.style.cursor = "crosshair";
+        canvas.addEventListener("mousemove", drawRangeCircle);
+      } else {
+        canvas.style.cursor = "default";
+        canvas.removeEventListener("mousemove", drawRangeCircle);
+      }
+
+      towers.forEach(t => {
+        t.update();
+        t.draw();
+      });
+
+      enemies.forEach(e => {
+        e.update();
+        e.draw();
+      });
+
+      bullets.forEach(b => {
+        b.update();
+        b.draw();
+      });
+
       for (let i = enemies.length - 1; i >= 0; i--) {
         if (enemies[i].health <= 0) {
           enemies.splice(i, 1);
           gold += 10;
+          updateGoldDisplay();
         }
       }
 
-      if (baseHealth <= 0) {
-        alert("Game Over!");
-        location.reload();
-      }
-
-      updateUI();
       requestAnimationFrame(gameLoop);
+    }
+
+    function drawRangeCircle(e) {
+      const rect = canvas.getBoundingClientRect();
+      const x = Math.floor((e.clientX - rect.left) / tileSize) * tileSize + tileSize / 2;
+      const y = Math.floor((e.clientY - rect.top) / tileSize) * tileSize + tileSize / 2;
+      const radius = towerStats[selectedTower]?.range || 0;
+
+      ctx.beginPath();
+      ctx.strokeStyle = "rgba(255,255,0,0.3)";
+      ctx.arc(x, y, radius, 0, Math.PI * 2);
+      ctx.stroke();
     }
   </script>
 </body>
