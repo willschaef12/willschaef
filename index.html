@@ -71,6 +71,7 @@
         this.type = type;
         this.fireRate = 60;
         this.cooldown = 0;
+        this.damage = 1; // ✅ Base damage
       }
 
       draw() {
@@ -85,7 +86,7 @@
 
         ctx.fillStyle = "white";
         ctx.font = "10px Arial";
-        ctx.fillText(this.type, this.x + 3, this.y + tileSize - 5);
+        ctx.fillText(`${this.type} (${this.damage})`, this.x + 2, this.y + tileSize + 10); // ✅ Show damage
       }
 
       update() {
@@ -99,10 +100,22 @@
           const dy = enemy.y - this.y;
           const dist = Math.sqrt(dx * dx + dy * dy);
           if (dist < 100) {
-            bullets.push(new Bullet(this.x + tileSize / 2, this.y + tileSize / 2, enemy));
+            bullets.push(new Bullet(this.x + tileSize / 2, this.y + tileSize / 2, enemy, this.damage));
             this.cooldown = this.fireRate;
             break;
           }
+        }
+      }
+
+      contains(x, y) {
+        return x >= this.x && x <= this.x + tileSize && y >= this.y && y <= this.y + tileSize;
+      }
+
+      upgrade() {
+        if (gold >= 50) {
+          this.damage++;
+          gold -= 50;
+          document.getElementById("goldDisplay").innerText = `Gold: ${gold}`;
         }
       }
     }
@@ -112,7 +125,7 @@
         this.x = 0;
         this.y = pathY;
         this.speed = 1;
-        this.maxHealth = 3;
+        this.maxHealth = 5;
         this.health = this.maxHealth;
       }
 
@@ -124,22 +137,20 @@
         ctx.fillStyle = "red";
         ctx.fillRect(this.x, this.y, tileSize, tileSize);
 
-        // Health bar background
+        // Health bar
         ctx.fillStyle = "darkred";
         ctx.fillRect(this.x, this.y - 10, tileSize, 5);
-
-        // Health bar foreground
         ctx.fillStyle = "lime";
-        const hpWidth = (this.health / this.maxHealth) * tileSize;
-        ctx.fillRect(this.x, this.y - 10, hpWidth, 5);
+        ctx.fillRect(this.x, this.y - 10, (this.health / this.maxHealth) * tileSize, 5);
       }
     }
 
     class Bullet {
-      constructor(x, y, target) {
+      constructor(x, y, target, damage) {
         this.x = x;
         this.y = y;
         this.target = target;
+        this.damage = damage;
         this.speed = 3;
       }
 
@@ -151,7 +162,7 @@
         this.y += (dy / dist) * this.speed;
 
         if (dist < 5) {
-          this.target.health--;
+          this.target.health -= this.damage;
           bullets.splice(bullets.indexOf(this), 1);
         }
       }
@@ -166,7 +177,6 @@
 
     canvas.addEventListener("click", (e) => {
       if (!selectedTower) return;
-
       const rect = canvas.getBoundingClientRect();
       const x = Math.floor((e.clientX - rect.left) / tileSize) * tileSize;
       const y = Math.floor((e.clientY - rect.top) / tileSize) * tileSize;
@@ -178,11 +188,26 @@
       }
     });
 
+    // ✅ Right-click to upgrade tower
+    canvas.addEventListener("contextmenu", (e) => {
+      e.preventDefault();
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+
+      for (let tower of towers) {
+        if (tower.contains(x, y)) {
+          tower.upgrade();
+          break;
+        }
+      }
+    });
+
     let frame = 0;
     function gameLoop() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Draw visible path
+      // Draw path
       ctx.fillStyle = "#333";
       ctx.fillRect(0, pathY, canvas.width, tileSize);
 
@@ -206,7 +231,7 @@
         bullet.draw();
       }
 
-      // Remove dead enemies
+      // Remove defeated enemies
       for (let i = enemies.length - 1; i >= 0; i--) {
         if (enemies[i].health <= 0) {
           enemies.splice(i, 1);
