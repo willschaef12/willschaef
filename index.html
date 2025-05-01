@@ -58,7 +58,7 @@
     let gold = 100;
     let selectedTower = null;
 
-    const path = [{ x: 0, y: 200 }, { x: 640, y: 200 }];
+    const pathY = 240;
 
     function selectTower(name) {
       selectedTower = name;
@@ -74,22 +74,18 @@
       }
 
       draw() {
-        // Block color
-        if (this.type === "luke") ctx.fillStyle = "green";
-        else if (this.type === "anakin") ctx.fillStyle = "blue";
+        ctx.fillStyle = this.type === "luke" ? "green" : "blue";
         ctx.fillRect(this.x, this.y, tileSize, tileSize);
 
-        // Cooldown bar
         const cooldownRatio = 1 - this.cooldown / this.fireRate;
         ctx.fillStyle = "gray";
         ctx.fillRect(this.x, this.y - 8, tileSize, 5);
         ctx.fillStyle = "yellow";
         ctx.fillRect(this.x, this.y - 8, tileSize * cooldownRatio, 5);
 
-        // Label
         ctx.fillStyle = "white";
         ctx.font = "10px Arial";
-        ctx.fillText(this.type.charAt(0).toUpperCase() + this.type.slice(1), this.x + 3, this.y + tileSize - 5);
+        ctx.fillText(this.type, this.x + 3, this.y + tileSize - 5);
       }
 
       update() {
@@ -113,10 +109,11 @@
 
     class Enemy {
       constructor() {
-        this.x = path[0].x;
-        this.y = path[0].y;
+        this.x = 0;
+        this.y = pathY;
         this.speed = 1;
-        this.health = 3;
+        this.maxHealth = 3;
+        this.health = this.maxHealth;
       }
 
       update() {
@@ -126,6 +123,15 @@
       draw() {
         ctx.fillStyle = "red";
         ctx.fillRect(this.x, this.y, tileSize, tileSize);
+
+        // Health bar background
+        ctx.fillStyle = "darkred";
+        ctx.fillRect(this.x, this.y - 10, tileSize, 5);
+
+        // Health bar foreground
+        ctx.fillStyle = "lime";
+        const hpWidth = (this.health / this.maxHealth) * tileSize;
+        ctx.fillRect(this.x, this.y - 10, hpWidth, 5);
       }
     }
 
@@ -176,6 +182,10 @@
     function gameLoop() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+      // Draw visible path
+      ctx.fillStyle = "#333";
+      ctx.fillRect(0, pathY, canvas.width, tileSize);
+
       frame++;
       if (frame % 180 === 0) {
         enemies.push(new Enemy());
@@ -196,13 +206,14 @@
         bullet.draw();
       }
 
-      enemies.forEach((enemy, index) => {
-        if (enemy.health <= 0) {
-          enemies.splice(index, 1);
+      // Remove dead enemies
+      for (let i = enemies.length - 1; i >= 0; i--) {
+        if (enemies[i].health <= 0) {
+          enemies.splice(i, 1);
           gold += 10;
           document.getElementById("goldDisplay").innerText = `Gold: ${gold}`;
         }
-      });
+      }
 
       requestAnimationFrame(gameLoop);
     }
