@@ -1,220 +1,213 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sorcerers Battle</title>
-    <style>
-        body {
-            margin: 0;
-            overflow: hidden;
-            background: #bb1414;
-            font-family: Arial, sans-serif;
-        }
-        canvas {
-            display: block;
-            background: #6e0909;
-            margin: auto;
-        }
-        #loadingScreen, #fightingScreen, #settingsScreen {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: white;
-        }
-        #loadingScreen {
-            background: rgba(0, 0, 0, 0.8);
-        }
-        #settingsScreen {
-            background: rgba(0, 0, 0, 0.8);
-            display: none;
-        }
-        #settingsButton, #backToMenu {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
-        }
-        #backToMenu {
-            background-color: rgba(0, 0, 0, 0.6);
-            color: white;
-            border: none;
-            border-radius: 5px;
-        }
-        #characterSelection {
-            display: flex;
-            gap: 20px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-        .character-container, .shop-item {
-            text-align: center;
-        }
-        .character, .shop-img {
-            width: 100px;
-            height: 100px;
-            object-fit: cover;
-            cursor: pointer;
-            border: 2px solid transparent;
-        }
-        .character.selected, .shop-item.available {
-            border-color: yellow;
-        }
-        .character-name, .shop-name {
-            margin-top: 10px;
-            font-size: 16px;
-            color: white;
-        }
-        #shop {
-            margin-top: 20px;
-            display: flex;
-            gap: 20px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-        #startGame, #abilityButton, #reversalRedButton, #lapseBlueButton {
-            margin-top: 20px;
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
-        }
-        #reversalRedButton, #lapseBlueButton {
-            display: none;
-        }
-        #lapseBlueLabel {
-            color: blue;
-            font-size: 18px;
-            margin-bottom: 10px;
-        }
-        #cooldown {
-            font-size: 16px;
-            color: red;
-        }
-        .blast, .lapse-blue {
-            position: absolute;
-            width: 200px;
-            height: 200px;
-            border-radius: 50%;
-            pointer-events: none;
-            transform: translate(-50%, -50%);
-            display: none;
-        }
-        .blast {
-            background: rgba(255, 0, 0, 0.7);
-            animation: expand 1s forwards;
-        }
-        .lapse-blue {
-            background: rgba(0, 0, 255, 0.7);
-        }
-        @keyframes expand {
-            0% {
-                transform: scale(0);
-                opacity: 1;
-            }
-            100% {
-                transform: scale(2);
-                opacity: 0;
-            }
-        }
-        #brightness, #fps {
-            margin-top: 10px;
-        }
-        .brightness-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            pointer-events: none;
-            transition: opacity 0.3s ease;
-        }
-        #difficulty {
-            margin-top: 10px;
-            font-size: 16px;
-        }
-        .character-text {
-            position: absolute;
-            bottom: 10px;
-            left: 10px;
-            color: white;
-            font-size: 18px;
-            background: rgba(0, 0, 0, 0.5);
-            padding: 5px;
-            border-radius: 5px;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Star Wars Tower Defense</title>
+  <style>
+    body {
+      margin: 0;
+      background: #000;
+      color: #fff;
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    #controls {
+      margin: 10px;
+    }
+
+    button {
+      margin: 0 5px;
+      padding: 10px 15px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    canvas {
+      background: #111;
+      border: 4px solid #555;
+    }
+
+    #goldDisplay {
+      margin-bottom: 10px;
+      font-size: 20px;
+    }
+  </style>
 </head>
 <body>
-    <audio id="background-music" src="background.mp3" loop></audio>
+  <div id="controls">
+    <span id="goldDisplay">Gold: 100</span>
+    <button onclick="selectTower('luke')">Buy Luke (50)</button>
+    <button onclick="selectTower('anakin')">Buy Anakin (50)</button>
+  </div>
 
-    <div id="loadingScreen">
-        <h1>Sorcerers Battle</h1>
-        <h2>Select Your Character</h2>
-        <div id="characterSelection">
-            <div class="character-container">
-                <img src="gojo.png" alt="Character 1" class="character" data-character="character1" />
-                <div class="character-name">Gojo</div>
-            </div>
-            <div class="character-container">
-                <img src="yuji.png" alt="Character 2" class="character" data-character="character2" />
-                <div class="character-name">Yuji</div>
-            </div>
-        </div>
-        <h2>Shop</h2>
-        <div id="shop">
-            <div class="shop-item available" data-character="character3">
-                <img src="yuta.png" alt="New Character" class="shop-img" />
-                <div class="shop-name">Yuta</div>
-                <button class="buy-button" data-price="100">Buy (100 Gold)</button>
-            </div>
-        </div>
-        <button id="startGame">Start Game</button>
-        <button id="settingsButton">Settings</button>
-    </div>
+  <canvas id="gameCanvas" width="640" height="480"></canvas>
 
-    <div id="settingsScreen">
-        <button id="backToMenu">Back to Menu</button>
-        <h2>Settings</h2>
-        <label for="brightness">Brightness:</label>
-        <input type="range" id="brightness" min="0" max="200" value="100" />
-        <span id="brightnessValue">100</span>%
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
 
-        <label for="fps">FPS:</label>
-        <input type="number" id="fps" min="10" max="60" value="30" />
-        <span id="fpsValue">30</span> FPS
+    const tileSize = 40;
+    const towers = [];
+    const enemies = [];
+    const bullets = [];
 
-        <label for="difficulty">Difficulty:</label>
-        <select id="difficulty">
-            <option value="easy">Easy</option>
-            <option value="medium" selected>Medium</option>
-            <option value="hard">Hard</option>
-        </select>
-    </div>
+    let gold = 100;
+    let selectedTower = null;
 
-    
-    <div id="fightingScreen" style="display: none;">
-        <div id="cooldown"></div>
-        <button id="reversalRedButton"></button>
-        <div id="lapseBlueLabel">Lapse Blue</div>
-        <button id="lapseBlueButton">Lapse Blue</button>
-        <canvas id="gameCanvas" width="800" height="600"></canvas>
-        <div id="blastEffect" class="blast"></div>
-        <div id="lapseBlueEffect" class="lapse-blue"></div>
-        <div id="characterText" class="character-text">Gojo says: Nah id win</div>
-        <div id="enemyHealth">Enemy Health: 100</div> <!-- Add this line -->
-    </div>
-    
+    const path = [{ x: 0, y: 200 }, { x: 640, y: 200 }];
 
-    <div id="brightnessOverlay" class="brightness-overlay"></div>
+    function selectTower(name) {
+      selectedTower = name;
+    }
 
-    <script src="game.js"></script>
+    class Tower {
+      constructor(x, y, type) {
+        this.x = x;
+        this.y = y;
+        this.type = type;
+        this.fireRate = 60;
+        this.cooldown = 0;
+      }
+
+      draw() {
+        // Block color
+        if (this.type === "luke") ctx.fillStyle = "green";
+        else if (this.type === "anakin") ctx.fillStyle = "blue";
+        ctx.fillRect(this.x, this.y, tileSize, tileSize);
+
+        // Cooldown bar
+        const cooldownRatio = 1 - this.cooldown / this.fireRate;
+        ctx.fillStyle = "gray";
+        ctx.fillRect(this.x, this.y - 8, tileSize, 5);
+        ctx.fillStyle = "yellow";
+        ctx.fillRect(this.x, this.y - 8, tileSize * cooldownRatio, 5);
+
+        // Label
+        ctx.fillStyle = "white";
+        ctx.font = "10px Arial";
+        ctx.fillText(this.type.charAt(0).toUpperCase() + this.type.slice(1), this.x + 3, this.y + tileSize - 5);
+      }
+
+      update() {
+        if (this.cooldown > 0) {
+          this.cooldown--;
+          return;
+        }
+
+        for (let enemy of enemies) {
+          const dx = enemy.x - this.x;
+          const dy = enemy.y - this.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 100) {
+            bullets.push(new Bullet(this.x + tileSize / 2, this.y + tileSize / 2, enemy));
+            this.cooldown = this.fireRate;
+            break;
+          }
+        }
+      }
+    }
+
+    class Enemy {
+      constructor() {
+        this.x = path[0].x;
+        this.y = path[0].y;
+        this.speed = 1;
+        this.health = 3;
+      }
+
+      update() {
+        this.x += this.speed;
+      }
+
+      draw() {
+        ctx.fillStyle = "red";
+        ctx.fillRect(this.x, this.y, tileSize, tileSize);
+      }
+    }
+
+    class Bullet {
+      constructor(x, y, target) {
+        this.x = x;
+        this.y = y;
+        this.target = target;
+        this.speed = 3;
+      }
+
+      update() {
+        const dx = this.target.x - this.x;
+        const dy = this.target.y - this.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        this.x += (dx / dist) * this.speed;
+        this.y += (dy / dist) * this.speed;
+
+        if (dist < 5) {
+          this.target.health--;
+          bullets.splice(bullets.indexOf(this), 1);
+        }
+      }
+
+      draw() {
+        ctx.fillStyle = "yellow";
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, 4, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    canvas.addEventListener("click", (e) => {
+      if (!selectedTower) return;
+
+      const rect = canvas.getBoundingClientRect();
+      const x = Math.floor((e.clientX - rect.left) / tileSize) * tileSize;
+      const y = Math.floor((e.clientY - rect.top) / tileSize) * tileSize;
+
+      if (gold >= 50) {
+        towers.push(new Tower(x, y, selectedTower));
+        gold -= 50;
+        document.getElementById("goldDisplay").innerText = `Gold: ${gold}`;
+      }
+    });
+
+    let frame = 0;
+    function gameLoop() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      frame++;
+      if (frame % 180 === 0) {
+        enemies.push(new Enemy());
+      }
+
+      for (let tower of towers) {
+        tower.update();
+        tower.draw();
+      }
+
+      for (let enemy of enemies) {
+        enemy.update();
+        enemy.draw();
+      }
+
+      for (let bullet of bullets) {
+        bullet.update();
+        bullet.draw();
+      }
+
+      enemies.forEach((enemy, index) => {
+        if (enemy.health <= 0) {
+          enemies.splice(index, 1);
+          gold += 10;
+          document.getElementById("goldDisplay").innerText = `Gold: ${gold}`;
+        }
+      });
+
+      requestAnimationFrame(gameLoop);
+    }
+
+    gameLoop();
+  </script>
 </body>
 </html>
