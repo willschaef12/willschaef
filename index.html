@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Star Wars TD</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Star Wars TD with Upgrades</title>
   <style>
     body {
       margin: 0;
@@ -35,12 +35,36 @@
       cursor: pointer;
       font-size: 12px;
       text-align: center;
+      white-space: pre-line;
     }
     #gameCanvas {
       background: #222;
       border: 4px solid #555;
       display: block;
       margin: 10px 0;
+    }
+    #upgradePanel {
+      background: #222;
+      padding: 10px;
+      margin-top: 10px;
+      width: 200px;
+      border: 2px solid #555;
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+    }
+    #upgradePanel button {
+      padding: 5px;
+      cursor: pointer;
+      background: #444;
+      border: none;
+      color: white;
+      font-size: 14px;
+    }
+    #upgradePanel button:disabled {
+      background: #222;
+      color: #777;
+      cursor: not-allowed;
     }
   </style>
 </head>
@@ -50,13 +74,25 @@
     <div id="goldDisplay">Gold: 100</div>
   </div>
   <canvas id="gameCanvas" width="800" height="500"></canvas>
+  <div id="upgradePanel">
+    <div id="upgradeInfo"></div>
+    <button id="upgradeDamageBtn">Upgrade Damage (Cost: 50)</button>
+    <button id="upgradeFireRateBtn">Upgrade Fire Rate (Cost: 50)</button>
+  </div>
 
   <script>
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
     const towerPanel = document.getElementById("towerPanel");
+    const goldDisplay = document.getElementById("goldDisplay");
+    const upgradePanel = document.getElementById("upgradePanel");
+    const upgradeInfo = document.getElementById("upgradeInfo");
+    const upgradeDamageBtn = document.getElementById("upgradeDamageBtn");
+    const upgradeFireRateBtn = document.getElementById("upgradeFireRateBtn");
+
     let gold = 100;
     let selectedTowerType = null;
+    let selectedTower = null;
     const tileSize = 40;
 
     const characters = [
@@ -72,7 +108,7 @@
     const pathY = 240;
 
     function updateGoldDisplay() {
-      document.getElementById("goldDisplay").innerText = `Gold: ${gold}`;
+      goldDisplay.innerText = `Gold: ${gold}`;
     }
 
     function createTowerPanel() {
@@ -84,6 +120,8 @@
         btn.onclick = () => {
           if (gold >= char.cost) {
             selectedTowerType = char;
+            selectedTower = null;
+            upgradePanel.style.display = "none";
           } else {
             alert("Not enough gold!");
           }
@@ -96,8 +134,10 @@
       constructor(x, y, data) {
         this.x = x;
         this.y = y;
-        this.data = data;
+        this.data = {...data}; // copy so upgrades don't affect base
         this.cooldown = 0;
+        this.upgradeLevelDamage = 0;
+        this.upgradeLevelFireRate = 0;
       }
       draw() {
         ctx.fillStyle = this.data.color;
@@ -120,6 +160,29 @@
             this.cooldown = this.data.fireRate;
             break;
           }
+        }
+      }
+      upgradeDamage() {
+        if (gold >= 50) {
+          gold -= 50;
+          this.data.damage += 1;
+          this.upgradeLevelDamage++;
+          updateGoldDisplay();
+          updateUpgradePanel();
+        } else {
+          alert("Not enough gold for damage upgrade!");
+        }
+      }
+      upgradeFireRate() {
+        if (gold >= 50) {
+          gold -= 50;
+          // Decrease cooldown (fireRate) by 5 but not below 5
+          this.data.fireRate = Math.max(5, this.data.fireRate - 5);
+          this.upgradeLevelFireRate++;
+          updateGoldDisplay();
+          updateUpgradePanel();
+        } else {
+          alert("Not enough gold for fire rate upgrade!");
         }
       }
     }
@@ -173,15 +236,54 @@
     }
 
     canvas.addEventListener("click", (e) => {
-      if (!selectedTowerType) return;
       const rect = canvas.getBoundingClientRect();
       const x = Math.floor((e.clientX - rect.left) / tileSize) * tileSize;
       const y = Math.floor((e.clientY - rect.top) / tileSize) * tileSize;
-      if (y === pathY) return alert("Can't place on path!");
-      towers.push(new Tower(x, y, selectedTowerType));
-      gold -= selectedTowerType.cost;
-      updateGoldDisplay();
+
+      // If clicked on upgrade panel or tower panel, ignore canvas click
+      if (e.target.closest("#upgradePanel") || e.target.closest("#towerPanel")) return;
+
+      if (selectedTowerType) {
+        if (y === pathY) return alert("Can't place on path!");
+        towers.push(new Tower(x, y, selectedTowerType));
+        gold -= selectedTowerType.cost;
+        updateGoldDisplay();
+        selectedTowerType = null;
+      } else {
+        // Check if clicked on a tower to upgrade
+        selectedTower = towers.find(t => t.x === x && t.y === y);
+        if (selectedTower) {
+          upgradePanel.style.display = "flex";
+          updateUpgradePanel();
+        } else {
+          upgradePanel.style.display = "none";
+          selectedTower = null;
+        }
+      }
     });
+
+    function updateUpgradePanel() {
+      if (!selectedTower) return;
+      upgradeInfo.innerHTML = `
+        <strong>${selectedTower.data.name}</strong><br>
+        Damage: ${selectedTower.data.damage} (Upgrades: ${selectedTower.upgradeLevelDamage})<br>
+        Fire Rate: ${selectedTower.data.fireRate} (Upgrades: ${selectedTower.upgradeLevelFireRate})<br>
+        Range: ${selectedTower.data.range}
+      `;
+      upgradeDamageBtn.disabled = gold < 50;
+      upgradeFireRateBtn.disabled = gold < 50;
+    }
+
+    upgradeDamageBtn.onclick = () => {
+      if (selectedTower) {
+        selectedTower.upgradeDamage();
+      }
+    };
+    upgradeFireRateBtn.onclick = () => {
+      if (selectedTower) {
+        selectedTower.upgradeFireRate();
+      }
+    };
 
     let wave = 1, frame = 0;
     function gameLoop() {
@@ -203,6 +305,7 @@
           enemies.splice(i, 1);
           gold += 10;
           updateGoldDisplay();
+          if (selectedTower) updateUpgradePanel();
         }
       }
       requestAnimationFrame(gameLoop);
