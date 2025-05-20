@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Star Wars Tower Defense</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Star Wars TD</title>
   <style>
     body {
       margin: 0;
@@ -14,207 +14,112 @@
       flex-direction: column;
       align-items: center;
     }
-
-    button {
-      padding: 12px 20px;
-      margin: 10px;
-      font-size: 16px;
-      background: #222;
-      color: white;
-      border: 2px solid #555;
-      cursor: pointer;
+    #ui {
+      display: flex;
+      width: 100%;
+      justify-content: space-between;
+      background: #111;
+      padding: 10px;
     }
-
-    #homeScreen, #shopScreen, #gameContainer {
-      display: none;
-      flex-direction: column;
+    #towerPanel {
+      display: flex;
+      gap: 10px;
+    }
+    .tower-icon {
+      width: 60px;
+      height: 60px;
+      border: 2px solid #555;
+      display: flex;
+      justify-content: center;
       align-items: center;
+      cursor: pointer;
+      font-size: 12px;
       text-align: center;
     }
-
-    #homeScreen {
-      display: flex;
-      margin-top: 100px;
-    }
-
-    canvas {
-      background: #111;
+    #gameCanvas {
+      background: #222;
       border: 4px solid #555;
-    }
-
-    #controls {
-      margin: 10px;
-    }
-
-    #goldDisplay {
-      font-size: 18px;
-      margin-bottom: 10px;
+      display: block;
+      margin: 10px 0;
     }
   </style>
 </head>
 <body>
-
-  <!-- Home Screen -->
-  <div id="homeScreen">
-    <h1>Star Wars Tower Defense</h1>
-    <p>Defend the galaxy by placing powerful heroes!</p>
-    <button onclick="goToShop()">Go to Shop</button>
-    <button onclick="startGame()">Start Game</button>
+  <div id="ui">
+    <div id="towerPanel"></div>
+    <div id="goldDisplay">Gold: 100</div>
   </div>
-
-  <!-- Shop Screen -->
-  <div id="shopScreen">
-    <h2>Shop - Buy Characters</h2>
-    <p id="shopGold">Gold: 100</p>
-    <button onclick="buyCharacter('obiwan', 75)">Buy Obi-Wan (75)</button>
-    <br>
-    <button onclick="returnToHome()">Back to Home</button>
-  </div>
-
-  <!-- Game Screen -->
-  <div id="gameContainer">
-    <div id="controls">
-      <span id="goldDisplay">Gold: 100</span>
-      <button id="buyLukeBtn" onclick="selectTower('luke')" disabled>Place Luke</button>
-      <button id="buyAnakinBtn" onclick="selectTower('anakin')" disabled>Place Anakin</button>
-      <button id="buyObiwanBtn" onclick="selectTower('obiwan')" disabled>Place Obi-Wan</button>
-    </div>
-    <canvas id="gameCanvas" width="640" height="480"></canvas>
-  </div>
+  <canvas id="gameCanvas" width="800" height="500"></canvas>
 
   <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    const towerPanel = document.getElementById("towerPanel");
     let gold = 100;
-    let ownedCharacters = {
-      luke: true,
-      anakin: true
-    };
-    let selectedTower = null;
-    let waveNumber = 1;
+    let selectedTowerType = null;
+    const tileSize = 40;
 
-    function goToShop() {
-      document.getElementById("homeScreen").style.display = "none";
-      document.getElementById("shopScreen").style.display = "flex";
-      updateShopGold();
-    }
+    const characters = [
+      { name: "Luke", color: "green", cost: 0, fireRate: 30, damage: 1, range: 100 },
+      { name: "Anakin", color: "blue", cost: 0, fireRate: 60, damage: 2, range: 110 },
+      { name: "Obi-Wan", color: "beige", cost: 75, fireRate: 90, damage: 4, range: 120 },
+      { name: "Yoda", color: "lime", cost: 100, fireRate: 20, damage: 3, range: 130 },
+      { name: "Darth Vader", color: "red", cost: 125, fireRate: 80, damage: 5, range: 110 },
+      { name: "Rey", color: "cyan", cost: 90, fireRate: 50, damage: 3, range: 100 }
+    ];
 
-    function returnToHome() {
-      document.getElementById("shopScreen").style.display = "none";
-      document.getElementById("homeScreen").style.display = "flex";
-    }
-
-    function updateShopGold() {
-      document.getElementById("shopGold").innerText = `Gold: ${gold}`;
-    }
-
-    function buyCharacter(name, cost) {
-      if (gold >= cost && !ownedCharacters[name]) {
-        gold -= cost;
-        ownedCharacters[name] = true;
-        updateShopGold();
-        updateGoldDisplay();
-        enableCharacterButton(name);
-        alert(`${name.charAt(0).toUpperCase() + name.slice(1)} unlocked!`);
-      } else {
-        alert("Not enough gold or already purchased.");
-      }
-    }
-
-    function enableCharacterButton(name) {
-      if (name === "luke") document.getElementById("buyLukeBtn").disabled = false;
-      if (name === "anakin") document.getElementById("buyAnakinBtn").disabled = false;
-      if (name === "obiwan") document.getElementById("buyObiwanBtn").disabled = false;
-    }
-
-    function startGame() {
-      document.getElementById("homeScreen").style.display = "none";
-      document.getElementById("shopScreen").style.display = "none";
-      document.getElementById("gameContainer").style.display = "flex";
-      updateGoldDisplay();
-      enableCharacterButton("luke");
-      enableCharacterButton("anakin");
-      if (ownedCharacters["obiwan"]) enableCharacterButton("obiwan");
-      gameLoop();
-    }
+    const towers = [], enemies = [], bullets = [];
+    const pathY = 240;
 
     function updateGoldDisplay() {
       document.getElementById("goldDisplay").innerText = `Gold: ${gold}`;
     }
 
-    function selectTower(name) {
-      if (ownedCharacters[name]) {
-        selectedTower = name;
-      }
+    function createTowerPanel() {
+      characters.forEach(char => {
+        const btn = document.createElement("div");
+        btn.classList.add("tower-icon");
+        btn.style.background = char.color;
+        btn.innerText = `${char.name}\n(${char.cost})`;
+        btn.onclick = () => {
+          if (gold >= char.cost) {
+            selectedTowerType = char;
+          } else {
+            alert("Not enough gold!");
+          }
+        };
+        towerPanel.appendChild(btn);
+      });
     }
 
-    const canvas = document.getElementById("gameCanvas");
-    const ctx = canvas.getContext("2d");
-
-    const tileSize = 40;
-    const towers = [];
-    const enemies = [];
-    const bullets = [];
-
-    const pathY = 240;
-
-    const towerStats = {
-      luke:    { fireRate: 30, damage: 1, range: 100 },
-      anakin:  { fireRate: 60, damage: 2, range: 110 },
-      obiwan:  { fireRate: 90, damage: 4, range: 120 }
-    };
-
     class Tower {
-      constructor(x, y, type) {
+      constructor(x, y, data) {
         this.x = x;
         this.y = y;
-        this.type = type;
-        this.fireRate = towerStats[type].fireRate;
+        this.data = data;
         this.cooldown = 0;
-        this.damage = towerStats[type].damage;
-        this.range = towerStats[type].range;
       }
-
       draw() {
-        ctx.fillStyle =
-          this.type === "luke" ? "green" :
-          this.type === "anakin" ? "blue" :
-          this.type === "obiwan" ? "beige" : "white";
-
+        ctx.fillStyle = this.data.color;
         ctx.fillRect(this.x, this.y, tileSize, tileSize);
-
-        const cdRatio = 1 - this.cooldown / this.fireRate;
-        ctx.fillStyle = "gray";
-        ctx.fillRect(this.x, this.y - 8, tileSize, 5);
-        ctx.fillStyle = "yellow";
-        ctx.fillRect(this.x, this.y - 8, tileSize * cdRatio, 5);
+        ctx.fillStyle = "white";
+        ctx.font = "10px sans-serif";
+        ctx.fillText(this.data.name, this.x, this.y + tileSize + 10);
       }
-
       update() {
         if (this.cooldown > 0) {
           this.cooldown--;
           return;
         }
-
         for (let enemy of enemies) {
           const dx = enemy.x - this.x;
           const dy = enemy.y - this.y;
           const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < this.range) {
-            bullets.push(new Bullet(this.x + tileSize / 2, this.y + tileSize / 2, enemy, this.damage));
-            this.cooldown = this.fireRate;
+          if (dist < this.data.range) {
+            bullets.push(new Bullet(this.x + tileSize / 2, this.y + tileSize / 2, enemy, this.data.damage));
+            this.cooldown = this.data.fireRate;
             break;
           }
-        }
-      }
-
-      contains(x, y) {
-        return x >= this.x && x <= this.x + tileSize && y >= this.y && y <= this.y + tileSize;
-      }
-
-      upgrade() {
-        if (gold >= 50) {
-          this.damage++;
-          gold -= 50;
-          updateGoldDisplay();
         }
       }
     }
@@ -223,22 +128,20 @@
       constructor(health, speed) {
         this.x = 0;
         this.y = pathY;
-        this.speed = speed;
-        this.maxHealth = health;
         this.health = health;
+        this.maxHealth = health;
+        this.speed = speed;
       }
-
       update() {
         this.x += this.speed;
       }
-
       draw() {
         ctx.fillStyle = "red";
         ctx.fillRect(this.x, this.y, tileSize, tileSize);
         ctx.fillStyle = "darkred";
         ctx.fillRect(this.x, this.y - 10, tileSize, 5);
         ctx.fillStyle = "lime";
-        ctx.fillRect(this.x, this.y - 10, (this.health / this.maxHealth) * tileSize, 5);
+        ctx.fillRect(this.x, this.y - 10, tileSize * (this.health / this.maxHealth), 5);
       }
     }
 
@@ -248,22 +151,19 @@
         this.y = y;
         this.target = target;
         this.damage = damage;
-        this.speed = 4;
+        this.speed = 5;
       }
-
       update() {
         const dx = this.target.x - this.x;
         const dy = this.target.y - this.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
         this.x += (dx / dist) * this.speed;
         this.y += (dy / dist) * this.speed;
-
         if (dist < 5) {
           this.target.health -= this.damage;
           bullets.splice(bullets.indexOf(this), 1);
         }
       }
-
       draw() {
         ctx.fillStyle = "yellow";
         ctx.beginPath();
@@ -273,73 +173,31 @@
     }
 
     canvas.addEventListener("click", (e) => {
-      if (!selectedTower) return;
+      if (!selectedTowerType) return;
       const rect = canvas.getBoundingClientRect();
       const x = Math.floor((e.clientX - rect.left) / tileSize) * tileSize;
       const y = Math.floor((e.clientY - rect.top) / tileSize) * tileSize;
-
-      // Block placement on enemy path
-      if (y === pathY) {
-        alert("You can't place a tower on the enemy path!");
-        return;
-      }
-
-      towers.push(new Tower(x, y, selectedTower));
+      if (y === pathY) return alert("Can't place on path!");
+      towers.push(new Tower(x, y, selectedTowerType));
+      gold -= selectedTowerType.cost;
+      updateGoldDisplay();
     });
 
-    canvas.addEventListener("contextmenu", (e) => {
-      e.preventDefault();
-      const rect = canvas.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-
-      for (let tower of towers) {
-        if (tower.contains(x, y)) {
-          tower.upgrade();
-          break;
-        }
-      }
-    });
-
-    let frame = 0;
+    let wave = 1, frame = 0;
     function gameLoop() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.fillStyle = "#333";
       ctx.fillRect(0, pathY, canvas.width, tileSize);
-
       frame++;
-
       if (frame % 60 === 0 && enemies.length === 0) {
-        for (let i = 0; i < waveNumber; i++) {
-          enemies.push(new Enemy(5 + waveNumber * 2, 1 + waveNumber * 0.1));
+        for (let i = 0; i < wave; i++) {
+          enemies.push(new Enemy(5 + wave * 2, 1 + wave * 0.1));
         }
-        waveNumber++;
+        wave++;
       }
-
-      // Draw range if tower is selected
-      if (selectedTower) {
-        canvas.style.cursor = "crosshair";
-        canvas.addEventListener("mousemove", drawRangeCircle);
-      } else {
-        canvas.style.cursor = "default";
-        canvas.removeEventListener("mousemove", drawRangeCircle);
-      }
-
-      towers.forEach(t => {
-        t.update();
-        t.draw();
-      });
-
-      enemies.forEach(e => {
-        e.update();
-        e.draw();
-      });
-
-      bullets.forEach(b => {
-        b.update();
-        b.draw();
-      });
-
+      towers.forEach(t => { t.update(); t.draw(); });
+      enemies.forEach(e => { e.update(); e.draw(); });
+      bullets.forEach(b => { b.update(); b.draw(); });
       for (let i = enemies.length - 1; i >= 0; i--) {
         if (enemies[i].health <= 0) {
           enemies.splice(i, 1);
@@ -347,21 +205,12 @@
           updateGoldDisplay();
         }
       }
-
       requestAnimationFrame(gameLoop);
     }
 
-    function drawRangeCircle(e) {
-      const rect = canvas.getBoundingClientRect();
-      const x = Math.floor((e.clientX - rect.left) / tileSize) * tileSize + tileSize / 2;
-      const y = Math.floor((e.clientY - rect.top) / tileSize) * tileSize + tileSize / 2;
-      const radius = towerStats[selectedTower]?.range || 0;
-
-      ctx.beginPath();
-      ctx.strokeStyle = "rgba(255,255,0,0.3)";
-      ctx.arc(x, y, radius, 0, Math.PI * 2);
-      ctx.stroke();
-    }
+    createTowerPanel();
+    updateGoldDisplay();
+    gameLoop();
   </script>
 </body>
 </html>
