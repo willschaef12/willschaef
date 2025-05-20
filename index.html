@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Star Wars TD with Upgrades</title>
+  <title>Star Wars TD with Upgrades & Next Wave Button</title>
   <style>
     body {
       margin: 0;
@@ -66,6 +66,20 @@
       color: #777;
       cursor: not-allowed;
     }
+    #nextWaveBtn {
+      margin-top: 10px;
+      padding: 8px 16px;
+      font-size: 16px;
+      background: #007bff;
+      border: none;
+      color: white;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    #nextWaveBtn:disabled {
+      background: #004a99;
+      cursor: not-allowed;
+    }
   </style>
 </head>
 <body>
@@ -74,6 +88,9 @@
     <div id="goldDisplay">Gold: 100</div>
   </div>
   <canvas id="gameCanvas" width="800" height="500"></canvas>
+  
+  <button id="nextWaveBtn">Play Next Wave</button>
+
   <div id="upgradePanel">
     <div id="upgradeInfo"></div>
     <button id="upgradeDamageBtn">Upgrade Damage (Cost: 50)</button>
@@ -89,6 +106,7 @@
     const upgradeInfo = document.getElementById("upgradeInfo");
     const upgradeDamageBtn = document.getElementById("upgradeDamageBtn");
     const upgradeFireRateBtn = document.getElementById("upgradeFireRateBtn");
+    const nextWaveBtn = document.getElementById("nextWaveBtn");
 
     let gold = 100;
     let selectedTowerType = null;
@@ -134,7 +152,7 @@
       constructor(x, y, data) {
         this.x = x;
         this.y = y;
-        this.data = {...data}; // copy so upgrades don't affect base
+        this.data = {...data};
         this.cooldown = 0;
         this.upgradeLevelDamage = 0;
         this.upgradeLevelFireRate = 0;
@@ -176,7 +194,6 @@
       upgradeFireRate() {
         if (gold >= 50) {
           gold -= 50;
-          // Decrease cooldown (fireRate) by 5 but not below 5
           this.data.fireRate = Math.max(5, this.data.fireRate - 5);
           this.upgradeLevelFireRate++;
           updateGoldDisplay();
@@ -240,7 +257,6 @@
       const x = Math.floor((e.clientX - rect.left) / tileSize) * tileSize;
       const y = Math.floor((e.clientY - rect.top) / tileSize) * tileSize;
 
-      // If clicked on upgrade panel or tower panel, ignore canvas click
       if (e.target.closest("#upgradePanel") || e.target.closest("#towerPanel")) return;
 
       if (selectedTowerType) {
@@ -250,7 +266,6 @@
         updateGoldDisplay();
         selectedTowerType = null;
       } else {
-        // Check if clicked on a tower to upgrade
         selectedTower = towers.find(t => t.x === x && t.y === y);
         if (selectedTower) {
           upgradePanel.style.display = "flex";
@@ -275,31 +290,35 @@
     }
 
     upgradeDamageBtn.onclick = () => {
-      if (selectedTower) {
-        selectedTower.upgradeDamage();
-      }
+      if (selectedTower) selectedTower.upgradeDamage();
     };
     upgradeFireRateBtn.onclick = () => {
-      if (selectedTower) {
-        selectedTower.upgradeFireRate();
-      }
+      if (selectedTower) selectedTower.upgradeFireRate();
     };
 
-    let wave = 1, frame = 0;
+    let wave = 1;
+
+    function spawnWave() {
+      for (let i = 0; i < wave; i++) {
+        enemies.push(new Enemy(5 + wave * 2, 1 + wave * 0.1));
+      }
+      wave++;
+      nextWaveBtn.disabled = true; // Disable until wave cleared
+    }
+
+    nextWaveBtn.onclick = () => {
+      spawnWave();
+    };
+
     function gameLoop() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.fillStyle = "#333";
       ctx.fillRect(0, pathY, canvas.width, tileSize);
-      frame++;
-      if (frame % 60 === 0 && enemies.length === 0) {
-        for (let i = 0; i < wave; i++) {
-          enemies.push(new Enemy(5 + wave * 2, 1 + wave * 0.1));
-        }
-        wave++;
-      }
+
       towers.forEach(t => { t.update(); t.draw(); });
       enemies.forEach(e => { e.update(); e.draw(); });
       bullets.forEach(b => { b.update(); b.draw(); });
+
       for (let i = enemies.length - 1; i >= 0; i--) {
         if (enemies[i].health <= 0) {
           enemies.splice(i, 1);
@@ -308,6 +327,12 @@
           if (selectedTower) updateUpgradePanel();
         }
       }
+
+      // Enable next wave button only if no enemies remain
+      if (enemies.length === 0) {
+        nextWaveBtn.disabled = false;
+      }
+
       requestAnimationFrame(gameLoop);
     }
 
