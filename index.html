@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Star Wars TD with Upgrades & Next Wave Button</title>
+  <title>Star Wars TD with Wheel Spin</title>
   <style>
     body {
       margin: 0;
@@ -43,42 +43,23 @@
       display: block;
       margin: 10px 0;
     }
-    #upgradePanel {
-      background: #222;
-      padding: 10px;
+    #wheel {
       margin-top: 10px;
-      width: 200px;
+      padding: 10px;
+      background: #333;
       border: 2px solid #555;
-      display: none;
-      flex-direction: column;
-      gap: 5px;
+      border-radius: 8px;
+      text-align: center;
     }
-    #upgradePanel button {
-      padding: 5px;
-      cursor: pointer;
-      background: #444;
-      border: none;
-      color: white;
-      font-size: 14px;
-    }
-    #upgradePanel button:disabled {
-      background: #222;
-      color: #777;
-      cursor: not-allowed;
-    }
-    #nextWaveBtn {
+    #spinBtn {
       margin-top: 10px;
       padding: 8px 16px;
       font-size: 16px;
-      background: #007bff;
+      background: gold;
       border: none;
-      color: white;
+      color: black;
       cursor: pointer;
       border-radius: 4px;
-    }
-    #nextWaveBtn:disabled {
-      background: #004a99;
-      cursor: not-allowed;
     }
   </style>
 </head>
@@ -87,14 +68,13 @@
     <div id="towerPanel"></div>
     <div id="goldDisplay">Gold: 100</div>
   </div>
-  <canvas id="gameCanvas" width="800" height="500"></canvas>
-  
-  <button id="nextWaveBtn">Play Next Wave</button>
 
-  <div id="upgradePanel">
-    <div id="upgradeInfo"></div>
-    <button id="upgradeDamageBtn">Upgrade Damage (Cost: 50)</button>
-    <button id="upgradeFireRateBtn">Upgrade Fire Rate (Cost: 50)</button>
+  <canvas id="gameCanvas" width="800" height="500"></canvas>
+
+  <div id="wheel">
+    <h3>Spin the Wheel!</h3>
+    <button id="spinBtn">Spin (Cost: 50 Gold)</button>
+    <p id="spinResult">Result: -</p>
   </div>
 
   <script>
@@ -102,28 +82,28 @@
     const ctx = canvas.getContext("2d");
     const towerPanel = document.getElementById("towerPanel");
     const goldDisplay = document.getElementById("goldDisplay");
-    const upgradePanel = document.getElementById("upgradePanel");
-    const upgradeInfo = document.getElementById("upgradeInfo");
-    const upgradeDamageBtn = document.getElementById("upgradeDamageBtn");
-    const upgradeFireRateBtn = document.getElementById("upgradeFireRateBtn");
-    const nextWaveBtn = document.getElementById("nextWaveBtn");
+    const spinBtn = document.getElementById("spinBtn");
+    const spinResult = document.getElementById("spinResult");
 
     let gold = 100;
-    let selectedTowerType = null;
-    let selectedTower = null;
     const tileSize = 40;
 
-    const characters = [
-      { name: "Luke", color: "green", cost: 0, fireRate: 30, damage: 1, range: 100 },
-      { name: "Anakin", color: "blue", cost: 0, fireRate: 60, damage: 2, range: 110 },
-      { name: "Obi-Wan", color: "beige", cost: 75, fireRate: 90, damage: 4, range: 120 },
-      { name: "Yoda", color: "lime", cost: 100, fireRate: 20, damage: 3, range: 130 },
-      { name: "Darth Vader", color: "red", cost: 125, fireRate: 80, damage: 5, range: 110 },
-      { name: "Rey", color: "cyan", cost: 90, fireRate: 50, damage: 3, range: 100 }
+    const rewards = [
+      { text: "+25 Gold", effect: () => gold += 25 },
+      { text: "+50 Gold", effect: () => gold += 50 },
+      { text: "Free Obi-Wan Tower", effect: () => addFreeTower("Obi-Wan") },
+      { text: "No Reward", effect: () => {} },
+      { text: "-25 Gold", effect: () => gold = Math.max(0, gold - 25) },
     ];
 
-    const towers = [], enemies = [], bullets = [];
-    const pathY = 240;
+    const characters = [
+      { name: "Luke", color: "green", cost: 0 },
+      { name: "Anakin", color: "blue", cost: 0 },
+      { name: "Obi-Wan", color: "beige", cost: 75 },
+      { name: "Yoda", color: "lime", cost: 100 },
+      { name: "Darth Vader", color: "red", cost: 125 },
+      { name: "Rey", color: "cyan", cost: 90 }
+    ];
 
     function updateGoldDisplay() {
       goldDisplay.innerText = `Gold: ${gold}`;
@@ -137,9 +117,9 @@
         btn.innerText = `${char.name}\n(${char.cost})`;
         btn.onclick = () => {
           if (gold >= char.cost) {
-            selectedTowerType = char;
-            selectedTower = null;
-            upgradePanel.style.display = "none";
+            alert(`Placed ${char.name} (not implemented)`);
+            gold -= char.cost;
+            updateGoldDisplay();
           } else {
             alert("Not enough gold!");
           }
@@ -148,197 +128,26 @@
       });
     }
 
-    class Tower {
-      constructor(x, y, data) {
-        this.x = x;
-        this.y = y;
-        this.data = {...data};
-        this.cooldown = 0;
-        this.upgradeLevelDamage = 0;
-        this.upgradeLevelFireRate = 0;
-      }
-      draw() {
-        ctx.fillStyle = this.data.color;
-        ctx.fillRect(this.x, this.y, tileSize, tileSize);
-        ctx.fillStyle = "white";
-        ctx.font = "10px sans-serif";
-        ctx.fillText(this.data.name, this.x, this.y + tileSize + 10);
-      }
-      update() {
-        if (this.cooldown > 0) {
-          this.cooldown--;
-          return;
-        }
-        for (let enemy of enemies) {
-          const dx = enemy.x - this.x;
-          const dy = enemy.y - this.y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < this.data.range) {
-            bullets.push(new Bullet(this.x + tileSize / 2, this.y + tileSize / 2, enemy, this.data.damage));
-            this.cooldown = this.data.fireRate;
-            break;
-          }
-        }
-      }
-      upgradeDamage() {
-        if (gold >= 50) {
-          gold -= 50;
-          this.data.damage += 1;
-          this.upgradeLevelDamage++;
-          updateGoldDisplay();
-          updateUpgradePanel();
-        } else {
-          alert("Not enough gold for damage upgrade!");
-        }
-      }
-      upgradeFireRate() {
-        if (gold >= 50) {
-          gold -= 50;
-          this.data.fireRate = Math.max(5, this.data.fireRate - 5);
-          this.upgradeLevelFireRate++;
-          updateGoldDisplay();
-          updateUpgradePanel();
-        } else {
-          alert("Not enough gold for fire rate upgrade!");
-        }
-      }
+    function addFreeTower(name) {
+      alert(`${name} added for free! (placement not implemented)`);
     }
 
-    class Enemy {
-      constructor(health, speed) {
-        this.x = 0;
-        this.y = pathY;
-        this.health = health;
-        this.maxHealth = health;
-        this.speed = speed;
+    spinBtn.onclick = () => {
+      if (gold < 50) {
+        alert("Not enough gold to spin!");
+        return;
       }
-      update() {
-        this.x += this.speed;
-      }
-      draw() {
-        ctx.fillStyle = "red";
-        ctx.fillRect(this.x, this.y, tileSize, tileSize);
-        ctx.fillStyle = "darkred";
-        ctx.fillRect(this.x, this.y - 10, tileSize, 5);
-        ctx.fillStyle = "lime";
-        ctx.fillRect(this.x, this.y - 10, tileSize * (this.health / this.maxHealth), 5);
-      }
-    }
+      gold -= 50;
+      updateGoldDisplay();
 
-    class Bullet {
-      constructor(x, y, target, damage) {
-        this.x = x;
-        this.y = y;
-        this.target = target;
-        this.damage = damage;
-        this.speed = 5;
-      }
-      update() {
-        const dx = this.target.x - this.x;
-        const dy = this.target.y - this.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        this.x += (dx / dist) * this.speed;
-        this.y += (dy / dist) * this.speed;
-        if (dist < 5) {
-          this.target.health -= this.damage;
-          bullets.splice(bullets.indexOf(this), 1);
-        }
-      }
-      draw() {
-        ctx.fillStyle = "yellow";
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, 4, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
-
-    canvas.addEventListener("click", (e) => {
-      const rect = canvas.getBoundingClientRect();
-      const x = Math.floor((e.clientX - rect.left) / tileSize) * tileSize;
-      const y = Math.floor((e.clientY - rect.top) / tileSize) * tileSize;
-
-      if (e.target.closest("#upgradePanel") || e.target.closest("#towerPanel")) return;
-
-      if (selectedTowerType) {
-        if (y === pathY) return alert("Can't place on path!");
-        towers.push(new Tower(x, y, selectedTowerType));
-        gold -= selectedTowerType.cost;
-        updateGoldDisplay();
-        selectedTowerType = null;
-      } else {
-        selectedTower = towers.find(t => t.x === x && t.y === y);
-        if (selectedTower) {
-          upgradePanel.style.display = "flex";
-          updateUpgradePanel();
-        } else {
-          upgradePanel.style.display = "none";
-          selectedTower = null;
-        }
-      }
-    });
-
-    function updateUpgradePanel() {
-      if (!selectedTower) return;
-      upgradeInfo.innerHTML = `
-        <strong>${selectedTower.data.name}</strong><br>
-        Damage: ${selectedTower.data.damage} (Upgrades: ${selectedTower.upgradeLevelDamage})<br>
-        Fire Rate: ${selectedTower.data.fireRate} (Upgrades: ${selectedTower.upgradeLevelFireRate})<br>
-        Range: ${selectedTower.data.range}
-      `;
-      upgradeDamageBtn.disabled = gold < 50;
-      upgradeFireRateBtn.disabled = gold < 50;
-    }
-
-    upgradeDamageBtn.onclick = () => {
-      if (selectedTower) selectedTower.upgradeDamage();
+      const reward = rewards[Math.floor(Math.random() * rewards.length)];
+      reward.effect();
+      updateGoldDisplay();
+      spinResult.innerText = `Result: ${reward.text}`;
     };
-    upgradeFireRateBtn.onclick = () => {
-      if (selectedTower) selectedTower.upgradeFireRate();
-    };
-
-    let wave = 1;
-
-    function spawnWave() {
-      for (let i = 0; i < wave; i++) {
-        enemies.push(new Enemy(5 + wave * 2, 1 + wave * 0.1));
-      }
-      wave++;
-      nextWaveBtn.disabled = true; // Disable until wave cleared
-    }
-
-    nextWaveBtn.onclick = () => {
-      spawnWave();
-    };
-
-    function gameLoop() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = "#333";
-      ctx.fillRect(0, pathY, canvas.width, tileSize);
-
-      towers.forEach(t => { t.update(); t.draw(); });
-      enemies.forEach(e => { e.update(); e.draw(); });
-      bullets.forEach(b => { b.update(); b.draw(); });
-
-      for (let i = enemies.length - 1; i >= 0; i--) {
-        if (enemies[i].health <= 0) {
-          enemies.splice(i, 1);
-          gold += 10;
-          updateGoldDisplay();
-          if (selectedTower) updateUpgradePanel();
-        }
-      }
-
-      // Enable next wave button only if no enemies remain
-      if (enemies.length === 0) {
-        nextWaveBtn.disabled = false;
-      }
-
-      requestAnimationFrame(gameLoop);
-    }
 
     createTowerPanel();
     updateGoldDisplay();
-    gameLoop();
   </script>
 </body>
 </html>
