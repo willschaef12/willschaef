@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Star Wars TD with Wheel Spin</title>
+  <title>Star Wars TD with Upgrades & Next Wave Button</title>
   <style>
     body {
       margin: 0;
@@ -13,13 +13,57 @@
       display: flex;
       flex-direction: column;
       align-items: center;
+      height: 100vh;
     }
+
+    /* Home Screen */
+    #homeScreen {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      flex-grow: 1;
+      width: 100%;
+      background: #111;
+    }
+
+    #homeScreen h1 {
+      font-size: 3em;
+      margin-bottom: 20px;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: #ffe81f; /* Star Wars yellow */
+      text-shadow: 0 0 10px #ffe81f;
+    }
+
+    #startBtn {
+      font-size: 24px;
+      padding: 15px 40px;
+      cursor: pointer;
+      border: none;
+      border-radius: 8px;
+      background: #007bff;
+      color: white;
+      transition: background-color 0.3s ease;
+      box-shadow: 0 0 10px #007bff;
+    }
+    #startBtn:hover {
+      background: #0056b3;
+      box-shadow: 0 0 20px #0056b3;
+    }
+
+    /* Hide home screen when game started */
+    body.game-started #homeScreen {
+      display: none;
+    }
+
+    /* Game UI and Canvas */
     #ui {
       display: flex;
       width: 100%;
       justify-content: space-between;
       background: #111;
       padding: 10px;
+      box-sizing: border-box;
     }
     #towerPanel {
       display: flex;
@@ -36,80 +80,130 @@
       font-size: 12px;
       text-align: center;
       white-space: pre-line;
+      user-select: none;
     }
     #gameCanvas {
       background: #222;
       border: 4px solid #555;
       display: block;
       margin: 10px 0;
+      cursor: crosshair;
     }
-    #wheel {
-      margin-top: 10px;
+    #upgradePanel {
+      background: #222;
       padding: 10px;
-      background: #333;
+      margin-top: 10px;
+      width: 200px;
       border: 2px solid #555;
-      border-radius: 8px;
-      text-align: center;
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      user-select: none;
     }
-    #spinBtn {
+    #upgradePanel button {
+      padding: 5px;
+      cursor: pointer;
+      background: #444;
+      border: none;
+      color: white;
+      font-size: 14px;
+      border-radius: 4px;
+      transition: background-color 0.3s ease;
+    }
+    #upgradePanel button:disabled {
+      background: #222;
+      color: #777;
+      cursor: not-allowed;
+    }
+    #upgradePanel button:hover:not(:disabled) {
+      background: #666;
+    }
+    #nextWaveBtn {
       margin-top: 10px;
       padding: 8px 16px;
       font-size: 16px;
-      background: gold;
+      background: #007bff;
       border: none;
-      color: black;
+      color: white;
       cursor: pointer;
       border-radius: 4px;
+      user-select: none;
+      transition: background-color 0.3s ease;
+    }
+    #nextWaveBtn:disabled {
+      background: #004a99;
+      cursor: not-allowed;
+    }
+    #nextWaveBtn:hover:not(:disabled) {
+      background: #0056b3;
     }
   </style>
 </head>
 <body>
-  <div id="ui">
+  <!-- HOME SCREEN -->
+  <div id="homeScreen">
+    <h1>Star Wars Tower Defense</h1>
+    <button id="startBtn">Start Game</button>
+  </div>
+
+  <!-- GAME UI -->
+  <div id="ui" style="display:none;">
     <div id="towerPanel"></div>
     <div id="goldDisplay">Gold: 100</div>
   </div>
 
-  <canvas id="gameCanvas" width="800" height="500"></canvas>
+  <canvas id="gameCanvas" width="800" height="500" style="display:none;"></canvas>
+  
+  <button id="nextWaveBtn" style="display:none;">Play Next Wave</button>
 
-  <div id="wheel">
-    <h3>Spin the Wheel!</h3>
-    <button id="spinBtn">Spin (Cost: 50 Gold)</button>
-    <p id="spinResult">Result: -</p>
+  <div id="upgradePanel">
+    <div id="upgradeInfo"></div>
+    <button id="upgradeDamageBtn">Upgrade Damage (Cost: 50)</button>
+    <button id="upgradeFireRateBtn">Upgrade Fire Rate (Cost: 50)</button>
   </div>
 
   <script>
+    // DOM elements
+    const homeScreen = document.getElementById("homeScreen");
+    const startBtn = document.getElementById("startBtn");
+    const ui = document.getElementById("ui");
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
     const towerPanel = document.getElementById("towerPanel");
     const goldDisplay = document.getElementById("goldDisplay");
-    const spinBtn = document.getElementById("spinBtn");
-    const spinResult = document.getElementById("spinResult");
+    const upgradePanel = document.getElementById("upgradePanel");
+    const upgradeInfo = document.getElementById("upgradeInfo");
+    const upgradeDamageBtn = document.getElementById("upgradeDamageBtn");
+    const upgradeFireRateBtn = document.getElementById("upgradeFireRateBtn");
+    const nextWaveBtn = document.getElementById("nextWaveBtn");
 
+    // Game variables
     let gold = 100;
+    let selectedTowerType = null;
+    let selectedTower = null;
     const tileSize = 40;
+    const pathY = 240;
 
-    const rewards = [
-      { text: "+25 Gold", effect: () => gold += 25 },
-      { text: "+50 Gold", effect: () => gold += 50 },
-      { text: "Free Obi-Wan Tower", effect: () => addFreeTower("Obi-Wan") },
-      { text: "No Reward", effect: () => {} },
-      { text: "-25 Gold", effect: () => gold = Math.max(0, gold - 25) },
-    ];
-
+    // Character / Tower options
     const characters = [
-      { name: "Luke", color: "green", cost: 0 },
-      { name: "Anakin", color: "blue", cost: 0 },
-      { name: "Obi-Wan", color: "beige", cost: 75 },
-      { name: "Yoda", color: "lime", cost: 100 },
-      { name: "Darth Vader", color: "red", cost: 125 },
-      { name: "Rey", color: "cyan", cost: 90 }
+      { name: "Luke", color: "green", cost: 0, fireRate: 30, damage: 1, range: 100 },
+      { name: "Anakin", color: "blue", cost: 0, fireRate: 60, damage: 2, range: 110 },
+      { name: "Obi-Wan", color: "beige", cost: 75, fireRate: 90, damage: 4, range: 120 },
+      { name: "Yoda", color: "lime", cost: 100, fireRate: 20, damage: 3, range: 130 },
+      { name: "Darth Vader", color: "red", cost: 125, fireRate: 80, damage: 5, range: 110 },
+      { name: "Rey", color: "cyan", cost: 90, fireRate: 50, damage: 3, range: 100 }
     ];
 
+    const towers = [], enemies = [], bullets = [];
+
+    // Update gold display UI
     function updateGoldDisplay() {
       goldDisplay.innerText = `Gold: ${gold}`;
     }
 
+    // Create tower selection buttons
     function createTowerPanel() {
+      towerPanel.innerHTML = ""; // clear first
       characters.forEach(char => {
         const btn = document.createElement("div");
         btn.classList.add("tower-icon");
@@ -117,9 +211,9 @@
         btn.innerText = `${char.name}\n(${char.cost})`;
         btn.onclick = () => {
           if (gold >= char.cost) {
-            alert(`Placed ${char.name} (not implemented)`);
-            gold -= char.cost;
-            updateGoldDisplay();
+            selectedTowerType = char;
+            selectedTower = null;
+            upgradePanel.style.display = "none";
           } else {
             alert("Not enough gold!");
           }
@@ -128,26 +222,236 @@
       });
     }
 
-    function addFreeTower(name) {
-      alert(`${name} added for free! (placement not implemented)`);
+    // Tower class
+    class Tower {
+      constructor(x, y, data) {
+        this.x = x;
+        this.y = y;
+        this.data = {...data};
+        this.cooldown = 0;
+        this.upgradeLevelDamage = 0;
+        this.upgradeLevelFireRate = 0;
+      }
+      draw() {
+        ctx.fillStyle = this.data.color;
+        ctx.fillRect(this.x, this.y, tileSize, tileSize);
+        ctx.fillStyle = "white";
+        ctx.font = "10px sans-serif";
+        ctx.fillText(this.data.name, this.x + 2, this.y + tileSize + 10);
+      }
+      update() {
+        if (this.cooldown > 0) {
+          this.cooldown--;
+          return;
+        }
+        for (let enemy of enemies) {
+          const dx = enemy.x - this.x;
+          const dy = enemy.y - this.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < this.data.range) {
+            bullets.push(new Bullet(this.x + tileSize / 2, this.y + tileSize / 2, enemy, this.data.damage));
+            this.cooldown = this.data.fireRate;
+            break;
+          }
+        }
+      }
+      upgradeDamage() {
+        if (gold >= 50) {
+          gold -= 50;
+          this.data.damage += 1;
+          this.upgradeLevelDamage++;
+          updateGoldDisplay();
+          updateUpgradePanel();
+        } else {
+          alert("Not enough gold for damage upgrade!");
+        }
+      }
+      upgradeFireRate() {
+        if (gold >= 50) {
+          gold -= 50;
+          this.data.fireRate = Math.max(5, this.data.fireRate - 5);
+          this.upgradeLevelFireRate++;
+          updateGoldDisplay();
+          updateUpgradePanel();
+        } else {
+          alert("Not enough gold for fire rate upgrade!");
+        }
+      }
     }
 
-    spinBtn.onclick = () => {
-      if (gold < 50) {
-        alert("Not enough gold to spin!");
-        return;
+    // Enemy class
+    class Enemy {
+      constructor(health, speed) {
+        this.x = 0;
+        this.y = pathY;
+        this.health = health;
+        this.maxHealth = health;
+        this.speed = speed;
       }
-      gold -= 50;
-      updateGoldDisplay();
+      update() {
+        this.x += this.speed;
+      }
+      draw() {
+        ctx.fillStyle = "red";
+        ctx.fillRect(this.x, this.y, tileSize, tileSize);
+        ctx.fillStyle = "darkred";
+        ctx.fillRect(this.x, this.y - 10, tileSize, 5);
+        ctx.fillStyle = "lime";
+        ctx.fillRect(this.x, this.y - 10, tileSize * (this.health / this.maxHealth), 5);
+      }
+    }
 
-      const reward = rewards[Math.floor(Math.random() * rewards.length)];
-      reward.effect();
-      updateGoldDisplay();
-      spinResult.innerText = `Result: ${reward.text}`;
+    // Bullet class
+    class Bullet {
+      constructor(x, y, target, damage) {
+        this.x = x;
+        this.y = y;
+        this.target = target;
+        this.damage = damage;
+        this.speed = 5;
+      }
+      update() {
+        const dx = this.target.x - this.x;
+        const dy = this.target.y - this.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist === 0) return; // prevent division by zero
+        this.x += (dx / dist) * this.speed;
+        this.y += (dy / dist) * this.speed;
+        if (dist < 5) {
+          this.target.health -= this.damage;
+          bullets.splice(bullets.indexOf(this), 1);
+        }
+      }
+      draw() {
+        ctx.fillStyle = "yellow";
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, 4, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    // Canvas click handling
+    canvas.addEventListener("click", (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = Math.floor((e.clientX - rect.left) / tileSize) * tileSize;
+      const y = Math.floor((e.clientY - rect.top) / tileSize) * tileSize;
+
+      // Prevent clicks on UI panels from affecting canvas
+      if (e.target.closest("#upgradePanel") || e.target.closest("#towerPanel")) return;
+
+      if (selectedTowerType) {
+        if (y === pathY) {
+          alert("Can't place on path!");
+          return;
+        }
+        towers.push(new Tower(x, y, selectedTowerType));
+        gold -= selectedTowerType.cost;
+        updateGoldDisplay();
+        selectedTowerType = null;
+      } else {
+        selectedTower = towers.find(t => t.x === x && t.y === y);
+        if (selectedTower) {
+          upgradePanel.style.display = "flex";
+          updateUpgradePanel();
+        } else {
+          upgradePanel.style.display = "none";
+          selectedTower = null;
+        }
+      }
+    });
+
+    // Update upgrade panel info and buttons
+    function updateUpgradePanel() {
+      if (!selectedTower) return;
+      upgradeInfo.innerHTML = `
+        <strong>${selectedTower.data.name}</strong><br>
+        Damage: ${selectedTower.data.damage} (Upgrades: ${selectedTower.upgradeLevelDamage})<br>
+        Fire Rate: ${selectedTower.data.fireRate} (Upgrades: ${selectedTower.upgradeLevelFireRate})<br>
+        Range: ${selectedTower.data.range}
+      `;
+      upgradeDamageBtn.disabled = gold < 50;
+      upgradeFireRateBtn.disabled = gold < 50;
+    }
+
+    upgradeDamageBtn.onclick = () => {
+      if (selectedTower) selectedTower.upgradeDamage();
+    };
+    upgradeFireRateBtn.onclick = () => {
+      if (selectedTower) selectedTower.upgradeFireRate();
     };
 
-    createTowerPanel();
-    updateGoldDisplay();
+    // Waves
+    let wave = 1;
+
+    function spawnWave() {
+      for (let i = 0; i < wave; i++) {
+        enemies.push(new Enemy(5 + wave * 2, 1 + wave * 0.1));
+      }
+      wave++;
+      nextWaveBtn.disabled = true;
+    }
+
+    nextWaveBtn.onclick = () => {
+      spawnWave();
+      nextWaveBtn.style.display = "none";
+    };
+
+    // Game loop
+    function gameLoop() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Draw path
+      ctx.fillStyle = "#654321";
+      ctx.fillRect(0, pathY, canvas.width, tileSize);
+
+      // Update and draw towers
+      towers.forEach(tower => {
+        tower.update();
+        tower.draw();
+      });
+
+      // Update and draw enemies
+      for (let i = enemies.length - 1; i >= 0; i--) {
+        const enemy = enemies[i];
+        enemy.update();
+        enemy.draw();
+        if (enemy.health <= 0) {
+          gold += 10;
+          updateGoldDisplay();
+          enemies.splice(i, 1);
+        } else if (enemy.x > canvas.width) {
+          enemies.splice(i, 1);
+          // TODO: reduce player health or end game if enemies pass
+        }
+      }
+
+      // Update and draw bullets
+      bullets.forEach(bullet => {
+        bullet.update();
+        bullet.draw();
+      });
+
+      // If no enemies, show next wave button
+      if (enemies.length === 0 && wave > 1) {
+        nextWaveBtn.style.display = "inline-block";
+        nextWaveBtn.disabled = false;
+      }
+
+      requestAnimationFrame(gameLoop);
+    }
+
+    // Start game handler
+    startBtn.onclick = () => {
+      document.body.classList.add("game-started");
+      homeScreen.style.display = "none";
+      ui.style.display = "flex";
+      canvas.style.display = "block";
+      nextWaveBtn.style.display = "inline-block";
+      updateGoldDisplay();
+      createTowerPanel();
+      spawnWave();
+      gameLoop();
+    };
   </script>
 </body>
 </html>
