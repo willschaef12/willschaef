@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Star Wars TD - Enhanced Version</title>
+<title>Star Wars TD - Ultimate Attack Edition</title>
 <style>
   body {
     margin: 0;
@@ -19,6 +19,7 @@
     display: flex;
     gap: 20px;
     margin-top: 20px;
+    position: relative;
   }
   canvas {
     background-color: #111;
@@ -31,11 +32,12 @@
     height: 500px;
   }
   #uiPanel {
-    width: 320px;
+    width: 340px;
     background: #111;
     padding: 10px;
     border: 2px solid #fff;
     border-radius: 8px;
+    position: relative;
   }
   button {
     width: 100%;
@@ -60,12 +62,12 @@
     background: #000;
     padding: 10px;
     border-radius: 6px;
-    min-height: 180px;
+    min-height: 200px;
   }
   h2 {
     margin-top: 0;
   }
-  .upgrade-button, .special-button {
+  .upgrade-button, .special-button, #ultimateButton {
     margin: 5px 0;
     padding: 6px;
     font-size: 0.9em;
@@ -74,7 +76,7 @@
     cursor: pointer;
     border-radius: 4px;
   }
-  .upgrade-button:disabled, .special-button:disabled {
+  .upgrade-button:disabled, .special-button:disabled, #ultimateButton:disabled {
     background: #555;
     cursor: not-allowed;
   }
@@ -93,12 +95,71 @@
     border-radius: 50%;
     opacity: 0.5;
   }
+  /* Ultimate selection overlay */
+  #ultimateSelectionOverlay {
+    position: fixed;
+    top:0; left:0; right:0; bottom:0;
+    background: rgba(0,0,0,0.9);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    color: white;
+  }
+  #ultimateSelectionOverlay h2 {
+    margin-bottom: 15px;
+  }
+  #ultimateTowersContainer {
+    display: flex;
+    gap: 15px;
+  }
+  .ultimateTowerChoice {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 3px solid transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 0.9em;
+    user-select: none;
+  }
+  .ultimateTowerChoice:hover {
+    border-color: yellow;
+  }
+  .ultimateTowerChoice.selected {
+    border-color: limegreen;
+    box-shadow: 0 0 10px limegreen;
+  }
+  #killsCounter {
+    margin-top: 10px;
+    font-weight: bold;
+    text-align: center;
+    font-size: 1.2em;
+  }
+  /* Ultimate animation ring */
+  .ultimate-ring {
+    position: absolute;
+    pointer-events: none;
+    border: 4px solid cyan;
+    border-radius: 50%;
+    opacity: 0.8;
+    animation: pulseRing 1.5s infinite ease-in-out;
+  }
+  @keyframes pulseRing {
+    0% { transform: scale(1); opacity: 0.8; }
+    50% { transform: scale(1.3); opacity: 0.3; }
+    100% { transform: scale(1); opacity: 0.8; }
+  }
 </style>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap" rel="stylesheet" />
 </head>
 <body>
 
-<h1>Star Wars Tower Defense - Enhanced</h1>
+<h1>Star Wars Tower Defense - Ultimate Attack Edition</h1>
 
 <div id="game-container">
   <canvas id="battleCanvas" width="800" height="500"></canvas>
@@ -113,13 +174,14 @@
     <p><strong>Base Health:</strong> <span id="baseHealth">10</span></p>
 
     <div id="waveControls">
-      <button id="btnStartWave">Start Next Wave</button>
+      <button id="btnStartWave" disabled>Start Next Wave</button>
       <p>Wave: <span id="waveNumber">1</span></p>
     </div>
 
     <div id="towerInfo">
       <h3>Tower Info</h3>
       <div id="towerDetails">Select a tower to see details here.</div>
+      <div id="killsCounter"></div>
       <div id="specialCooldown"></div>
       <div id="upgradeSection" style="display:none;">
         <h4>Upgrade Paths</h4>
@@ -128,8 +190,20 @@
       <div id="specialSection" style="display:none;">
         <button id="specialButton" class="special-button">Use Special Attack</button>
       </div>
+      <div id="ultimateSection" style="display:none;">
+        <button id="ultimateButton" class="special-button">Use Ultimate Attack</button>
+      </div>
     </div>
   </div>
+</div>
+
+<!-- Ultimate Selection Overlay -->
+<div id="ultimateSelectionOverlay">
+  <h2>Select Your Ultimate Tower</h2>
+  <div id="ultimateTowersContainer">
+    <!-- Towers will be populated here dynamically -->
+  </div>
+  <button id="confirmUltimate" disabled>Confirm Ultimate Tower</button>
 </div>
 
 <script>
@@ -146,6 +220,12 @@ const waveNumberDisplay = document.getElementById('waveNumber');
 const btnStartWave = document.getElementById('btnStartWave');
 const specialButton = document.getElementById('specialButton');
 const specialSection = document.getElementById('specialSection');
+const killsCounter = document.getElementById('killsCounter');
+const ultimateSection = document.getElementById('ultimateSection');
+const ultimateButton = document.getElementById('ultimateButton');
+const ultimateSelectionOverlay = document.getElementById('ultimateSelectionOverlay');
+const ultimateTowersContainer = document.getElementById('ultimateTowersContainer');
+const confirmUltimateBtn = document.getElementById('confirmUltimate');
 
 let credits = 500;
 let baseHealth = 10;
@@ -160,6 +240,14 @@ let path = [];
 
 let placementPreview = null;
 let placingTowerType = null;
+
+let ultimateTower = null; // The tower chosen for ultimate
+const ULTIMATE_KILLS_REQUIRED = 50;
+
+// For ultimate animation
+let ultimateAnimationStart = 0;
+let ultimateAnimationDuration = 3000; // 3 seconds
+let ultimateAnimating = false;
 
 // --- Define Path for enemies ---
 function definePath() {
@@ -194,6 +282,8 @@ class Tower {
       range: 0,
       fireRate: 0,
     };
+
+    this.kills = 0;
   }
 
   draw() {
@@ -221,6 +311,10 @@ class Tower {
     enemy.health -= this.damage;
     this.lastShot = Date.now();
     playShootSound();
+    if(enemy.health <= 0) {
+      this.kills++;
+      if(this === ultimateTower) updateKillsCounter();
+    }
   }
 
   isEnemyInRange(enemy) {
@@ -239,29 +333,27 @@ class Tower {
 
     // Special effects depending on tower name
     if(this.name === 'Stormtrooper Tower') {
-      // Rapid burst: deal damage to all enemies in range (damage x3)
       enemies.forEach(enemy => {
         if(this.isEnemyInRange(enemy)) {
           enemy.health -= this.damage * 3;
+          if(enemy.health <= 0) this.kills++;
         }
       });
     } else if(this.name === 'Luke Skywalker Tower') {
-      // Pierce shot: damage 3 enemies in range, even if behind each other
       let hitCount = 0;
       for(let enemy of enemies) {
         if(this.isEnemyInRange(enemy)) {
           enemy.health -= this.damage * 5;
+          if(enemy.health <= 0) this.kills++;
           hitCount++;
           if(hitCount >= 3) break;
         }
       }
     } else if(this.name === 'Darth Vader Tower') {
-      // Force Push: damage + push back all enemies in range
       enemies.forEach(enemy => {
         if(this.isEnemyInRange(enemy)) {
           enemy.health -= this.damage * 4;
-
-          // Push enemy back along the path by moving them backward
+          if(enemy.health <= 0) this.kills++;
           enemy.currentPoint = Math.max(0, enemy.currentPoint - 1);
           const pos = enemy.path[enemy.currentPoint];
           enemy.x = pos.x;
@@ -269,6 +361,7 @@ class Tower {
         }
       });
     }
+    if(this === ultimateTower) updateKillsCounter();
 
     playSpecialSound();
     if(selectedTower === this) updateSpecialCooldown(this);
@@ -298,6 +391,39 @@ class Tower {
         alert('Not enough credits to upgrade!');
       }
     }
+  }
+
+  canUseUltimate() {
+    return this.kills >= ULTIMATE_KILLS_REQUIRED && !ultimateAnimating;
+  }
+
+  useUltimate() {
+    if (!this.canUseUltimate()) return false;
+
+    ultimateAnimating = true;
+    ultimateAnimationStart = Date.now();
+
+    // Ultimate effect: big damage to all enemies in range, big flashy animation
+    enemies.forEach(enemy => {
+      if(this.isEnemyInRange(enemy)) {
+        enemy.health -= this.damage * 20;
+      }
+    });
+
+    this.kills = 0;
+    updateKillsCounter();
+    playUltimateSound();
+
+    // Disable ultimate button during animation
+    if(selectedTower === this) updateUltimateButton();
+
+    // After animation duration, end ultimate animation flag
+    setTimeout(() => {
+      ultimateAnimating = false;
+      if(selectedTower === this) updateUltimateButton();
+    }, ultimateAnimationDuration);
+
+    return true;
   }
 }
 
@@ -383,22 +509,36 @@ function updateTowerInfo(tower) {
 
   updateSpecialCooldown(tower);
   updateUpgradeButtons();
+
+  if(tower === ultimateTower) {
+    ultimateSection.style.display = 'block';
+    updateKillsCounter();
+    updateUltimateButton();
+  } else {
+    ultimateSection.style.display = 'none';
+    killsCounter.textContent = '';
+  }
+}
+
+function updateKillsCounter() {
+  if(ultimateTower) {
+    killsCounter.textContent = `Kills: ${ultimateTower.kills}/${ULTIMATE_KILLS_REQUIRED}`;
+  } else {
+    killsCounter.textContent = '';
+  }
 }
 
 function updateSpecialCooldown(tower) {
   if(!tower) {
     specialCooldownDisplay.textContent = '';
-    specialButton.disabled = true;
     return;
   }
 
   let remaining = tower.getSpecialCooldownRemaining();
   if(remaining > 0) {
     specialCooldownDisplay.textContent = `Special attack ready in ${(remaining/1000).toFixed(1)} seconds`;
-    specialButton.disabled = true;
   } else {
     specialCooldownDisplay.textContent = `Special attack READY!`;
-    specialButton.disabled = false;
   }
 }
 
@@ -425,18 +565,36 @@ function createUpgradeButton(path, label, level) {
   upgradesDiv.appendChild(btn);
 }
 
+function updateUltimateButton() {
+  if(!ultimateTower || selectedTower !== ultimateTower) {
+    ultimateButton.disabled = true;
+    ultimateButton.textContent = "Use Ultimate Attack";
+    return;
+  }
+  if(ultimateTower.canUseUltimate()) {
+    ultimateButton.disabled = false;
+    ultimateButton.textContent = "Use Ultimate Attack!";
+  } else {
+    ultimateButton.disabled = true;
+    ultimateButton.textContent = `Kills ${ultimateTower.kills}/${ULTIMATE_KILLS_REQUIRED}`;
+  }
+}
+
+// --- Tower Placement ---
 function placeTower(towerType, position) {
+  // Check if space is free (not too close to other towers)
+  for(let tower of towers) {
+    const dx = tower.x - position.x;
+    const dy = tower.y - position.y;
+    if(Math.sqrt(dx*dx + dy*dy) < 60) {
+      alert("Too close to another tower!");
+      return false;
+    }
+  }
   if(towerType.cost > credits) {
     alert("You don't have enough credits!");
     return false;
   }
-
-  // Check if position overlaps existing towers
-  if(towers.some(t => Math.hypot(t.x - position.x, t.y - position.y) < 50)) {
-    alert("Tower too close to another tower!");
-    return false;
-  }
-
   credits -= towerType.cost;
   updateCredits();
 
@@ -446,43 +604,42 @@ function placeTower(towerType, position) {
   return true;
 }
 
+// --- Spawn Enemy ---
+function spawnEnemy() {
+  const enemyType = Math.random() < 0.3 ? 'fast' : 'basic';
+  enemies.push(new Enemy(path, enemyType));
+}
+
 // --- Sound Effects ---
 function playShootSound() {
-  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  const oscillator = audioCtx.createOscillator();
-  const gainNode = audioCtx.createGain();
-  oscillator.connect(gainNode);
-  gainNode.connect(audioCtx.destination);
-  oscillator.type = 'square';
-  oscillator.frequency.setValueAtTime(600, audioCtx.currentTime);
-  gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
-  oscillator.start();
-  oscillator.stop(audioCtx.currentTime + 0.05);
+  // Simple beep
+  const ctxAudio = new AudioContext();
+  const osc = ctxAudio.createOscillator();
+  osc.frequency.value = 600;
+  osc.connect(ctxAudio.destination);
+  osc.start();
+  osc.stop(ctxAudio.currentTime + 0.05);
 }
-
 function playSpecialSound() {
-  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  const oscillator = audioCtx.createOscillator();
-  const gainNode = audioCtx.createGain();
-  oscillator.connect(gainNode);
-  gainNode.connect(audioCtx.destination);
-  oscillator.type = 'triangle';
-  oscillator.frequency.setValueAtTime(300, audioCtx.currentTime);
-  gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
-  oscillator.start();
-  oscillator.stop(audioCtx.currentTime + 0.3);
+  const ctxAudio = new AudioContext();
+  const osc = ctxAudio.createOscillator();
+  osc.frequency.value = 300;
+  osc.connect(ctxAudio.destination);
+  osc.start();
+  osc.stop(ctxAudio.currentTime + 0.1);
 }
-
-// --- Enemy spawning ---
-function spawnEnemy() {
-  // Alternate enemy type for variety
-  let type = (Math.random() < 0.5) ? 'basic' : 'fast';
-  enemies.push(new Enemy(path, type));
+function playUltimateSound() {
+  const ctxAudio = new AudioContext();
+  const osc = ctxAudio.createOscillator();
+  osc.frequency.value = 900;
+  osc.connect(ctxAudio.destination);
+  osc.start();
+  osc.stop(ctxAudio.currentTime + 0.3);
 }
 
 // --- Game Loop ---
 function gameLoop() {
-  if (!gameRunning) return;
+  if(!gameRunning) return;
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -496,21 +653,12 @@ function gameLoop() {
   }
   ctx.stroke();
 
-  // Draw placement preview if active
-  if(placingTowerType && placementPreview) {
-    ctx.strokeStyle = 'yellow';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.arc(placementPreview.x, placementPreview.y, placingTowerType.range || 120, 0, Math.PI*2);
-    ctx.stroke();
-
-    ctx.fillStyle = placingTowerType.color;
-    ctx.beginPath();
-    ctx.arc(placementPreview.x, placementPreview.y, 25, 0, Math.PI*2);
-    ctx.fill();
+  // Draw towers
+  for(let tower of towers) {
+    tower.draw();
   }
 
-  // Move and draw enemies
+  // Draw enemies and move them
   for(let i = enemies.length - 1; i >= 0; i--) {
     let enemy = enemies[i];
     enemy.move();
@@ -520,57 +668,78 @@ function gameLoop() {
       enemies.splice(i, 1);
       credits += 20;
       updateCredits();
-      continue;
-    }
-
-    if(enemy.currentPoint >= path.length - 1) {
+    } else if(enemy.currentPoint >= path.length - 1) {
+      enemies.splice(i, 1);
       baseHealth--;
       updateBaseHealth();
-      enemies.splice(i, 1);
       if(baseHealth <= 0) {
-        alert('Game Over! Your base was destroyed.');
         gameRunning = false;
-        return;
+        alert("Game Over! Your base has been destroyed.");
       }
     }
   }
 
-  // Towers draw, shoot enemies
+  // Towers shoot enemies and use special attacks
   for(let tower of towers) {
-    tower.draw();
+    if(!ultimateAnimating) {
+      if(tower.canUseSpecial()) {
+        // Don't auto-use special if ultimateAnimating, to keep things clear
+      }
 
-    if(tower.canShoot()) {
-      let target = enemies.find(e => tower.isEnemyInRange(e));
-      if(target) {
-        tower.shoot(target);
-        ctx.strokeStyle = 'yellow';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(tower.x, tower.y);
-        ctx.lineTo(target.x, target.y);
-        ctx.stroke();
+      if(tower.canShoot()) {
+        let target = enemies.find(e => tower.isEnemyInRange(e));
+        if(target) {
+          tower.shoot(target);
+          // Draw laser line
+          ctx.strokeStyle = 'yellow';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(tower.x, tower.y);
+          ctx.lineTo(target.x, target.y);
+          ctx.stroke();
+        }
       }
     }
   }
 
-  // Update special cooldown for selected tower
-  if(selectedTower) updateSpecialCooldown(selectedTower);
+  // Draw ultimate animation ring if active
+  if(ultimateAnimating && ultimateTower) {
+    const elapsed = Date.now() - ultimateAnimationStart;
+    if(elapsed < ultimateAnimationDuration) {
+      const scale = 1 + 0.3 * Math.sin((elapsed / ultimateAnimationDuration) * Math.PI * 4);
+      const alpha = 0.8 * (1 - elapsed / ultimateAnimationDuration);
 
-  // Spawn enemies only if wave is active and enemies remain to spawn
+      ctx.save();
+      ctx.strokeStyle = `rgba(0, 255, 255, ${alpha.toFixed(2)})`;
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.arc(ultimateTower.x, ultimateTower.y, 40 * scale, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+
+  // Update cooldown display for selected tower
+  if(selectedTower) {
+    updateSpecialCooldown(selectedTower);
+    updateKillsCounter();
+    updateUltimateButton();
+  }
+
+  // Spawn enemies per wave
   if(spawningWave && enemiesToSpawn > 0) {
-    enemySpawnTimer += 16;
-    if(enemySpawnTimer > 700) {
+    if(enemySpawnTimer > 300) {
       spawnEnemy();
       enemiesToSpawn--;
       enemySpawnTimer = 0;
     }
-    if(enemiesToSpawn === 0 && enemies.length === 0) {
-      spawningWave = false;
-      waveNumber++;
-      updateWaveNumber();
-      alert(`Wave ${waveNumber - 1} finished! Prepare for wave ${waveNumber}`);
-      btnStartWave.disabled = false;
-    }
+    enemySpawnTimer += 16;
+  } else if(spawningWave && enemiesToSpawn === 0 && enemies.length === 0) {
+    spawningWave = false;
+    waveNumber++;
+    updateWaveNumber();
+    alert(`Wave ${waveNumber - 1} finished! Prepare for wave ${waveNumber}`);
+    btnStartWave.disabled = false;
   }
 
   requestAnimationFrame(gameLoop);
@@ -605,6 +774,7 @@ canvas.addEventListener('click', (e) => {
       placingTowerType = null;
       placementPreview = null;
       canvas.style.cursor = 'crosshair';
+      btnStartWave.disabled = false; // Enable start wave after placing tower(s)
     }
     return;
   }
@@ -623,6 +793,8 @@ canvas.addEventListener('click', (e) => {
   towerDetails.textContent = "Select a tower to see details here.";
   upgradeSection.style.display = 'none';
   specialSection.style.display = 'none';
+  ultimateSection.style.display = 'none';
+  killsCounter.textContent = '';
   specialCooldownDisplay.textContent = '';
 });
 
@@ -652,6 +824,18 @@ specialButton.onclick = () => {
   }
 }
 
+// Ultimate attack button
+ultimateButton.onclick = () => {
+  if(selectedTower && selectedTower === ultimateTower) {
+    if(!ultimateTower.canUseUltimate()) {
+      alert(`Ultimate attack not ready! Kills: ${ultimateTower.kills}/${ULTIMATE_KILLS_REQUIRED}`);
+      return;
+    }
+    const used = ultimateTower.useUltimate();
+    if(!used) alert('Cannot use ultimate right now.');
+  }
+}
+
 // Upgrade buttons handled inside updateUpgradeButtons()
 
 // --- Tower placement mode ---
@@ -665,7 +849,56 @@ function startPlacingTower(towerType) {
   towerDetails.textContent = "Click to place your tower.";
   upgradeSection.style.display = 'none';
   specialSection.style.display = 'none';
+  ultimateSection.style.display = 'none';
+  killsCounter.textContent = '';
   specialCooldownDisplay.textContent = '';
+  btnStartWave.disabled = true; // Disable wave start while placing towers
+}
+
+// --- Ultimate Selection Screen ---
+
+function populateUltimateSelection() {
+  // Clear container
+  ultimateTowersContainer.innerHTML = '';
+  // Create choices for base tower types
+  const baseTowers = [
+    {name:'Stormtrooper Tower', color:'white'},
+    {name:'Luke Skywalker Tower', color:'limegreen'},
+    {name:'Darth Vader Tower', color:'red'},
+  ];
+
+  baseTowers.forEach((towerType, idx) => {
+    const div = document.createElement('div');
+    div.className = 'ultimateTowerChoice';
+    div.style.backgroundColor = towerType.color;
+    div.textContent = towerType.name.split(' ')[0]; // short name
+    div.title = towerType.name;
+    div.dataset.name = towerType.name;
+    div.onclick = () => {
+      // Deselect all first
+      Array.from(ultimateTowersContainer.children).forEach(c => c.classList.remove('selected'));
+      div.classList.add('selected');
+      confirmUltimateBtn.disabled = false;
+    };
+    ultimateTowersContainer.appendChild(div);
+  });
+}
+
+confirmUltimateBtn.onclick = () => {
+  const selectedDiv = ultimateTowersContainer.querySelector('.selected');
+  if(!selectedDiv) return alert("Select a tower for ultimate.");
+
+  const chosenName = selectedDiv.dataset.name;
+  // We'll create an ultimateTower placeholder with 0 kills first.
+  // It will link to an actual tower once you place it.
+  ultimateTower = null;
+  ultimateTowerTypeName = chosenName;
+
+  // Hide overlay and enable tower placement and wave start
+  ultimateSelectionOverlay.style.display = 'none';
+  btnStartWave.disabled = false;
+
+  alert(`Selected ${chosenName} as your Ultimate Tower. Place one on the battlefield!`);
 }
 
 // --- Initialize Game ---
@@ -675,9 +908,172 @@ function initGame() {
   updateBaseHealth();
   updateWaveNumber();
   gameLoop();
+
+  // Show ultimate selection overlay first
+  ultimateSelectionOverlay.style.display = 'flex';
+  populateUltimateSelection();
+  btnStartWave.disabled = true;
 }
 
 initGame();
+
+// --- Linking ultimate tower after placement ---
+// We'll assign ultimateTower to the first tower placed matching ultimateTowerTypeName
+let ultimateTowerTypeName = null;
+
+function linkUltimateTower(tower) {
+  if(ultimateTower) return; // already linked
+  if(tower.name === ultimateTowerTypeName) {
+    ultimateTower = tower;
+    updateKillsCounter();
+    if(selectedTower === tower) updateTowerInfo(tower);
+  }
+}
+
+// Modify placeTower to link ultimate tower
+const originalPlaceTower = placeTower;
+placeTower = function(towerType, position) {
+  if(originalPlaceTower(towerType, position)) {
+    // Link ultimate tower if matching
+    linkUltimateTower(towers[towers.length - 1]);
+    return true;
+  }
+  return false;
+}
+
+// --- Draw placement preview ---
+function drawPlacementPreview() {
+  if(!placingTowerType || !placementPreview) return;
+
+  // Circle preview with tower color
+  ctx.fillStyle = placingTowerType.color;
+  ctx.globalAlpha = 0.3;
+  ctx.beginPath();
+  ctx.arc(placementPreview.x, placementPreview.y, 25, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Range circle
+  ctx.strokeStyle = placingTowerType.color;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(placementPreview.x, placementPreview.y, placingTowerType.range, 0, Math.PI * 2);
+  ctx.stroke();
+
+  ctx.globalAlpha = 1;
+}
+
+// Integrate drawPlacementPreview in gameLoop
+const oldGameLoop = gameLoop;
+gameLoop = function() {
+  if(!gameRunning) return;
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Draw path line
+  ctx.strokeStyle = '#444';
+  ctx.lineWidth = 8;
+  ctx.beginPath();
+  ctx.moveTo(path[0].x, path[0].y);
+  for(let i=1; i<path.length; i++) {
+    ctx.lineTo(path[i].x, path[i].y);
+  }
+  ctx.stroke();
+
+  // Draw towers
+  for(let tower of towers) {
+    tower.draw();
+  }
+
+  // Draw enemies and move them
+  for(let i = enemies.length - 1; i >= 0; i--) {
+    let enemy = enemies[i];
+    enemy.move();
+    enemy.draw();
+
+    if(enemy.health <= 0) {
+      enemies.splice(i, 1);
+      credits += 20;
+      updateCredits();
+    } else if(enemy.currentPoint >= path.length - 1) {
+      enemies.splice(i, 1);
+      baseHealth--;
+      updateBaseHealth();
+      if(baseHealth <= 0) {
+        gameRunning = false;
+        alert("Game Over! Your base has been destroyed.");
+      }
+    }
+  }
+
+  // Towers shoot enemies and use special attacks
+  for(let tower of towers) {
+    if(!ultimateAnimating) {
+      if(tower.canUseSpecial()) {
+        // Auto specials disabled for clarity
+      }
+
+      if(tower.canShoot()) {
+        let target = enemies.find(e => tower.isEnemyInRange(e));
+        if(target) {
+          tower.shoot(target);
+          // Draw laser line
+          ctx.strokeStyle = 'yellow';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(tower.x, tower.y);
+          ctx.lineTo(target.x, target.y);
+          ctx.stroke();
+        }
+      }
+    }
+  }
+
+  // Draw placement preview on top
+  drawPlacementPreview();
+
+  // Draw ultimate animation ring if active
+  if(ultimateAnimating && ultimateTower) {
+    const elapsed = Date.now() - ultimateAnimationStart;
+    if(elapsed < ultimateAnimationDuration) {
+      const scale = 1 + 0.3 * Math.sin((elapsed / ultimateAnimationDuration) * Math.PI * 4);
+      const alpha = 0.8 * (1 - elapsed / ultimateAnimationDuration);
+
+      ctx.save();
+      ctx.strokeStyle = `rgba(0, 255, 255, ${alpha.toFixed(2)})`;
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.arc(ultimateTower.x, ultimateTower.y, 40 * scale, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+
+  // Update cooldown display for selected tower
+  if(selectedTower) {
+    updateSpecialCooldown(selectedTower);
+    updateKillsCounter();
+    updateUltimateButton();
+  }
+
+  // Spawn enemies per wave
+  if(spawningWave && enemiesToSpawn > 0) {
+    if(enemySpawnTimer > 300) {
+      spawnEnemy();
+      enemiesToSpawn--;
+      enemySpawnTimer = 0;
+    }
+    enemySpawnTimer += 16;
+  } else if(spawningWave && enemiesToSpawn === 0 && enemies.length === 0) {
+    spawningWave = false;
+    waveNumber++;
+    updateWaveNumber();
+    alert(`Wave ${waveNumber - 1} finished! Prepare for wave ${waveNumber}`);
+    btnStartWave.disabled = false;
+  }
+
+  requestAnimationFrame(gameLoop);
+};
+
 </script>
 
 </body>
