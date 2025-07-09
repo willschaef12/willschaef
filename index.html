@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Jet Fighters: Nations at War</title>
   <style>
     body {
@@ -11,16 +11,19 @@
       background-color: #0a0a0a;
       color: #fff;
       text-align: center;
+      overflow-x: hidden;
     }
 
     h1 {
       font-size: 3rem;
       margin-top: 50px;
+      animation: fadeIn 1s ease forwards;
     }
 
     h2 {
       font-size: 2rem;
       margin-bottom: 30px;
+      animation: fadeIn 1s ease forwards;
     }
 
     p {
@@ -36,6 +39,7 @@
       border: none;
       cursor: pointer;
       transition: background 0.3s;
+      border-radius: 6px;
     }
 
     button:hover {
@@ -52,6 +56,7 @@
       flex-wrap: wrap;
       gap: 20px;
       padding: 20px;
+      animation: fadeIn 0.8s ease forwards;
     }
 
     .card {
@@ -62,6 +67,7 @@
       padding: 10px;
       cursor: pointer;
       transition: transform 0.2s, border-color 0.2s;
+      user-select: none;
     }
 
     .card:hover {
@@ -79,6 +85,23 @@
     .card p {
       margin-top: 10px;
       font-weight: bold;
+      color: #ddd;
+    }
+
+    /* Fade in animation */
+    @keyframes fadeIn {
+      0% {opacity: 0;}
+      100% {opacity: 1;}
+    }
+
+    /* Confirmation screen styling */
+    #confirmation-screen img {
+      width: 200px;
+      height: 120px;
+      object-fit: contain;
+      border-radius: 8px;
+      border: 2px solid #444;
+      margin-top: 20px;
     }
   </style>
 </head>
@@ -96,23 +119,23 @@
     <h2>Select Your Nation</h2>
     <div class="card-container">
       <div class="card" data-nation="USA">
-        <img src="https://upload.wikimedia.org/wikipedia/en/a/a4/Flag_of_the_United_States.svg" alt="USA Flag">
+        <img src="https://upload.wikimedia.org/wikipedia/en/a/a4/Flag_of_the_United_States.svg" alt="USA Flag" />
         <p>USA</p>
       </div>
       <div class="card" data-nation="USSR">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/a/a9/Flag_of_the_Soviet_Union.svg" alt="USSR Flag">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/a/a9/Flag_of_the_Soviet_Union.svg" alt="USSR Flag" />
         <p>USSR</p>
       </div>
       <div class="card" data-nation="Germany">
-        <img src="https://upload.wikimedia.org/wikipedia/en/b/ba/Flag_of_Germany.svg" alt="Germany Flag">
+        <img src="https://upload.wikimedia.org/wikipedia/en/b/ba/Flag_of_Germany.svg" alt="Germany Flag" />
         <p>Germany</p>
       </div>
       <div class="card" data-nation="UK">
-        <img src="https://upload.wikimedia.org/wikipedia/en/a/ae/Flag_of_the_United_Kingdom.svg" alt="UK Flag">
+        <img src="https://upload.wikimedia.org/wikipedia/en/a/ae/Flag_of_the_United_Kingdom.svg" alt="UK Flag" />
         <p>UK</p>
       </div>
       <div class="card" data-nation="Japan">
-        <img src="https://upload.wikimedia.org/wikipedia/en/9/9e/Flag_of_Japan.svg" alt="Japan Flag">
+        <img src="https://upload.wikimedia.org/wikipedia/en/9/9e/Flag_of_Japan.svg" alt="Japan Flag" />
         <p>Japan</p>
       </div>
     </div>
@@ -121,12 +144,21 @@
   <!-- Plane Selection Screen -->
   <div id="plane-select" class="hidden">
     <h2 id="plane-title">Select Your Fighter Jet</h2>
-    <div class="card-container" id="plane-list">
-      <!-- Planes will be added here dynamically -->
-    </div>
+    <div class="card-container" id="plane-list"></div>
   </div>
 
-  <!-- Script -->
+  <!-- Confirmation Screen -->
+  <div id="confirmation-screen" class="hidden">
+    <h2>Confirm Your Selection</h2>
+    <p id="confirm-nation"></p>
+    <p id="confirm-plane"></p>
+    <img id="confirm-plane-img" alt="Selected Plane" />
+    <br />
+    <button id="confirm-start-btn">Start Mission</button>
+    <br />
+    <button id="confirm-back-btn" style="margin-top: 10px; background-color:#777;">Back to Plane Selection</button>
+  </div>
+
   <script>
     const startBtn = document.getElementById("start-btn");
     const startScreen = document.getElementById("start-screen");
@@ -134,6 +166,13 @@
     const planeSelect = document.getElementById("plane-select");
     const planeList = document.getElementById("plane-list");
     const planeTitle = document.getElementById("plane-title");
+
+    const confirmationScreen = document.getElementById("confirmation-screen");
+    const confirmNationText = document.getElementById("confirm-nation");
+    const confirmPlaneText = document.getElementById("confirm-plane");
+    const confirmPlaneImg = document.getElementById("confirm-plane-img");
+    const confirmStartBtn = document.getElementById("confirm-start-btn");
+    const confirmBackBtn = document.getElementById("confirm-back-btn");
 
     const nationCards = document.querySelectorAll(".card[data-nation]");
 
@@ -160,14 +199,19 @@
       ]
     };
 
+    let selectedNation = null;
+    let selectedPlane = null;
+
+    // Start game button → Show nation selection
     startBtn.addEventListener("click", () => {
       startScreen.classList.add("hidden");
       nationSelect.classList.remove("hidden");
     });
 
+    // Nation cards click → Show plane select screen with planes for that nation
     nationCards.forEach(card => {
       card.addEventListener("click", () => {
-        const selectedNation = card.dataset.nation;
+        selectedNation = card.dataset.nation;
         showPlaneSelect(selectedNation);
       });
     });
@@ -175,24 +219,48 @@
     function showPlaneSelect(nation) {
       nationSelect.classList.add("hidden");
       planeSelect.classList.remove("hidden");
+      confirmationScreen.classList.add("hidden");
       planeTitle.textContent = `Select Your Fighter Jet (${nation})`;
       planeList.innerHTML = "";
+      selectedPlane = null;
 
       const planes = planesByNation[nation];
       planes.forEach(plane => {
         const div = document.createElement("div");
         div.className = "card";
         div.innerHTML = `
-          <img src="${plane.img}" alt="${plane.name}">
+          <img src="${plane.img}" alt="${plane.name}" />
           <p>${plane.name}</p>
         `;
         div.addEventListener("click", () => {
-          alert(`You selected: ${plane.name}`);
-          // Load game or mission here
+          selectedPlane = plane;
+          showConfirmation();
         });
         planeList.appendChild(div);
       });
     }
+
+    function showConfirmation() {
+      planeSelect.classList.add("hidden");
+      confirmationScreen.classList.remove("hidden");
+
+      confirmNationText.textContent = `Nation: ${selectedNation}`;
+      confirmPlaneText.textContent = `Plane: ${selectedPlane.name}`;
+      confirmPlaneImg.src = selectedPlane.img;
+      confirmPlaneImg.alt = selectedPlane.name;
+    }
+
+    // Confirm start mission
+    confirmStartBtn.addEventListener("click", () => {
+      alert(`Starting mission with ${selectedNation} - ${selectedPlane.name}!`);
+      // Here you can add your game mission start code or redirect.
+    });
+
+    // Back button to plane selection
+    confirmBackBtn.addEventListener("click", () => {
+      confirmationScreen.classList.add("hidden");
+      planeSelect.classList.remove("hidden");
+    });
   </script>
 
 </body>
