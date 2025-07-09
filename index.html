@@ -46,7 +46,7 @@
       display: none;
     }
 
-    .nation-options {
+    .card-container {
       display: flex;
       justify-content: center;
       flex-wrap: wrap;
@@ -54,7 +54,7 @@
       padding: 20px;
     }
 
-    .nation-card {
+    .card {
       background-color: #1a1a1a;
       border: 2px solid #444;
       border-radius: 10px;
@@ -64,19 +64,19 @@
       transition: transform 0.2s, border-color 0.2s;
     }
 
-    .nation-card:hover {
+    .card:hover {
       transform: scale(1.05);
       border-color: #888;
     }
 
-    .nation-card img {
+    .card img {
       width: 100%;
       height: 80px;
       object-fit: contain;
       border-radius: 5px;
     }
 
-    .nation-card p {
+    .card p {
       margin-top: 10px;
       font-weight: bold;
     }
@@ -94,27 +94,35 @@
   <!-- Nation Selection Screen -->
   <div id="nation-select" class="hidden">
     <h2>Select Your Nation</h2>
-    <div class="nation-options">
-      <div class="nation-card" data-nation="USA">
+    <div class="card-container">
+      <div class="card" data-nation="USA">
         <img src="https://upload.wikimedia.org/wikipedia/en/a/a4/Flag_of_the_United_States.svg" alt="USA Flag">
         <p>USA</p>
       </div>
-      <div class="nation-card" data-nation="USSR">
+      <div class="card" data-nation="USSR">
         <img src="https://upload.wikimedia.org/wikipedia/commons/a/a9/Flag_of_the_Soviet_Union.svg" alt="USSR Flag">
         <p>USSR</p>
       </div>
-      <div class="nation-card" data-nation="Germany">
+      <div class="card" data-nation="Germany">
         <img src="https://upload.wikimedia.org/wikipedia/en/b/ba/Flag_of_Germany.svg" alt="Germany Flag">
         <p>Germany</p>
       </div>
-      <div class="nation-card" data-nation="UK">
+      <div class="card" data-nation="UK">
         <img src="https://upload.wikimedia.org/wikipedia/en/a/ae/Flag_of_the_United_Kingdom.svg" alt="UK Flag">
         <p>UK</p>
       </div>
-      <div class="nation-card" data-nation="Japan">
+      <div class="card" data-nation="Japan">
         <img src="https://upload.wikimedia.org/wikipedia/en/9/9e/Flag_of_Japan.svg" alt="Japan Flag">
         <p>Japan</p>
       </div>
+    </div>
+  </div>
+
+  <!-- Plane Selection Screen -->
+  <div id="plane-select" class="hidden">
+    <h2 id="plane-title">Select Your Fighter Jet</h2>
+    <div class="card-container" id="plane-list">
+      <!-- Planes will be added here dynamically -->
     </div>
   </div>
 
@@ -123,7 +131,34 @@
     const startBtn = document.getElementById("start-btn");
     const startScreen = document.getElementById("start-screen");
     const nationSelect = document.getElementById("nation-select");
-    const nationCards = document.querySelectorAll(".nation-card");
+    const planeSelect = document.getElementById("plane-select");
+    const planeList = document.getElementById("plane-list");
+    const planeTitle = document.getElementById("plane-title");
+
+    const nationCards = document.querySelectorAll(".card[data-nation]");
+
+    const planesByNation = {
+      USA: [
+        { name: "F-22 Raptor", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/F-22_Raptor_flight.jpg/320px-F-22_Raptor_flight.jpg" },
+        { name: "F-16 Falcon", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/28/F-16_June_2008.jpg/320px-F-16_June_2008.jpg" }
+      ],
+      USSR: [
+        { name: "MiG-29", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/71/MiG-29_fighter.jpg/320px-MiG-29_fighter.jpg" },
+        { name: "Su-27", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Sukhoi_Su-27SKM_at_MAKS-2005_airshow.jpg/320px-Sukhoi_Su-27SKM_at_MAKS-2005_airshow.jpg" }
+      ],
+      Germany: [
+        { name: "Messerschmitt Bf 109", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/70/Bf_109G-6_RCAF.jpg/320px-Bf_109G-6_RCAF.jpg" },
+        { name: "Focke-Wulf Fw 190", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4f/Focke-Wulf_Fw_190.jpg/320px-Focke-Wulf_Fw_190.jpg" }
+      ],
+      UK: [
+        { name: "Spitfire", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/Supermarine_Spitfire_Mk_XVI_crop.jpg/320px-Supermarine_Spitfire_Mk_XVI_crop.jpg" },
+        { name: "Hawker Hurricane", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/Hawker_Hurricane_Mk_1_R4118_Fairford_2005.jpg/320px-Hawker_Hurricane_Mk_1_R4118_Fairford_2005.jpg" }
+      ],
+      Japan: [
+        { name: "Mitsubishi Zero", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/28/Mitsubishi_Zero_Saipan.jpg/320px-Mitsubishi_Zero_Saipan.jpg" },
+        { name: "Nakajima Ki-84", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/Nakajima_Ki-84_Hayate.jpg/320px-Nakajima_Ki-84_Hayate.jpg" }
+      ]
+    };
 
     startBtn.addEventListener("click", () => {
       startScreen.classList.add("hidden");
@@ -133,10 +168,31 @@
     nationCards.forEach(card => {
       card.addEventListener("click", () => {
         const selectedNation = card.dataset.nation;
-        alert(`You selected: ${selectedNation}`);
-        // Next: Load jets or transition to gameplay
+        showPlaneSelect(selectedNation);
       });
     });
+
+    function showPlaneSelect(nation) {
+      nationSelect.classList.add("hidden");
+      planeSelect.classList.remove("hidden");
+      planeTitle.textContent = `Select Your Fighter Jet (${nation})`;
+      planeList.innerHTML = "";
+
+      const planes = planesByNation[nation];
+      planes.forEach(plane => {
+        const div = document.createElement("div");
+        div.className = "card";
+        div.innerHTML = `
+          <img src="${plane.img}" alt="${plane.name}">
+          <p>${plane.name}</p>
+        `;
+        div.addEventListener("click", () => {
+          alert(`You selected: ${plane.name}`);
+          // Load game or mission here
+        });
+        planeList.appendChild(div);
+      });
+    }
   </script>
 
 </body>
