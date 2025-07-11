@@ -3,265 +3,410 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Jet Fighters: Nations at War</title>
+  <title>Jet Fighters: Nations at War - Tech Tree</title>
   <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background-color: #0a0a0a;
+    /* Reset and base */
+    body, html {
+      margin: 0; padding: 0; height: 100%;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: radial-gradient(circle at center, #0c0c1a, #000);
       color: #fff;
-      text-align: center;
-      overflow-x: hidden;
+      overflow: hidden;
+      user-select: none;
     }
 
-    h1 {
-      font-size: 3rem;
-      margin-top: 50px;
-      animation: fadeIn 1s ease forwards;
-    }
-
-    h2 {
-      font-size: 2rem;
-      margin-bottom: 30px;
-      animation: fadeIn 1s ease forwards;
-    }
-
-    p {
-      font-size: 1.2rem;
-    }
-
-    button {
-      padding: 15px 30px;
-      font-size: 18px;
-      margin-top: 20px;
-      background-color: #444;
-      color: white;
-      border: none;
-      cursor: pointer;
-      transition: background 0.3s;
-      border-radius: 6px;
-    }
-
-    button:hover {
-      background-color: #666;
-    }
-
-    .hidden {
-      display: none;
-    }
-
-    .card-container {
+    /* Animated starfield background for home screen */
+    #home-screen {
+      height: 100vh;
       display: flex;
+      flex-direction: column;
       justify-content: center;
-      flex-wrap: wrap;
-      gap: 20px;
-      padding: 20px;
-      animation: fadeIn 0.8s ease forwards;
+      align-items: center;
+      background: radial-gradient(circle, #001133, #000);
+      position: relative;
+      overflow: hidden;
+      text-align: center;
     }
 
-    .card {
-      background-color: #1a1a1a;
+    /* Star dots */
+    #home-screen::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background:
+        radial-gradient(2px 2px at 20% 30%, #55aaff, transparent),
+        radial-gradient(1.5px 1.5px at 40% 80%, #77ccff, transparent),
+        radial-gradient(2.5px 2.5px at 70% 20%, #3399ff, transparent),
+        radial-gradient(1.2px 1.2px at 85% 50%, #55aaff, transparent);
+      background-repeat: repeat;
+      background-size: 200px 200px;
+      animation: starMove 30s linear infinite;
+      z-index: 0;
+      opacity: 0.4;
+    }
+    @keyframes starMove {
+      from {background-position: 0 0, 0 0, 0 0, 0 0;}
+      to {background-position: 200px 200px, 200px 200px, 200px 200px, 200px 200px;}
+    }
+
+    #home-screen h1 {
+      font-size: 3.5rem;
+      margin-bottom: 40px;
+      color: #88f;
+      text-shadow: 0 0 10px #55aaff;
+      z-index: 1;
+    }
+
+    .nation-button {
+      background-color: #111;
+      border: 2px solid #0af;
+      border-radius: 12px;
+      color: #0af;
+      font-size: 1.8rem;
+      padding: 18px 50px;
+      margin: 15px;
+      cursor: pointer;
+      width: 240px;
+      transition: background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+      box-shadow: 0 0 15px #0af88a33;
+      z-index: 1;
+      font-weight: 600;
+      letter-spacing: 1px;
+    }
+    .nation-button:hover {
+      background-color: #0af;
+      color: #000;
+      box-shadow: 0 0 30px #0affaa, 0 0 50px #0affaa;
+      transform: scale(1.1);
+    }
+    .nation-button:active {
+      transform: scale(0.98);
+      box-shadow: 0 0 10px #0affaa;
+    }
+
+    /* Tech tree screen styles */
+    #tech-tree-screen {
+      display: none;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+    #tech-tree-screen.active {
+      display: flex;
+    }
+
+    header {
+      padding: 20px;
+      text-align: center;
+      background: #111;
+      border-bottom: 2px solid #0af;
+      user-select: none;
+    }
+    header h1 {
+      margin: 0 0 10px;
+      color: #88f;
+      font-size: 2.5rem;
+    }
+    #nation-select {
+      padding: 8px 12px;
+      font-size: 1.1rem;
+      border-radius: 6px;
+      border: none;
+      outline: none;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .tree-wrapper {
+      flex-grow: 1;
+      overflow: auto;
+      cursor: grab;
+      position: relative;
+      background-image:
+        linear-gradient(to right, rgba(255,255,255,0.05) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255,255,255,0.05) 1px, transparent 1px);
+      background-size: 50px 50px;
+    }
+
+    .tech-tree {
+      position: relative;
+      width: 2000px;
+      height: 1200px;
+      margin: 0 auto;
+    }
+
+    .node {
+      position: absolute;
+      background-color: #111;
       border: 2px solid #444;
+      padding: 10px;
       border-radius: 10px;
       width: 150px;
-      padding: 10px;
-      cursor: pointer;
+      text-align: center;
       transition: transform 0.2s, border-color 0.2s;
       user-select: none;
     }
 
-    .card:hover {
+    .node:hover {
       transform: scale(1.05);
-      border-color: #888;
+      border-color: #0af;
+      z-index: 5;
     }
 
-    .card img {
+    .node img {
       width: 100%;
       height: 80px;
       object-fit: contain;
-      border-radius: 5px;
+      margin-bottom: 5px;
+      border-radius: 6px;
+      user-select: none;
     }
 
-    .card p {
-      margin-top: 10px;
-      font-weight: bold;
-      color: #ddd;
+    svg#lines {
+      position: absolute;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+      z-index: 0;
     }
 
-    /* Fade in animation */
-    @keyframes fadeIn {
-      0% {opacity: 0;}
-      100% {opacity: 1;}
-    }
-
-    /* Confirmation screen styling */
-    #confirmation-screen img {
-      width: 200px;
-      height: 120px;
-      object-fit: contain;
-      border-radius: 8px;
-      border: 2px solid #444;
-      margin-top: 20px;
+    .tooltip {
+      position: absolute;
+      background: #222;
+      color: #fff;
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+      white-space: nowrap;
+      z-index: 10;
+      user-select: none;
     }
   </style>
 </head>
 <body>
 
-  <!-- Start Screen -->
-  <div id="start-screen">
+  <!-- HOME SCREEN -->
+  <section id="home-screen">
     <h1>Jet Fighters: Nations at War</h1>
-    <p>Choose your nation and dominate the skies!</p>
-    <button id="start-btn">Start Game</button>
-  </div>
+    <button class="nation-button" data-nation="usa">United States</button>
+    <button class="nation-button" data-nation="russia">Russia</button>
+    <button class="nation-button" data-nation="uk">United Kingdom</button>
+    <button class="nation-button" data-nation="china">China</button>
+  </section>
 
-  <!-- Nation Selection Screen -->
-  <div id="nation-select" class="hidden">
-    <h2>Select Your Nation</h2>
-    <div class="card-container">
-      <div class="card" data-nation="USA">
-        <img src="https://upload.wikimedia.org/wikipedia/en/a/a4/Flag_of_the_United_States.svg" alt="USA Flag" />
-        <p>USA</p>
+  <!-- TECH TREE SCREEN -->
+  <section id="tech-tree-screen" aria-label="Tech Tree Screen">
+    <header>
+      <h1>Aircraft Tech Tree</h1>
+      <select id="nation-select" aria-label="Select Nation">
+        <option value="usa">United States</option>
+        <option value="russia">Russia</option>
+        <option value="uk">United Kingdom</option>
+        <option value="china">China</option>
+      </select>
+    </header>
+
+    <div class="tree-wrapper" id="tree-wrapper" tabindex="0" aria-describedby="tooltip">
+      <div class="tech-tree" id="tree-container">
+        <svg id="lines" width="2000" height="1200" aria-hidden="true"></svg>
       </div>
-      <div class="card" data-nation="USSR">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/a/a9/Flag_of_the_Soviet_Union.svg" alt="USSR Flag" />
-        <p>USSR</p>
-      </div>
-      <div class="card" data-nation="Germany">
-        <img src="https://upload.wikimedia.org/wikipedia/en/b/ba/Flag_of_Germany.svg" alt="Germany Flag" />
-        <p>Germany</p>
-      </div>
-      <div class="card" data-nation="UK">
-        <img src="https://upload.wikimedia.org/wikipedia/en/a/ae/Flag_of_the_United_Kingdom.svg" alt="UK Flag" />
-        <p>UK</p>
-      </div>
-      <div class="card" data-nation="Japan">
-        <img src="https://upload.wikimedia.org/wikipedia/en/9/9e/Flag_of_Japan.svg" alt="Japan Flag" />
-        <p>Japan</p>
-      </div>
+      <div class="tooltip" id="tooltip" role="tooltip"></div>
     </div>
-  </div>
-
-  <!-- Plane Selection Screen -->
-  <div id="plane-select" class="hidden">
-    <h2 id="plane-title">Select Your Fighter Jet</h2>
-    <div class="card-container" id="plane-list"></div>
-  </div>
-
-  <!-- Confirmation Screen -->
-  <div id="confirmation-screen" class="hidden">
-    <h2>Confirm Your Selection</h2>
-    <p id="confirm-nation"></p>
-    <p id="confirm-plane"></p>
-    <img id="confirm-plane-img" alt="Selected Plane" />
-    <br />
-    <button id="confirm-start-btn">Start Mission</button>
-    <br />
-    <button id="confirm-back-btn" style="margin-top: 10px; background-color:#777;">Back to Plane Selection</button>
-  </div>
+  </section>
 
   <script>
-    const startBtn = document.getElementById("start-btn");
-    const startScreen = document.getElementById("start-screen");
-    const nationSelect = document.getElementById("nation-select");
-    const planeSelect = document.getElementById("plane-select");
-    const planeList = document.getElementById("plane-list");
-    const planeTitle = document.getElementById("plane-title");
+    // Tech tree data for 4 nations (add your data for UK, China)
+    const techTrees = {
+      usa: [
+        { id: "fa18", name: "F/A-18F", top: 100, left: 200, tooltip: "Multirole Carrier Fighter", img: "fa18.png", cost: "Start Node", connections: ["qaam", "lasm", "eml"] },
+        { id: "qaam", name: "QAAM", top: 300, left: 100, tooltip: "Quick maneuver air-to-air missile", cost: "30,000", connections: [] },
+        { id: "lasm", name: "LASM", top: 300, left: 350, tooltip: "Long-range air-to-ground missile", cost: "30,000", connections: ["a10c"] },
+        { id: "eml", name: "EML", top: 300, left: 500, tooltip: "Electromagnetic Launcher", cost: "30,000", connections: [] },
+        { id: "a10c", name: "A-10C", top: 500, left: 350, tooltip: "Close Air Support Specialist", img: "a10c.png", cost: "120,000", connections: ["ugb", "agm"] },
+        { id: "ugb", name: "UGB", top: 700, left: 300, tooltip: "Unguided Bombs", cost: "0", connections: [] },
+        { id: "agm", name: "4AGM", top: 700, left: 450, tooltip: "4x Air-to-Ground Missiles", cost: "12,000", connections: ["typhoon"] },
+        { id: "typhoon", name: "Typhoon", top: 900, left: 400, tooltip: "High-speed European Multirole Jet", img: "typhoon.png", cost: "440,000", connections: [] }
+      ],
 
-    const confirmationScreen = document.getElementById("confirmation-screen");
-    const confirmNationText = document.getElementById("confirm-nation");
-    const confirmPlaneText = document.getElementById("confirm-plane");
-    const confirmPlaneImg = document.getElementById("confirm-plane-img");
-    const confirmStartBtn = document.getElementById("confirm-start-btn");
-    const confirmBackBtn = document.getElementById("confirm-back-btn");
+      russia: [
+        { id: "su57", name: "Su-57", top: 100, left: 200, tooltip: "Stealth Multirole Fighter", img: "su57.png", cost: "Start Node", connections: ["r73", "kh31"] },
+        { id: "r73", name: "R-73", top: 300, left: 100, tooltip: "Short-range air-to-air missile", cost: "25,000", connections: [] },
+        { id: "kh31", name: "Kh-31", top: 300, left: 350, tooltip: "Air-to-surface missile", cost: "30,000", connections: ["su25"] },
+        { id: "su25", name: "Su-25", top: 500, left: 350, tooltip: "Close air support aircraft", img: "su25.png", cost: "100,000", connections: ["rbk"] },
+        { id: "rbk", name: "RBK Cluster Bombs", top: 700, left: 350, tooltip: "Cluster Bombs", cost: "10,000", connections: [] }
+      ],
 
-    const nationCards = document.querySelectorAll(".card[data-nation]");
+      uk: [
+        { id: "tornado", name: "Panavia Tornado", top: 100, left: 200, tooltip: "Multirole Combat Aircraft", img: "tornado.png", cost: "Start Node", connections: ["stormshadow", "brimstone"] },
+        { id: "stormshadow", name: "Storm Shadow", top: 300, left: 100, tooltip: "Long-range cruise missile", cost: "40,000", connections: [] },
+        { id: "brimstone", name: "Brimstone", top: 300, left: 350, tooltip: "Precision air-to-surface missile", cost: "35,000", connections: [] }
+      ],
 
-    const planesByNation = {
-      USA: [
-        { name: "F-22 Raptor", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/F-22_Raptor_flight.jpg/320px-F-22_Raptor_flight.jpg" },
-        { name: "F-16 Falcon", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/28/F-16_June_2008.jpg/320px-F-16_June_2008.jpg" }
-      ],
-      USSR: [
-        { name: "MiG-29", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/71/MiG-29_fighter.jpg/320px-MiG-29_fighter.jpg" },
-        { name: "Su-27", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Sukhoi_Su-27SKM_at_MAKS-2005_airshow.jpg/320px-Sukhoi_Su-27SKM_at_MAKS-2005_airshow.jpg" }
-      ],
-      Germany: [
-        { name: "Messerschmitt Bf 109", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/70/Bf_109G-6_RCAF.jpg/320px-Bf_109G-6_RCAF.jpg" },
-        { name: "Focke-Wulf Fw 190", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4f/Focke-Wulf_Fw_190.jpg/320px-Focke-Wulf_Fw_190.jpg" }
-      ],
-      UK: [
-        { name: "Spitfire", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/Supermarine_Spitfire_Mk_XVI_crop.jpg/320px-Supermarine_Spitfire_Mk_XVI_crop.jpg" },
-        { name: "Hawker Hurricane", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/Hawker_Hurricane_Mk_1_R4118_Fairford_2005.jpg/320px-Hawker_Hurricane_Mk_1_R4118_Fairford_2005.jpg" }
-      ],
-      Japan: [
-        { name: "Mitsubishi Zero", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/28/Mitsubishi_Zero_Saipan.jpg/320px-Mitsubishi_Zero_Saipan.jpg" },
-        { name: "Nakajima Ki-84", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/Nakajima_Ki-84_Hayate.jpg/320px-Nakajima_Ki-84_Hayate.jpg" }
+      china: [
+        { id: "j20", name: "Chengdu J-20", top: 100, left: 200, tooltip: "Stealth Fighter Jet", img: "j20.png", cost: "Start Node", connections: ["pl10", "yd12"] },
+        { id: "pl10", name: "PL-10", top: 300, left: 100, tooltip: "Short-range missile", cost: "20,000", connections: [] },
+        { id: "yd12", name: "YD-12", top: 300, left: 350, tooltip: "Air-to-air missile", cost: "25,000", connections: [] }
       ]
     };
 
-    let selectedNation = null;
-    let selectedPlane = null;
+    // DOM references
+    const homeScreen = document.getElementById("home-screen");
+    const techTreeScreen = document.getElementById("tech-tree-screen");
+    const nationSelect = document.getElementById("nation-select");
+    const treeContainer = document.getElementById("tree-container");
+    const linesSvg = document.getElementById("lines");
+    const tooltip = document.getElementById("tooltip");
+    const treeWrapper = document.getElementById("tree-wrapper");
 
-    // Start game button → Show nation selection
-    startBtn.addEventListener("click", () => {
-      startScreen.classList.add("hidden");
-      nationSelect.classList.remove("hidden");
-    });
+    // Clear existing nodes and lines
+    function clearTree() {
+      const nodes = treeContainer.querySelectorAll(".node");
+      nodes.forEach(n => n.remove());
+      while (linesSvg.firstChild) linesSvg.removeChild(linesSvg.firstChild);
+    }
 
-    // Nation cards click → Show plane select screen with planes for that nation
-    nationCards.forEach(card => {
-      card.addEventListener("click", () => {
-        selectedNation = card.dataset.nation;
-        showPlaneSelect(selectedNation);
+    // Create a single node element
+    function createNode(nodeData) {
+      const node = document.createElement("div");
+      node.className = "node";
+      node.id = nodeData.id;
+      node.style.top = nodeData.top + "px";
+      node.style.left = nodeData.left + "px";
+      node.setAttribute("data-tooltip", nodeData.tooltip);
+
+      if (nodeData.img) {
+        const img = document.createElement("img");
+        img.src = nodeData.img;
+        img.alt = nodeData.name;
+        node.appendChild(img);
+      }
+
+      const nameP = document.createElement("p");
+      nameP.textContent = nodeData.name;
+      node.appendChild(nameP);
+
+      const costSmall = document.createElement("small");
+      costSmall.textContent = nodeData.cost;
+      node.appendChild(costSmall);
+
+      node.addEventListener("mouseenter", e => {
+        tooltip.textContent = e.currentTarget.getAttribute("data-tooltip");
+        const rect = e.currentTarget.getBoundingClientRect();
+        const containerRect = treeWrapper.getBoundingClientRect();
+
+        let left = rect.right - containerRect.left + 10;
+        let top = rect.top - containerRect.top;
+
+        if (left + tooltip.offsetWidth > containerRect.width) {
+          left = rect.left - containerRect.left - tooltip.offsetWidth - 10;
+        }
+        if (top + tooltip.offsetHeight > containerRect.height) {
+          top = containerRect.height - tooltip.offsetHeight - 10;
+        }
+
+        tooltip.style.left = left + "px";
+        tooltip.style.top = top + "px";
+        tooltip.style.opacity = "1";
       });
-    });
+      node.addEventListener("mouseleave", () => {
+        tooltip.style.opacity = "0";
+      });
 
-    function showPlaneSelect(nation) {
-      nationSelect.classList.add("hidden");
-      planeSelect.classList.remove("hidden");
-      confirmationScreen.classList.add("hidden");
-      planeTitle.textContent = `Select Your Fighter Jet (${nation})`;
-      planeList.innerHTML = "";
-      selectedPlane = null;
+      return node;
+    }
 
-      const planes = planesByNation[nation];
-      planes.forEach(plane => {
-        const div = document.createElement("div");
-        div.className = "card";
-        div.innerHTML = `
-          <img src="${plane.img}" alt="${plane.name}" />
-          <p>${plane.name}</p>
-        `;
-        div.addEventListener("click", () => {
-          selectedPlane = plane;
-          showConfirmation();
+    // Draw connection lines between nodes
+    function connectNodes(fromId, toId) {
+      const from = document.getElementById(fromId);
+      const to = document.getElementById(toId);
+      if (!from || !to) return;
+
+      const x1 = from.offsetLeft + from.offsetWidth / 2;
+      const y1 = from.offsetTop + from.offsetHeight;
+      const x2 = to.offsetLeft + to.offsetWidth / 2;
+      const y2 = to.offsetTop;
+
+      const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      line.setAttribute("x1", x1);
+      line.setAttribute("y1", y1);
+      line.setAttribute("x2", x2);
+      line.setAttribute("y2", y2);
+      line.setAttribute("stroke", "#0af");
+      line.setAttribute("stroke-width", "2");
+      linesSvg.appendChild(line);
+    }
+
+    // Build the tech tree for the given nation
+    function buildTechTree(nation) {
+      clearTree();
+      const nodesData = techTrees[nation];
+      if (!nodesData) return;
+
+      // Update dropdown to current nation (sync)
+      nationSelect.value = nation;
+
+      // Create nodes
+      nodesData.forEach(nodeData => {
+        const node = createNode(nodeData);
+        treeContainer.appendChild(node);
+      });
+
+      // Connect nodes
+      nodesData.forEach(nodeData => {
+        nodeData.connections.forEach(connId => {
+          connectNodes(nodeData.id, connId);
         });
-        planeList.appendChild(div);
       });
     }
 
-    function showConfirmation() {
-      planeSelect.classList.add("hidden");
-      confirmationScreen.classList.remove("hidden");
-
-      confirmNationText.textContent = `Nation: ${selectedNation}`;
-      confirmPlaneText.textContent = `Plane: ${selectedPlane.name}`;
-      confirmPlaneImg.src = selectedPlane.img;
-      confirmPlaneImg.alt = selectedPlane.name;
-    }
-
-    // Confirm start mission
-    confirmStartBtn.addEventListener("click", () => {
-      alert(`Starting mission with ${selectedNation} - ${selectedPlane.name}!`);
-      // Here you can add your game mission start code or redirect.
+    // Drag to pan tech tree
+    let isPanning = false, startX, startY, scrollLeft, scrollTop;
+    treeWrapper.addEventListener("mousedown", e => {
+      isPanning = true;
+      treeWrapper.style.cursor = "grabbing";
+      startX = e.pageX;
+      startY = e.pageY;
+      scrollLeft = treeWrapper.scrollLeft;
+      scrollTop = treeWrapper.scrollTop;
+    });
+    treeWrapper.addEventListener("mouseup", () => {
+      isPanning = false;
+      treeWrapper.style.cursor = "grab";
+    });
+    treeWrapper.addEventListener("mouseleave", () => {
+      isPanning = false;
+      treeWrapper.style.cursor = "grab";
+    });
+    treeWrapper.addEventListener("mousemove", e => {
+      if (!isPanning) return;
+      const dx = e.pageX - startX;
+      const dy = e.pageY - startY;
+      treeWrapper.scrollLeft = scrollLeft - dx;
+      treeWrapper.scrollTop = scrollTop - dy;
     });
 
-    // Back button to plane selection
-    confirmBackBtn.addEventListener("click", () => {
-      confirmationScreen.classList.add("hidden");
-      planeSelect.classList.remove("hidden");
+    // Handle nation select dropdown change on tech tree screen
+    nationSelect.addEventListener("change", e => {
+      buildTechTree(e.target.value);
+      tooltip.style.opacity = 0;
     });
+
+    // Handle home screen nation button clicks
+    document.querySelectorAll(".nation-button").forEach(btn => {
+      btn.addEventListener("click", e => {
+        const selectedNation = e.currentTarget.getAttribute("data-nation");
+        // Hide home screen, show tech tree screen
+        homeScreen.style.display = "none";
+        techTreeScreen.classList.add("active");
+        buildTechTree(selectedNation);
+      });
+    });
+
+    // Accessibility: Allow keyboard pan on treeWrapper (optional)
+
   </script>
-
 </body>
 </html>
