@@ -1,412 +1,617 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Jet Fighters: Nations at War - Tech Tree</title>
-  <style>
-    /* Reset and base */
-    body, html {
-      margin: 0; padding: 0; height: 100%;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: radial-gradient(circle at center, #0c0c1a, #000);
-      color: #fff;
-      overflow: hidden;
-      user-select: none;
-    }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Jet Fighters: Nations at War</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap');
 
-    /* Animated starfield background for home screen */
-    #home-screen {
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      background: radial-gradient(circle, #001133, #000);
-      position: relative;
-      overflow: hidden;
-      text-align: center;
-    }
+  body, html {
+    margin: 0; padding: 0; height: 100%;
+    background: radial-gradient(circle at center, #070a2a, #000010);
+    font-family: 'Orbitron', monospace, monospace;
+    color: #aafcff;
+    user-select: none;
+    overflow: hidden;
+  }
 
-    /* Star dots */
-    #home-screen::before {
-      content: "";
-      position: absolute;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background:
-        radial-gradient(2px 2px at 20% 30%, #55aaff, transparent),
-        radial-gradient(1.5px 1.5px at 40% 80%, #77ccff, transparent),
-        radial-gradient(2.5px 2.5px at 70% 20%, #3399ff, transparent),
-        radial-gradient(1.2px 1.2px at 85% 50%, #55aaff, transparent);
-      background-repeat: repeat;
-      background-size: 200px 200px;
-      animation: starMove 30s linear infinite;
-      z-index: 0;
-      opacity: 0.4;
-    }
-    @keyframes starMove {
-      from {background-position: 0 0, 0 0, 0 0, 0 0;}
-      to {background-position: 200px 200px, 200px 200px, 200px 200px, 200px 200px;}
-    }
+  /* PARTICLES BACKGROUND */
+  #particles {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 0;
+  }
 
-    #home-screen h1 {
-      font-size: 3.5rem;
-      margin-bottom: 40px;
-      color: #88f;
-      text-shadow: 0 0 10px #55aaff;
-      z-index: 1;
-    }
+  /* MAIN MENU */
+  #main-menu {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    gap: 20px;
+    padding: 0 20px;
+    background:
+      radial-gradient(circle at center, #0ff3 30%, transparent 80%);
+    position: relative;
+    z-index: 1;
+  }
 
-    .nation-button {
-      background-color: #111;
-      border: 2px solid #0af;
-      border-radius: 12px;
-      color: #0af;
-      font-size: 1.8rem;
-      padding: 18px 50px;
-      margin: 15px;
-      cursor: pointer;
-      width: 240px;
-      transition: background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
-      box-shadow: 0 0 15px #0af88a33;
-      z-index: 1;
-      font-weight: 600;
-      letter-spacing: 1px;
-    }
-    .nation-button:hover {
-      background-color: #0af;
-      color: #000;
-      box-shadow: 0 0 30px #0affaa, 0 0 50px #0affaa;
-      transform: scale(1.1);
-    }
-    .nation-button:active {
-      transform: scale(0.98);
-      box-shadow: 0 0 10px #0affaa;
-    }
+  #main-menu h1 {
+    font-size: 4rem;
+    text-shadow:
+      0 0 5px #00ffffaa,
+      0 0 15px #00ffffcc,
+      0 0 30px #00ffffff;
+    animation: flicker 2.5s infinite alternate;
+    margin-bottom: 5px;
+  }
 
-    /* Tech tree screen styles */
-    #tech-tree-screen {
-      display: none;
-      flex-direction: column;
-      height: 100vh;
-      overflow: hidden;
+  @keyframes flicker {
+    0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
+      opacity: 1;
+      text-shadow:
+        0 0 5px #00ffffaa,
+        0 0 15px #00ffffcc,
+        0 0 30px #00ffffff;
     }
-    #tech-tree-screen.active {
-      display: flex;
+    20%, 22%, 24%, 55% {
+      opacity: 0.7;
+      text-shadow: none;
     }
+  }
 
-    header {
-      padding: 20px;
-      text-align: center;
-      background: #111;
-      border-bottom: 2px solid #0af;
-      user-select: none;
-    }
-    header h1 {
-      margin: 0 0 10px;
-      color: #88f;
-      font-size: 2.5rem;
-    }
-    #nation-select {
-      padding: 8px 12px;
-      font-size: 1.1rem;
-      border-radius: 6px;
-      border: none;
-      outline: none;
-      cursor: pointer;
-      user-select: none;
-    }
+  #main-menu .subtitle {
+    font-size: 1.3rem;
+    color: #55eeffcc;
+    margin-bottom: 40px;
+    letter-spacing: 0.08em;
+    user-select:none;
+  }
 
-    .tree-wrapper {
-      flex-grow: 1;
-      overflow: auto;
-      cursor: grab;
-      position: relative;
-      background-image:
-        linear-gradient(to right, rgba(255,255,255,0.05) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(255,255,255,0.05) 1px, transparent 1px);
-      background-size: 50px 50px;
-    }
+  .nation-button {
+    background: linear-gradient(135deg, #004466, #002233);
+    border: 3px solid #00ffff;
+    border-radius: 16px;
+    color: #aaffff;
+    font-size: 1.6rem;
+    padding: 18px 50px;
+    width: 320px;
+    cursor: pointer;
+    text-align: center;
+    text-shadow: 0 0 6px #00ffffcc;
+    box-shadow: 0 0 15px #00ffff88;
+    transition: transform 0.3s, box-shadow 0.3s, background-color 0.3s;
+    user-select:none;
+    position: relative;
+    overflow: hidden;
+  }
+  .nation-button:hover, .nation-button:focus {
+    transform: scale(1.1);
+    box-shadow: 0 0 40px #00ffffcc;
+    background: linear-gradient(135deg, #0077aa, #004466);
+    outline: none;
+  }
 
-    .tech-tree {
-      position: relative;
-      width: 2000px;
-      height: 1200px;
-      margin: 0 auto;
-    }
+  .nation-button::before {
+    content: "";
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, #00ffff33 10%, transparent 40%);
+    animation: rotateGlow 6s linear infinite;
+    pointer-events: none;
+    opacity: 0.5;
+    transition: opacity 0.3s;
+    border-radius: 16px;
+  }
+  .nation-button:hover::before,
+  .nation-button:focus::before {
+    opacity: 1;
+  }
+  @keyframes rotateGlow {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
 
-    .node {
-      position: absolute;
-      background-color: #111;
-      border: 2px solid #444;
-      padding: 10px;
-      border-radius: 10px;
-      width: 150px;
-      text-align: center;
-      transition: transform 0.2s, border-color 0.2s;
-      user-select: none;
-    }
+  /* FOOTER */
+  #footer {
+    position: fixed;
+    bottom: 10px;
+    width: 100%;
+    text-align: center;
+    font-size: 0.9rem;
+    color: #008899cc;
+    letter-spacing: 0.1em;
+    user-select:none;
+    text-shadow: 0 0 5px #00cccc88;
+    z-index: 1;
+  }
 
-    .node:hover {
-      transform: scale(1.05);
-      border-color: #0af;
-      z-index: 5;
-    }
+  /* INTERMEDIATE SELECTION SCREEN */
+  #post-nation-select {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    gap: 30px;
+    background:
+      radial-gradient(circle at center, #070a2a, #000010);
+    z-index: 2;
+    position: relative;
+  }
+  #post-nation-select.active {
+    display: flex;
+  }
+  #post-nation-select h2 {
+    font-size: 3rem;
+    color: #00ffff;
+    text-shadow: 0 0 15px #00ffffcc;
+    user-select: none;
+  }
+  .choice-button {
+    background: linear-gradient(135deg, #004466, #002233);
+    border: 3px solid #00ffff;
+    border-radius: 20px;
+    color: #aaffff;
+    font-size: 2rem;
+    padding: 20px 60px;
+    cursor: pointer;
+    text-shadow: 0 0 6px #00ffffcc;
+    box-shadow: 0 0 25px #00ffff88;
+    transition: transform 0.3s, box-shadow 0.3s, background-color 0.3s;
+    user-select:none;
+    width: 320px;
+    text-align: center;
+  }
+  .choice-button:hover, .choice-button:focus {
+    transform: scale(1.1);
+    box-shadow: 0 0 60px #00ffffcc;
+    background: linear-gradient(135deg, #0077aa, #004466);
+    outline: none;
+  }
 
-    .node img {
-      width: 100%;
-      height: 80px;
-      object-fit: contain;
-      margin-bottom: 5px;
-      border-radius: 6px;
-      user-select: none;
-    }
+  /* TECH TREE SCREEN */
+  #tech-tree-screen {
+    display: none;
+    flex-direction: column;
+    height: 100vh;
+    background: radial-gradient(circle at center, #070a2a, #000010);
+    user-select: none;
+  }
+  #tech-tree-screen.active {
+    display: flex;
+  }
+  #back-button {
+    align-self: flex-start;
+    margin: 15px 30px;
+    background: linear-gradient(135deg, #004466, #002233);
+    border: 3px solid #00ffff;
+    border-radius: 12px;
+    color: #aaffff;
+    font-size: 1.2rem;
+    padding: 10px 24px;
+    cursor: pointer;
+    box-shadow: 0 0 15px #00ffff88;
+    user-select:none;
+  }
+  #back-button:hover, #back-button:focus {
+    box-shadow: 0 0 30px #00ffffcc;
+    outline: none;
+    transform: scale(1.05);
+  }
+  #tech-tree-title {
+    text-align: center;
+    font-size: 2.5rem;
+    margin: 10px 0 20px;
+    color: #00ffff;
+    text-shadow: 0 0 12px #00ffffcc;
+    user-select:none;
+  }
+  .tree-wrapper {
+    flex-grow: 1;
+    margin: 0 30px 30px;
+    overflow: auto;
+    cursor: grab;
+    background:
+      linear-gradient(to right, rgba(0, 255, 255, 0.07) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(0, 255, 255, 0.07) 1px, transparent 1px);
+    background-size: 80px 80px;
+    position: relative;
+    box-shadow: inset 0 0 40px #00ffff33;
+    border-radius: 20px;
+    border: 1px solid #00ffff44;
+  }
+  .tech-tree {
+    position: relative;
+    width: 1400px;  /* wider for more nodes */
+    height: 480px;
+    margin: 0 auto;
+    user-select: none;
+  }
+  .node {
+    position: absolute;
+    background: rgba(0, 255, 255, 0.12);
+    border: 2px solid #00ffffcc;
+    padding: 10px 14px;
+    border-radius: 14px;
+    width: 150px;
+    height: 130px;
+    text-align: center;
+    font-weight: 700;
+    font-family: 'Orbitron', monospace;
+    letter-spacing: 0.05em;
+    color: #aaffff;
+    box-shadow: 0 0 15px #00ffffbb;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.3s ease;
+    backdrop-filter: blur(10px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .node:hover, .node:focus {
+    transform: scale(1.15);
+    box-shadow: 0 0 35px #00ffffee;
+    outline: none;
+    z-index: 10;
+  }
+  .node img {
+    width: 100%;
+    height: 70px;
+    object-fit: contain;
+    margin-bottom: 10px;
+    pointer-events: none;
+  }
 
-    svg#lines {
-      position: absolute;
-      top: 0;
-      left: 0;
-      pointer-events: none;
-      z-index: 0;
-    }
+  svg#lines path {
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 3;
+    stroke: #00ffffcc;
+  }
 
-    .tooltip {
-      position: absolute;
-      background: #222;
-      color: #fff;
-      padding: 6px 10px;
-      border-radius: 6px;
-      font-size: 0.9rem;
-      pointer-events: none;
-      opacity: 0;
-      transition: opacity 0.2s ease;
-      white-space: nowrap;
-      z-index: 10;
-      user-select: none;
-    }
-  </style>
+  .tooltip {
+    position: absolute;
+    background: rgba(0, 255, 255, 0.22);
+    backdrop-filter: blur(8px);
+    color: #00ffff;
+    padding: 8px 14px;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    white-space: nowrap;
+    z-index: 20;
+    font-family: 'Orbitron', monospace;
+    text-shadow: 0 0 8px #00ffffcc;
+  }
+</style>
 </head>
 <body>
 
-  <!-- HOME SCREEN -->
-  <section id="home-screen">
+  <!-- PARTICLES CANVAS -->
+  <canvas id="particles"></canvas>
+
+  <!-- MAIN MENU -->
+  <section id="main-menu" role="main" aria-label="Nation selection screen">
     <h1>Jet Fighters: Nations at War</h1>
-    <button class="nation-button" data-nation="usa">United States</button>
-    <button class="nation-button" data-nation="russia">Russia</button>
-    <button class="nation-button" data-nation="uk">United Kingdom</button>
-    <button class="nation-button" data-nation="china">China</button>
+    <div class="subtitle">Choose your nation and dominate the skies!</div>
+    <button class="nation-button" data-nation="usa" tabindex="0">🇺🇸 United States</button>
+    <button class="nation-button" data-nation="russia" tabindex="0">🇷🇺 Russia</button>
+    <button class="nation-button" data-nation="uk" tabindex="0">🇬🇧 United Kingdom</button>
+    <button class="nation-button" data-nation="china" tabindex="0">🇨🇳 China</button>
+  </section>
+
+  <!-- INTERMEDIATE SELECTION SCREEN -->
+  <section id="post-nation-select" role="dialog" aria-modal="true" aria-label="Select action">
+    <h2 id="selected-nation-title"></h2>
+    <button class="choice-button" id="view-tech-tree">View Tech Tree</button>
+    <button class="choice-button" id="play-game">Play Game</button>
   </section>
 
   <!-- TECH TREE SCREEN -->
-  <section id="tech-tree-screen" aria-label="Tech Tree Screen">
-    <header>
-      <h1>Aircraft Tech Tree</h1>
-      <select id="nation-select" aria-label="Select Nation">
-        <option value="usa">United States</option>
-        <option value="russia">Russia</option>
-        <option value="uk">United Kingdom</option>
-        <option value="china">China</option>
-      </select>
-    </header>
-
+  <section id="tech-tree-screen" aria-label="Tech tree screen">
+    <button id="back-button" aria-label="Return to nation selection menu">⬅ Back</button>
+    <h2 id="tech-tree-title">Tech Tree</h2>
     <div class="tree-wrapper" id="tree-wrapper" tabindex="0" aria-describedby="tooltip">
       <div class="tech-tree" id="tree-container">
-        <svg id="lines" width="2000" height="1200" aria-hidden="true"></svg>
+        <svg id="lines" width="1400" height="480" aria-hidden="true"></svg>
       </div>
       <div class="tooltip" id="tooltip" role="tooltip"></div>
     </div>
   </section>
 
-  <script>
-    // Tech tree data for 4 nations (add your data for UK, China)
-    const techTrees = {
-      usa: [
-        { id: "fa18", name: "F/A-18F", top: 100, left: 200, tooltip: "Multirole Carrier Fighter", img: "fa18.png", cost: "Start Node", connections: ["qaam", "lasm", "eml"] },
-        { id: "qaam", name: "QAAM", top: 300, left: 100, tooltip: "Quick maneuver air-to-air missile", cost: "30,000", connections: [] },
-        { id: "lasm", name: "LASM", top: 300, left: 350, tooltip: "Long-range air-to-ground missile", cost: "30,000", connections: ["a10c"] },
-        { id: "eml", name: "EML", top: 300, left: 500, tooltip: "Electromagnetic Launcher", cost: "30,000", connections: [] },
-        { id: "a10c", name: "A-10C", top: 500, left: 350, tooltip: "Close Air Support Specialist", img: "a10c.png", cost: "120,000", connections: ["ugb", "agm"] },
-        { id: "ugb", name: "UGB", top: 700, left: 300, tooltip: "Unguided Bombs", cost: "0", connections: [] },
-        { id: "agm", name: "4AGM", top: 700, left: 450, tooltip: "4x Air-to-Ground Missiles", cost: "12,000", connections: ["typhoon"] },
-        { id: "typhoon", name: "Typhoon", top: 900, left: 400, tooltip: "High-speed European Multirole Jet", img: "typhoon.png", cost: "440,000", connections: [] }
-      ],
+  <!-- FOOTER -->
+  <div id="footer">© 2025 Jet Fighters Game | All rights reserved</div>
 
-      russia: [
-        { id: "su57", name: "Su-57", top: 100, left: 200, tooltip: "Stealth Multirole Fighter", img: "su57.png", cost: "Start Node", connections: ["r73", "kh31"] },
-        { id: "r73", name: "R-73", top: 300, left: 100, tooltip: "Short-range air-to-air missile", cost: "25,000", connections: [] },
-        { id: "kh31", name: "Kh-31", top: 300, left: 350, tooltip: "Air-to-surface missile", cost: "30,000", connections: ["su25"] },
-        { id: "su25", name: "Su-25", top: 500, left: 350, tooltip: "Close air support aircraft", img: "su25.png", cost: "100,000", connections: ["rbk"] },
-        { id: "rbk", name: "RBK Cluster Bombs", top: 700, left: 350, tooltip: "Cluster Bombs", cost: "10,000", connections: [] }
-      ],
+<script>
+  // Particle background effect for main menu
+  const canvas = document.getElementById('particles');
+  const ctx = canvas.getContext('2d');
+  let width, height;
+  let particles = [];
 
-      uk: [
-        { id: "tornado", name: "Panavia Tornado", top: 100, left: 200, tooltip: "Multirole Combat Aircraft", img: "tornado.png", cost: "Start Node", connections: ["stormshadow", "brimstone"] },
-        { id: "stormshadow", name: "Storm Shadow", top: 300, left: 100, tooltip: "Long-range cruise missile", cost: "40,000", connections: [] },
-        { id: "brimstone", name: "Brimstone", top: 300, left: 350, tooltip: "Precision air-to-surface missile", cost: "35,000", connections: [] }
-      ],
+  function resize() {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+  }
+  window.addEventListener('resize', resize);
+  resize();
 
-      china: [
-        { id: "j20", name: "Chengdu J-20", top: 100, left: 200, tooltip: "Stealth Fighter Jet", img: "j20.png", cost: "Start Node", connections: ["pl10", "yd12"] },
-        { id: "pl10", name: "PL-10", top: 300, left: 100, tooltip: "Short-range missile", cost: "20,000", connections: [] },
-        { id: "yd12", name: "YD-12", top: 300, left: 350, tooltip: "Air-to-air missile", cost: "25,000", connections: [] }
-      ]
-    };
-
-    // DOM references
-    const homeScreen = document.getElementById("home-screen");
-    const techTreeScreen = document.getElementById("tech-tree-screen");
-    const nationSelect = document.getElementById("nation-select");
-    const treeContainer = document.getElementById("tree-container");
-    const linesSvg = document.getElementById("lines");
-    const tooltip = document.getElementById("tooltip");
-    const treeWrapper = document.getElementById("tree-wrapper");
-
-    // Clear existing nodes and lines
-    function clearTree() {
-      const nodes = treeContainer.querySelectorAll(".node");
-      nodes.forEach(n => n.remove());
-      while (linesSvg.firstChild) linesSvg.removeChild(linesSvg.firstChild);
+  class Particle {
+    constructor() {
+      this.x = Math.random() * width;
+      this.y = Math.random() * height;
+      this.radius = Math.random() * 1.5 + 0.5;
+      this.speedX = (Math.random() - 0.5) * 0.3;
+      this.speedY = (Math.random() - 0.5) * 0.3;
+      this.alpha = Math.random() * 0.8 + 0.2;
     }
+    update() {
+      this.x += this.speedX;
+      this.y += this.speedY;
+      if (this.x < 0) this.x = width;
+      else if (this.x > width) this.x = 0;
+      if (this.y < 0) this.y = height;
+      else if (this.y > height) this.y = 0;
+    }
+    draw() {
+      ctx.beginPath();
+      ctx.fillStyle = `rgba(0, 255, 255, ${this.alpha})`;
+      ctx.shadowColor = 'cyan';
+      ctx.shadowBlur = 4;
+      ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
 
-    // Create a single node element
-    function createNode(nodeData) {
-      const node = document.createElement("div");
-      node.className = "node";
-      node.id = nodeData.id;
-      node.style.top = nodeData.top + "px";
-      node.style.left = nodeData.left + "px";
-      node.setAttribute("data-tooltip", nodeData.tooltip);
+  for (let i = 0; i < 180; i++) particles.push(new Particle());
 
-      if (nodeData.img) {
-        const img = document.createElement("img");
-        img.src = nodeData.img;
-        img.alt = nodeData.name;
-        node.appendChild(img);
+  function animate() {
+    ctx.clearRect(0, 0, width, height);
+    for (let p of particles) {
+      p.update();
+      p.draw();
+    }
+    requestAnimationFrame(animate);
+  }
+  animate();
+
+  // ----- GAME UI LOGIC -----
+  const mainMenu = document.getElementById('main-menu');
+  const postNationScreen = document.getElementById('post-nation-select');
+  const techTreeScreen = document.getElementById('tech-tree-screen');
+  const selectedNationTitle = document.getElementById('selected-nation-title');
+  const viewTechTreeBtn = document.getElementById('view-tech-tree');
+  const playGameBtn = document.getElementById('play-game');
+  const backButton = document.getElementById('back-button');
+
+  const treeContainer = document.getElementById('tree-container');
+  const linesSVG = document.getElementById('lines');
+  const tooltip = document.getElementById('tooltip');
+  const treeWrapper = document.getElementById('tree-wrapper');
+
+  let selectedNation = null;
+
+  document.querySelectorAll('.nation-button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      selectedNation = btn.dataset.nation;
+      selectedNationTitle.textContent = `Selected Nation: ${btn.textContent.trim()}`;
+      mainMenu.style.display = 'none';
+      postNationScreen.classList.add('active');
+      techTreeScreen.classList.remove('active');
+    });
+  });
+
+  backButton.addEventListener('click', () => {
+    techTreeScreen.classList.remove('active');
+    postNationScreen.classList.remove('active');
+    mainMenu.style.display = 'flex';
+    clearTechTree();
+  });
+
+  viewTechTreeBtn.addEventListener('click', () => {
+    postNationScreen.classList.remove('active');
+    techTreeScreen.classList.add('active');
+    buildTechTree(selectedNation);
+  });
+
+  playGameBtn.addEventListener('click', () => {
+    alert(`Launching game for ${selectedNation.toUpperCase()}! (Feature not implemented yet)`);
+  });
+
+  function clearTechTree() {
+    treeContainer.querySelectorAll('.node').forEach(n => n.remove());
+    while(linesSVG.firstChild) linesSVG.removeChild(linesSVG.firstChild);
+  }
+
+  // Expanded tech trees
+  const techTrees = {
+    usa: [
+      { id: "fa18", name: "F/A-18 Hornet", x: 50, y: 120, tooltip: "Multirole Fighter", img: "fa18.png", cost: 0, connections: ["aim9", "aim120"] },
+      { id: "aim9", name: "AIM-9 Missile", x: 250, y: 40, tooltip: "Short-range missile", cost: 25000, connections: [] },
+      { id: "aim120", name: "AIM-120 Missile", x: 250, y: 200, tooltip: "Medium-range missile", cost: 35000, connections: ["fa22"] },
+      { id: "fa22", name: "F-22 Raptor", x: 450, y: 120, tooltip: "Stealth Air Superiority Fighter", img: "fa22.png", cost: 150000, connections: ["fa35", "jdam"] },
+      { id: "fa35", name: "F-35 Lightning II", x: 650, y: 60, tooltip: "Stealth Multirole Fighter", img: "fa35.png", cost: 200000, connections: ["aim260"] },
+      { id: "jdam", name: "JDAM Bomb", x: 650, y: 180, tooltip: "GPS Guided Bomb", cost: 30000, connections: [] },
+      { id: "aim260", name: "AIM-260 Missile", x: 850, y: 60, tooltip: "Next-gen Long-range Missile", cost: 60000, connections: [] },
+      { id: "b2", name: "B-2 Spirit Bomber", x: 850, y: 180, tooltip: "Stealth Bomber", img: "b2.png", cost: 300000, connections: [] },
+      { id: "tomahawk", name: "Tomahawk Missile", x: 1050, y: 120, tooltip: "Long-range cruise missile", cost: 80000, connections: [] }
+    ],
+    russia: [
+      { id: "su57", name: "Su-57 Felon", x: 50, y: 120, tooltip: "Stealth Multirole Fighter", img: "su57.png", cost: 0, connections: ["kh59", "sm6"] },
+      { id: "kh59", name: "Kh-59 Missile", x: 250, y: 40, tooltip: "Long-range cruise missile", cost: 18000, connections: [] },
+      { id: "sm6", name: "S-400 Missile", x: 250, y: 200, tooltip: "Surface-to-air missile", cost: 25000, connections: ["su35"] },
+      { id: "su35", name: "Su-35 Flanker-E", x: 450, y: 120, tooltip: "Advanced Fighter", img: "su35.png", cost: 150000, connections: ["kh31", "r73"] },
+      { id: "kh31", name: "Kh-31 Missile", x: 650, y: 40, tooltip: "Anti-radiation missile", cost: 40000, connections: [] },
+      { id: "r73", name: "R-73 Missile", x: 650, y: 200, tooltip: "Short-range missile", cost: 15000, connections: ["tu160"] },
+      { id: "tu160", name: "Tu-160 Blackjack", x: 850, y: 120, tooltip: "Strategic Bomber", img: "tu160.png", cost: 250000, connections: ["kh59"] },
+      { id: "isands", name: "Iskander Missile", x: 1050, y: 120, tooltip: "Tactical ballistic missile", cost: 120000, connections: [] }
+    ],
+    uk: [
+      { id: "tornado", name: "Tornado GR4", x: 50, y: 120, tooltip: "Ground Attack Aircraft", img: "tornado.png", cost: 0, connections: ["stormshadow", "paveway"] },
+      { id: "stormshadow", name: "Storm Shadow", x: 250, y: 40, tooltip: "Long-range cruise missile", cost: 40000, connections: [] },
+      { id: "paveway", name: "Paveway Laser", x: 250, y: 200, tooltip: "Laser-guided bomb", cost: 30000, connections: ["typhoonuk"] },
+      { id: "typhoonuk", name: "Eurofighter Typhoon", x: 450, y: 120, tooltip: "Multirole Fighter Jet", img: "typhoonuk.png", cost: 150000, connections: ["meteor"] },
+      { id: "meteor", name: "Meteor Missile", x: 650, y: 80, tooltip: "Beyond visual range missile", cost: 60000, connections: [] },
+      { id: "brimstone", name: "Brimstone Missile", x: 650, y: 160, tooltip: "Air-to-ground missile", cost: 35000, connections: ["t45"] },
+      { id: "t45", name: "BAE Hawk T1", x: 850, y: 120, tooltip: "Trainer and light attack aircraft", img: "t45.png", cost: 40000, connections: [] }
+    ],
+    china: [
+      { id: "j20", name: "Chengdu J-20", x: 50, y: 120, tooltip: "Stealth Fighter", img: "j20.png", cost: 0, connections: ["pl10", "yd12"] },
+      { id: "pl10", name: "PL-10 Missile", x: 250, y: 40, tooltip: "Short-range missile", cost: 30000, connections: [] },
+      { id: "yd12", name: "YJ-12 Missile", x: 250, y: 200, tooltip: "Supersonic anti-ship missile", cost: 40000, connections: ["j31"] },
+      { id: "j31", name: "Shenyang J-31", x: 450, y: 120, tooltip: "Stealth Multirole Fighter", img: "j31.png", cost: 130000, connections: ["pl15"] },
+      { id: "pl15", name: "PL-15 Missile", x: 650, y: 80, tooltip: "Long-range missile", cost: 50000, connections: [] },
+      { id: "hq9", name: "HQ-9 SAM", x: 650, y: 160, tooltip: "Surface-to-air missile system", cost: 35000, connections: [] }
+    ]
+  };
+
+  // Build Tech Tree Nodes and Connections
+  function buildTechTree(nation) {
+    clearTechTree();
+    const data = techTrees[nation];
+    if (!data) return;
+
+    data.forEach(node => {
+      const div = document.createElement('div');
+      div.classList.add('node');
+      div.setAttribute('tabindex', '0');
+      div.style.left = node.x + 'px';
+      div.style.top = node.y + 'px';
+      div.setAttribute('data-tooltip', node.tooltip);
+      div.setAttribute('data-id', node.id);
+
+      if (node.img) {
+        const img = document.createElement('img');
+        img.src = node.img;
+        img.alt = node.name + " image";
+        div.appendChild(img);
       }
 
-      const nameP = document.createElement("p");
-      nameP.textContent = nodeData.name;
-      node.appendChild(nameP);
+      const title = document.createElement('div');
+      title.textContent = node.name;
+      div.appendChild(title);
 
-      const costSmall = document.createElement("small");
-      costSmall.textContent = nodeData.cost;
-      node.appendChild(costSmall);
-
-      node.addEventListener("mouseenter", e => {
-        tooltip.textContent = e.currentTarget.getAttribute("data-tooltip");
-        const rect = e.currentTarget.getBoundingClientRect();
-        const containerRect = treeWrapper.getBoundingClientRect();
-
-        let left = rect.right - containerRect.left + 10;
-        let top = rect.top - containerRect.top;
-
-        if (left + tooltip.offsetWidth > containerRect.width) {
-          left = rect.left - containerRect.left - tooltip.offsetWidth - 10;
+      div.addEventListener('click', () => openModal(node));
+      div.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          openModal(node);
         }
-        if (top + tooltip.offsetHeight > containerRect.height) {
-          top = containerRect.height - tooltip.offsetHeight - 10;
-        }
-
-        tooltip.style.left = left + "px";
-        tooltip.style.top = top + "px";
-        tooltip.style.opacity = "1";
-      });
-      node.addEventListener("mouseleave", () => {
-        tooltip.style.opacity = "0";
       });
 
-      return node;
+      div.addEventListener('mouseenter', showTooltip);
+      div.addEventListener('mouseleave', hideTooltip);
+      div.addEventListener('focus', showTooltip);
+      div.addEventListener('blur', hideTooltip);
+
+      treeContainer.appendChild(div);
+    });
+
+    data.forEach(node => {
+      node.connections.forEach(connId => {
+        const fromNode = data.find(n => n.id === node.id);
+        const toNode = data.find(n => n.id === connId);
+        if (fromNode && toNode) drawLine(fromNode, toNode);
+      });
+    });
+  }
+
+  // Draw straight lines with arrowhead
+  function drawLine(fromNode, toNode) {
+    const startX = fromNode.x + 150; // right edge of node
+    const startY = fromNode.y + 65;  // vertical center
+    const endX = toNode.x;            // left edge of node
+    const endY = toNode.y + 65;
+
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    const d = `M${startX},${startY} L${endX},${endY}`;
+    path.setAttribute("d", d);
+    path.setAttribute("stroke", "#00ffffcc");
+    path.setAttribute("stroke-width", "3");
+    path.setAttribute("fill", "none");
+    path.setAttribute("marker-end", "url(#arrowhead)");
+
+    linesSVG.appendChild(path);
+  }
+
+  function showTooltip(e) {
+    const node = e.currentTarget;
+    tooltip.textContent = node.getAttribute('data-tooltip');
+    const rect = node.getBoundingClientRect();
+    const wrapperRect = treeWrapper.getBoundingClientRect();
+
+    let top = rect.top - wrapperRect.top + window.scrollY - 40;
+    let left = rect.left - wrapperRect.left + window.scrollX + rect.width / 2;
+
+    if (left + tooltip.offsetWidth / 2 > wrapperRect.width) {
+      left = wrapperRect.width - tooltip.offsetWidth / 2 - 10;
+    }
+    if (left - tooltip.offsetWidth / 2 < 0) {
+      left = tooltip.offsetWidth / 2 + 10;
     }
 
-    // Draw connection lines between nodes
-    function connectNodes(fromId, toId) {
-      const from = document.getElementById(fromId);
-      const to = document.getElementById(toId);
-      if (!from || !to) return;
+    tooltip.style.top = `${top}px`;
+    tooltip.style.left = `${left}px`;
+    tooltip.style.opacity = '1';
+  }
+  function hideTooltip() {
+    tooltip.style.opacity = '0';
+  }
 
-      const x1 = from.offsetLeft + from.offsetWidth / 2;
-      const y1 = from.offsetTop + from.offsetHeight;
-      const x2 = to.offsetLeft + to.offsetWidth / 2;
-      const y2 = to.offsetTop;
+  function openModal(node) {
+    alert(`You clicked on: ${node.name}\n\n${node.tooltip}\nCost: $${node.cost.toLocaleString()}`);
+  }
 
-      const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-      line.setAttribute("x1", x1);
-      line.setAttribute("y1", y1);
-      line.setAttribute("x2", x2);
-      line.setAttribute("y2", y2);
-      line.setAttribute("stroke", "#0af");
-      line.setAttribute("stroke-width", "2");
-      linesSvg.appendChild(line);
-    }
+  // Drag to pan tech tree
+  let isDragging = false;
+  let dragStartX, dragStartY, scrollStartX, scrollStartY;
 
-    // Build the tech tree for the given nation
-    function buildTechTree(nation) {
-      clearTree();
-      const nodesData = techTrees[nation];
-      if (!nodesData) return;
+  treeWrapper.addEventListener('mousedown', e => {
+    isDragging = true;
+    dragStartX = e.clientX;
+    dragStartY = e.clientY;
+    scrollStartX = treeWrapper.scrollLeft;
+    scrollStartY = treeWrapper.scrollTop;
+    treeWrapper.style.cursor = 'grabbing';
+  });
+  window.addEventListener('mouseup', () => {
+    isDragging = false;
+    treeWrapper.style.cursor = 'grab';
+  });
+  treeWrapper.addEventListener('mousemove', e => {
+    if (!isDragging) return;
+    const dx = e.clientX - dragStartX;
+    const dy = e.clientY - dragStartY;
+    treeWrapper.scrollLeft = scrollStartX - dx;
+    treeWrapper.scrollTop = scrollStartY - dy;
+  });
 
-      // Update dropdown to current nation (sync)
-      nationSelect.value = nation;
+  // Add arrowhead marker to SVG for connections
+  const svgNS = "http://www.w3.org/2000/svg";
+  const marker = document.createElementNS(svgNS, "marker");
+  marker.setAttribute("id", "arrowhead");
+  marker.setAttribute("markerWidth", "10");
+  marker.setAttribute("markerHeight", "7");
+  marker.setAttribute("refX", "0");
+  marker.setAttribute("refY", "3.5");
+  marker.setAttribute("orient", "auto");
+  const pathMarker = document.createElementNS(svgNS, "path");
+  pathMarker.setAttribute("d", "M0,0 L0,7 L10,3.5 Z");
+  pathMarker.setAttribute("fill", "#00ffffcc");
+  marker.appendChild(pathMarker);
+  linesSVG.appendChild(marker);
+</script>
 
-      // Create nodes
-      nodesData.forEach(nodeData => {
-        const node = createNode(nodeData);
-        treeContainer.appendChild(node);
-      });
-
-      // Connect nodes
-      nodesData.forEach(nodeData => {
-        nodeData.connections.forEach(connId => {
-          connectNodes(nodeData.id, connId);
-        });
-      });
-    }
-
-    // Drag to pan tech tree
-    let isPanning = false, startX, startY, scrollLeft, scrollTop;
-    treeWrapper.addEventListener("mousedown", e => {
-      isPanning = true;
-      treeWrapper.style.cursor = "grabbing";
-      startX = e.pageX;
-      startY = e.pageY;
-      scrollLeft = treeWrapper.scrollLeft;
-      scrollTop = treeWrapper.scrollTop;
-    });
-    treeWrapper.addEventListener("mouseup", () => {
-      isPanning = false;
-      treeWrapper.style.cursor = "grab";
-    });
-    treeWrapper.addEventListener("mouseleave", () => {
-      isPanning = false;
-      treeWrapper.style.cursor = "grab";
-    });
-    treeWrapper.addEventListener("mousemove", e => {
-      if (!isPanning) return;
-      const dx = e.pageX - startX;
-      const dy = e.pageY - startY;
-      treeWrapper.scrollLeft = scrollLeft - dx;
-      treeWrapper.scrollTop = scrollTop - dy;
-    });
-
-    // Handle nation select dropdown change on tech tree screen
-    nationSelect.addEventListener("change", e => {
-      buildTechTree(e.target.value);
-      tooltip.style.opacity = 0;
-    });
-
-    // Handle home screen nation button clicks
-    document.querySelectorAll(".nation-button").forEach(btn => {
-      btn.addEventListener("click", e => {
-        const selectedNation = e.currentTarget.getAttribute("data-nation");
-        // Hide home screen, show tech tree screen
-        homeScreen.style.display = "none";
-        techTreeScreen.classList.add("active");
-        buildTechTree(selectedNation);
-      });
-    });
-
-    // Accessibility: Allow keyboard pan on treeWrapper (optional)
-
-  </script>
 </body>
 </html>
