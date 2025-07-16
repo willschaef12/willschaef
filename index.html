@@ -26,14 +26,12 @@
     z-index: 0;
   }
 
-  /* ----- MAIN MENU ----- */
   #main-menu {
     display: flex;
     flex-direction: column;
-    justify-content: center;
     align-items: center;
+    justify-content: center;
     height: 100vh;
-    gap: 20px;
     padding: 0 20px;
     background:
       radial-gradient(circle at center, #0ff3 30%, transparent 80%),
@@ -41,6 +39,16 @@
     position: relative;
     z-index: 1;
   }
+
+  #nation-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    max-width: 900px;
+    width: 100%;
+    justify-items: center;
+  }
+
 
   /* Flickering neon title */
   #main-menu h1 {
@@ -442,14 +450,17 @@
   <section id="main-menu" role="main" aria-label="Nation selection screen">
     <h1>Jet Fighters: Nations at War</h1>
     <div class="subtitle">Choose your nation and dominate the skies!</div>
-    <button class="nation-button" data-nation="usa" tabindex="0">🇺🇸 United States</button>
-    <button class="nation-button" data-nation="russia" tabindex="0">🇷🇺 Russia</button>
-    <button class="nation-button" data-nation="uk" tabindex="0">🇬🇧 United Kingdom</button>
-    <button class="nation-button" data-nation="china" tabindex="0">🇨🇳 China</button>
-    <button class="nation-button" data-nation="france" tabindex="0">🇫🇷 France</button>
-    <button class="nation-button" data-nation="japan" tabindex="0">🇯🇵 Japan</button>
-    <button class="nation-button" data-nation="germany" tabindex="0">🇩🇪 Germany</button>
-    <button class="nation-button" data-nation="india" tabindex="0">🇮🇳 India</button>
+   <div id="nation-grid">
+      <button class="nation-button" data-nation="usa" tabindex="0">🇺🇸 United States</button>
+      <button class="nation-button" data-nation="russia" tabindex="0">🇷🇺 Russia</button>
+      <button class="nation-button" data-nation="uk" tabindex="0">🇬🇧 United Kingdom</button>
+      <button class="nation-button" data-nation="china" tabindex="0">🇨🇳 China</button>
+      <button class="nation-button" data-nation="france" tabindex="0">🇫🇷 France</button>
+      <button class="nation-button" data-nation="japan" tabindex="0">🇯🇵 Japan</button>
+      <button class="nation-button" data-nation="germany" tabindex="0">🇩🇪 Germany</button>
+      <button class="nation-button" data-nation="india" tabindex="0">🇮🇳 India</button>
+    </div>
+
   </section>
 
   <!-- NAVIGATION SCREEN -->
