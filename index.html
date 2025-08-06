@@ -116,6 +116,13 @@
       margin: 20px 0;
       color: #80deea;
     }
+
+    #invadersCanvas {
+      background: #000;
+      border: 2px solid #00eaff;
+      margin-top: 20px;
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -133,7 +140,8 @@
     <p>Scraps Collected: <span id="scrapCount">0</span></p>
 
     <div id="missionText">Click "Start Next Mission" to begin...</div>
-    <button onclick="startMission()">🎯 Start Next Mission</button>
+    <canvas id="invadersCanvas" width="600" height="400"></canvas>
+    <button id="missionButton" onclick="startMission()">🎯 Start Next Mission</button>
 
     <div id="upgradeButtons"></div>
 
@@ -153,6 +161,9 @@
 
   <script>
     let scraps = 0;
+    let invaderGameActive = false;
+    let invaderCanvas, invaderCtx;
+    let playerShip, invaderBullets, invaders, invaderKeys;
 
     const missions = [
       { text: "Fix the broken circuit in the control panel", reward: 15 },
@@ -180,12 +191,94 @@
     }
 
     function startMission() {
-      const mission = missions[Math.floor(Math.random() * missions.length)];
-      scraps += mission.reward;
+      if (invaderGameActive) return;
+      document.getElementById('missionButton').style.display = 'none';
+      document.getElementById('missionText').innerText = 'Destroy the invaders!';
+      startInvadersGame();
+    }
 
-      document.getElementById('scrapCount').innerText = scraps;
-      document.getElementById('missionText').innerText = `✅ Mission Complete: ${mission.text} (+${mission.reward} scraps)`;
+    function startInvadersGame() {
+      invaderGameActive = true;
+      invaderCanvas = document.getElementById('invadersCanvas');
+      invaderCtx = invaderCanvas.getContext('2d');
+      invaderCanvas.style.display = 'block';
+      playerShip = { x: invaderCanvas.width / 2 - 15, y: invaderCanvas.height - 30, width: 30, height: 15, speed: 5 };
+      invaderBullets = [];
+      invaders = [];
+      invaderKeys = {};
+      for (let r = 0; r < 2; r++) {
+        for (let c = 0; c < 5; c++) {
+          invaders.push({ x: 60 + c * 80, y: 40 + r * 40, width: 30, height: 20, dx: 1 });
+        }
+      }
+      document.addEventListener('keydown', invaderKeyDown);
+      document.addEventListener('keyup', invaderKeyUp);
+      requestAnimationFrame(updateInvaders);
+    }
 
+    function invaderKeyDown(e) {
+      invaderKeys[e.key] = true;
+      if (e.key === ' ') {
+        invaderBullets.push({ x: playerShip.x + playerShip.width / 2 - 2, y: playerShip.y, width: 4, height: 8, dy: -7 });
+      }
+    }
+
+    function invaderKeyUp(e) {
+      invaderKeys[e.key] = false;
+    }
+
+    function updateInvaders() {
+      if (!invaderGameActive) return;
+      invaderCtx.clearRect(0, 0, invaderCanvas.width, invaderCanvas.height);
+
+      if (invaderKeys['ArrowLeft']) playerShip.x -= playerShip.speed;
+      if (invaderKeys['ArrowRight']) playerShip.x += playerShip.speed;
+      playerShip.x = Math.max(0, Math.min(invaderCanvas.width - playerShip.width, playerShip.x));
+      invaderCtx.fillStyle = '#00eaff';
+      invaderCtx.fillRect(playerShip.x, playerShip.y, playerShip.width, playerShip.height);
+
+      invaders.forEach(inv => {
+        inv.x += inv.dx;
+        if (inv.x + inv.width > invaderCanvas.width || inv.x < 0) {
+          inv.dx *= -1;
+          inv.y += 10;
+        }
+        invaderCtx.fillStyle = '#ff1744';
+        invaderCtx.fillRect(inv.x, inv.y, inv.width, inv.height);
+      });
+
+      invaderBullets.forEach((b, i) => {
+        b.y += b.dy;
+        invaderCtx.fillStyle = '#fff';
+        invaderCtx.fillRect(b.x, b.y, b.width, b.height);
+        if (b.y + b.height < 0) invaderBullets.splice(i, 1);
+      });
+
+      invaderBullets.forEach((b, bi) => {
+        invaders.forEach((inv, ii) => {
+          if (b.x < inv.x + inv.width && b.x + b.width > inv.x && b.y < inv.y + inv.height && b.y + b.height > inv.y) {
+            invaders.splice(ii, 1);
+            invaderBullets.splice(bi, 1);
+            scraps += 5;
+            document.getElementById('scrapCount').innerText = scraps;
+          }
+        });
+      });
+
+      if (invaders.length === 0) {
+        endInvadersGame();
+      } else {
+        requestAnimationFrame(updateInvaders);
+      }
+    }
+
+    function endInvadersGame() {
+      invaderGameActive = false;
+      invaderCanvas.style.display = 'none';
+      document.removeEventListener('keydown', invaderKeyDown);
+      document.removeEventListener('keyup', invaderKeyUp);
+      document.getElementById('missionText').innerText = 'Mission complete! Build your shuttle.';
+      document.getElementById('missionButton').style.display = 'inline-block';
       renderUpgrades();
     }
 
