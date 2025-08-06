@@ -1,965 +1,240 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Jet Fighters: Nations at War</title>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap');
+  <meta charset="UTF-8">
+  <title>Mission: Get to Space</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap');
 
-  body, html {
-    margin: 0; padding: 0; height: 100%;
-    background: radial-gradient(circle at center, #070a2a, #000010);
-    font-family: 'Orbitron', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    color: #aafcff;
-    user-select: none;
-    overflow: hidden;
-  }
-
-  /* ----- PARTICLES BACKGROUND ----- */
-  #particles {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100vw;
-    height: 100vh;
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  #main-menu {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100vh;
-    padding: 0 20px;
-    background:
-      radial-gradient(circle at center, #0ff3 30%, transparent 80%),
-      radial-gradient(circle at bottom right, #00ffff33, transparent 80%);
-    position: relative;
-    z-index: 1;
-  }
-  #nation-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 20px;
-    max-width: 1000px;
-    width: 100%;
-    padding: 20px;
-    justify-items: center;
-  }
-
-
-
-  /* Flickering neon title */
-  #main-menu h1 {
-    font-size: 4rem;
-    text-shadow:
-      0 0 5px #00ffffaa,
-      0 0 15px #00ffffcc,
-      0 0 30px #00ffffff;
-    animation: flicker 2.5s infinite alternate;
-    margin-bottom: 5px;
-  }
-
-  @keyframes flicker {
-    0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
-      opacity: 1;
-      text-shadow:
-        0 0 5px #00ffffaa,
-        0 0 15px #00ffffcc,
-        0 0 30px #00ffffff;
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
     }
-    20%, 22%, 24%, 55% {
-      opacity: 0.7;
-      text-shadow: none;
+
+    body {
+      font-family: 'Orbitron', sans-serif;
+      background: linear-gradient(120deg, #0f0f0f, #1a1a1a);
+      color: white;
+      height: 100vh;
+      overflow: hidden;
     }
-  }
 
-  #main-menu .subtitle {
-    font-size: 1.3rem;
-    color: #55eeffcc;
-    margin-bottom: 40px;
-    letter-spacing: 0.08em;
-    user-select:none;
-  }
-
-  .nation-button {
-    background: linear-gradient(135deg, #004466, #002233);
-    border: 3px solid #00ffff;
-    border-radius: 16px;
-    color: #aaffff;
-    font-size: 1.6rem;
-    padding: 18px 50px;
-    width: 320px;
-    cursor: pointer;
-    text-align: center;
-    text-shadow: 0 0 6px #00ffffcc;
-    box-shadow: 0 0 15px #00ffff88;
-    transition: transform 0.3s, box-shadow 0.3s, background-color 0.3s;
-    user-select:none;
-    position: relative;
-    overflow: hidden;
-  }
-  .nation-button:hover, .nation-button:focus {
-    transform: scale(1.1);
-    box-shadow: 0 0 40px #00ffffcc;
-    background: linear-gradient(135deg, #0077aa, #004466);
-    outline: none;
-  }
-
-  .nation-button::before {
-    content: "";
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: radial-gradient(circle, #00ffff33 10%, transparent 40%);
-    animation: rotateGlow 6s linear infinite;
-    pointer-events: none;
-    opacity: 0.5;
-    transition: opacity 0.3s;
-    border-radius: 16px;
-  }
-  .nation-button:hover::before,
-  .nation-button:focus::before {
-    opacity: 1;
-  }
-  @keyframes rotateGlow {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-  }
-
-  /* Footer tagline */
-  #footer {
-    position: fixed;
-    bottom: 10px;
-    width: 100%;
-    text-align: center;
-    font-size: 0.9rem;
-    color: #008899cc;
-    letter-spacing: 0.1em;
-    user-select:none;
-    text-shadow: 0 0 5px #00cccc88;
-  }
-
-  /* ----- NAVIGATION SCREEN ----- */
-  #nav-screen {
-    display: none;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    background: radial-gradient(circle at center, #070a2a, #000010);
-    gap: 30px;
-    padding: 20px;
-    color: #00ffff;
-  }
-
-  #nav-screen.active {
-    display: flex;
-  }
-
-  #nav-screen h2 {
-    font-size: 2.8rem;
-    text-shadow: 0 0 15px #00ffffcc;
-    user-select:none;
-  }
-
-  #nav-buttons {
-    display: flex;
-    gap: 30px;
-  }
-
-  .nav-button {
-    background: linear-gradient(135deg, #004466, #002233);
-    border: 3px solid #00ffff;
-    border-radius: 16px;
-    color: #aaffff;
-    font-size: 1.5rem;
-    padding: 20px 50px;
-    cursor: pointer;
-    text-align: center;
-    box-shadow: 0 0 20px #00ffffaa;
-    transition: transform 0.3s, box-shadow 0.3s, background-color 0.3s;
-    user-select:none;
-    position: relative;
-    overflow: hidden;
-    width: 200px;
-  }
-  .nav-button:hover, .nav-button:focus {
-    transform: scale(1.1);
-    box-shadow: 0 0 45px #00ffffdd;
-    background: linear-gradient(135deg, #0077aa, #004466);
-    outline: none;
-  }
-
-  .nav-button::before {
-    content: "";
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: radial-gradient(circle, #00ffff33 10%, transparent 40%);
-    animation: rotateGlow 6s linear infinite;
-    pointer-events: none;
-    opacity: 0.5;
-    transition: opacity 0.3s;
-    border-radius: 16px;
-  }
-  .nav-button:hover::before,
-  .nav-button:focus::before {
-    opacity: 1;
-  }
-
-  #nav-back-button {
-    margin-top: 30px;
-    font-size: 1.2rem;
-    width: auto;
-  }
-
-  /* ----- JET SELECTION SCREEN ----- */
-  #jet-selection-screen {
-    display: none;
-    flex-direction: column;
-    height: 100vh;
-    background: radial-gradient(circle at center, #070a2a, #000010);
-    padding: 20px;
-    gap: 20px;
-  }
-
-  #jet-selection-screen.active {
-    display: flex;
-  }
-
-  #jet-selection-title {
-    text-align: center;
-    font-size: 2.5rem;
-    color: #00ffff;
-    text-shadow: 0 0 12px #00ffffcc;
-    user-select:none;
-  }
-
-  #jet-list {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 15px;
-    overflow-y: auto;
-  }
-
-  .jet-card {
-    background: linear-gradient(145deg, #003366, #001622);
-    border: 3px solid #00ffff;
-    border-radius: 16px;
-    width: 180px;
-    padding: 15px 10px;
-    text-align: center;
-    cursor: pointer;
-    box-shadow:
-      0 0 12px #00ffff88,
-      inset 0 0 10px #00ffff55;
-    color: #aaffff;
-    font-family: 'Orbitron', monospace;
-    user-select:none;
-    transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
-  }
-  .jet-card:hover, .jet-card:focus {
-    transform: scale(1.05);
-    border-color: #00ffffee;
-    box-shadow:
-      0 0 30px #00ffffcc,
-      inset 0 0 15px #00ffffaa,
-      0 0 15px #00ffffaa;
-    outline: none;
-  }
-
-  .jet-name {
-    font-weight: 700;
-    font-size: 1.3rem;
-    margin-bottom: 8px;
-  }
-  .jet-info {
-    font-size: 0.9rem;
-    line-height: 1.2;
-  }
-
-  #jet-back-button {
-    align-self: center;
-    margin-top: 20px;
-    background: linear-gradient(135deg, #004466, #002233);
-    border: 3px solid #00ffff;
-    border-radius: 12px;
-    color: #aaffff;
-    font-size: 1.2rem;
-    padding: 10px 24px;
-    cursor: pointer;
-    box-shadow: 0 0 15px #00ffff88;
-    user-select:none;
-    width: 150px;
-  }
-  #jet-back-button:hover, #jet-back-button:focus {
-    box-shadow: 0 0 30px #00ffffcc;
-    outline: none;
-    transform: scale(1.05);
-  }
-
-  /* ----- TECH TREE SCREEN ----- */
-  #tech-tree-screen {
-    display: none;
-    flex-direction: column;
-    height: 100vh;
-    background: radial-gradient(circle at center, #070a2a, #000010);
-  }
-
-  #tech-tree-screen.active {
-    display: flex;
-  }
-
-  #back-button {
-    align-self: flex-start;
-    margin: 15px 30px;
-    background: linear-gradient(135deg, #004466, #002233);
-    border: 3px solid #00ffff;
-    border-radius: 12px;
-    color: #aaffff;
-    font-size: 1.2rem;
-    padding: 10px 24px;
-    cursor: pointer;
-    box-shadow: 0 0 15px #00ffff88;
-    user-select:none;
-  }
-  #back-button:hover, #back-button:focus {
-    box-shadow: 0 0 30px #00ffffcc;
-    outline: none;
-    transform: scale(1.05);
-  }
-
-  #tech-tree-title {
-    text-align: center;
-    font-size: 2.5rem;
-    margin: 10px 0 20px;
-    color: #00ffff;
-    text-shadow: 0 0 12px #00ffffcc;
-    user-select:none;
-  }
-
-  .tree-wrapper {
-    flex-grow: 1;
-    margin: 0 30px 30px;
-    overflow: auto;
-    cursor: grab;
-    background:
-      linear-gradient(to right, rgba(0,255,255,0.1) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(0,255,255,0.1) 1px, transparent 1px);
-    background-size: 50px 50px;
-    position: relative;
-    box-shadow: inset 0 0 40px #00ffff33;
-    user-select: none;
-  }
-
-  .tech-tree {
-    position: relative;
-    width: 1800px;
-    height: 1000px;
-    margin: 0 auto;
-    filter: drop-shadow(0 0 5px #00ffffaa);
-    user-select: none;
-  }
-
-  .node {
-    position: absolute;
-    background: linear-gradient(145deg, #003366, #001622);
-    border: 3px solid #00ffff;
-    padding: 15px 12px 12px;
-    border-radius: 16px;
-    width: 180px;
-    text-align: center;
-    transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
-    font-weight: 700;
-    font-family: 'Orbitron', monospace;
-    letter-spacing: 0.03em;
-    color: #aaffff;
-    box-shadow:
-      0 0 10px #00ffff88,
-      inset 0 0 10px #00ffff55;
-    user-select: none;
-    cursor: pointer;
-  }
-  .node:hover, .node:focus {
-    transform: scale(1.1);
-    border-color: #00ffffee;
-    box-shadow:
-      0 0 30px #00ffffcc,
-      inset 0 0 15px #00ffffaa,
-      0 0 15px #00ffffaa;
-    z-index: 10;
-    outline: none;
-  }
-
-  svg#lines {
-    position: absolute;
-    top: 0;
-    left: 0;
-    pointer-events: none;
-    z-index: 1;
-    filter: drop-shadow(0 0 3px #00ffffaa);
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    animation: pulseLine 3s infinite alternate;
-  }
-
-  @keyframes pulseLine {
-    0% {
-      stroke-opacity: 0.7;
-      stroke-width: 3;
+    .screen {
+      display: none;
+      height: 100vh;
+      width: 100vw;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      text-align: center;
     }
-    100% {
-      stroke-opacity: 1;
-      stroke-width: 4;
-    }
-  }
 
-  .tooltip {
-    position: absolute;
-    background: rgba(0, 255, 255, 0.15);
-    backdrop-filter: blur(5px);
-    color: #00ffff;
-    padding: 8px 14px;
-    border-radius: 12px;
-    font-size: 1rem;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    white-space: nowrap;
-    z-index: 20;
-    font-family: 'Orbitron', monospace;
-    text-shadow: 0 0 5px #00ffffaa;
-    box-shadow: 0 0 10px #00ffff88;
-    user-select: none;
-  }
-</style>
+    .visible {
+      display: flex;
+    }
+
+    h1 {
+      font-size: 3em;
+      color: #00eaff;
+      text-shadow: 0 0 20px #00eaff, 0 0 40px #00eaff;
+      margin-bottom: 20px;
+    }
+
+    p {
+      font-size: 1.2em;
+      max-width: 500px;
+      margin-bottom: 30px;
+    }
+
+    button {
+      padding: 12px 30px;
+      font-size: 1.3em;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      background: #00eaff;
+      color: #000;
+      font-weight: bold;
+      box-shadow: 0 0 10px #00eaff, 0 0 20px #00eaff;
+      transition: transform 0.2s ease, box-shadow 0.3s ease;
+      margin: 10px;
+    }
+
+    button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 20px #00ffff, 0 0 40px #00ffff;
+    }
+
+    .upgrade {
+      margin-top: 10px;
+      padding: 10px 20px;
+      background-color: #43a047;
+      border-radius: 8px;
+      font-size: 1em;
+      border: none;
+      color: white;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    .upgrade:hover {
+      background-color: #2e7d32;
+    }
+
+    .status {
+      margin-top: 20px;
+      font-size: 1.1em;
+    }
+
+    #launchButton {
+      background: #fdd835;
+      color: black;
+    }
+
+    #launchButton:hover {
+      background: #fbc02d;
+    }
+
+    #testButton {
+      background: #8e24aa;
+      color: white;
+    }
+
+    #testButton:hover {
+      background: #6a1b9a;
+    }
+
+    #testResult {
+      margin-top: 10px;
+      color: #00ff99;
+      font-size: 1.1em;
+    }
+
+    #missionText {
+      font-size: 1em;
+      margin: 20px 0;
+      color: #80deea;
+    }
+  </style>
 </head>
 <body>
 
-  <!-- PARTICLES CANVAS -->
-  <canvas id="particles"></canvas>
-
-  <!-- MAIN MENU -->
-<section id="main-menu" role="main" aria-label="Nation selection screen">
-  <h1>Jet Fighters: Nations at War</h1>
-  <div class="subtitle">Choose your nation and dominate the skies!</div>
-  <div id="nation-grid">
-    <button class="nation-button" data-nation="usa" tabindex="0">🇺🇸 United States</button>
-    <button class="nation-button" data-nation="russia" tabindex="0">🇷🇺 Russia</button>
-    <button class="nation-button" data-nation="uk" tabindex="0">🇬🇧 United Kingdom</button>
-    <button class="nation-button" data-nation="china" tabindex="0">🇨🇳 China</button>
-    <button class="nation-button" data-nation="france" tabindex="0">🇫🇷 France</button>
-    <button class="nation-button" data-nation="japan" tabindex="0">🇯🇵 Japan</button>
-    <button class="nation-button" data-nation="germany" tabindex="0">🇩🇪 Germany</button>
-    <button class="nation-button" data-nation="india" tabindex="0">🇮🇳 India</button>
+  <!-- Home Screen -->
+  <div id="homeScreen" class="screen visible">
+    <h1>🚀 MISSION: GET TO SPACE 🚀</h1>
+    <p>Start in a barn. Complete missions. Gather scraps. Build your shuttle.</p>
+    <button onclick="startGame()">Start Mission</button>
   </div>
-</section>
 
+  <!-- Game Screen -->
+  <div id="gameScreen" class="screen">
+    <h1>🛠️ Barn Workshop</h1>
+    <p>Scraps Collected: <span id="scrapCount">0</span></p>
 
-  <!-- NAVIGATION SCREEN -->
-  <section id="nav-screen" aria-label="Next action screen">
-    <h2>What do you want to do?</h2>
-    <div id="nav-buttons">
-      <button class="nav-button" id="nav-tech-tree" tabindex="0">View Tech Tree</button>
-      <button class="nav-button" id="nav-jet-selection" tabindex="0">Select Jet</button>
-      <button class="nav-button" id="nav-play" tabindex="0">Play</button>
-    </div>
-    <button class="nav-button" id="nav-back-button" tabindex="0" aria-label="Back to nation selection">⬅ Back</button>
-  </section>
+    <div id="missionText">Click "Start Next Mission" to begin...</div>
+    <button onclick="startMission()">🎯 Start Next Mission</button>
 
-  <!-- JET SELECTION SCREEN -->
-  <section id="jet-selection-screen" aria-label="Jet selection screen">
-    <h2 id="jet-selection-title">Select Your Jet</h2>
-    <div id="jet-list" tabindex="0" aria-describedby="tooltip"></div>
-    <button id="jet-back-button" tabindex="0" aria-label="Back to navigation screen">⬅ Back</button>
-  </section>
+    <div id="upgradeButtons"></div>
 
-  <!-- TECH TREE SCREEN -->
-  <section id="tech-tree-screen" aria-label="Tech tree screen">
-    <button id="back-button" aria-label="Return to navigation screen">⬅ Back</button>
-    <h2 id="tech-tree-title">Tech Tree</h2>
-    <div class="tree-wrapper" id="tree-wrapper" tabindex="0" aria-describedby="tooltip">
-      <div class="tech-tree" id="tree-container">
-        <svg id="lines" width="1800" height="1000" aria-hidden="true"></svg>
-      </div>
-      <div class="tooltip" id="tooltip" role="tooltip"></div>
-    </div>
-  </section>
+    <div class="status" id="statusText"></div>
+    <button id="testButton" onclick="runTest()" style="display: none;">🧪 Run System Test</button>
+    <button id="launchButton" onclick="launchShuttle()" style="display: none;">🚀 Launch to Space!</button>
 
-  <!-- FOOTER -->
-  <div id="footer">© 2025 Jet Fighters Game | All rights reserved</div>
+    <div id="testResult"></div>
+  </div>
 
-<script>
-  // Particle background effect for main menu
-  const canvas = document.getElementById('particles');
-  const ctx = canvas.getContext('2d');
-  let width, height;
-  let particles = [];
+  <!-- Space Screen -->
+  <div id="spaceScreen" class="screen">
+    <h1>🌌 YOU MADE IT TO SPACE! 🌌</h1>
+    <p>Congratulations, Commander. Earth is behind you. Stars await.</p>
+    <button onclick="location.reload()">Play Again</button>
+  </div>
 
-  function resize() {
-    width = canvas.width = window.innerWidth;
-    height = canvas.height = window.innerHeight;
-  }
-  window.addEventListener('resize', resize);
-  resize();
+  <script>
+    let scraps = 0;
 
-  class Particle {
-    constructor() {
-      this.x = Math.random() * width;
-      this.y = Math.random() * height;
-      this.radius = Math.random() * 1.5 + 0.3;
-      this.speedX = (Math.random() - 0.5) * 0.2;
-      this.speedY = (Math.random() - 0.5) * 0.2;
-      this.alpha = Math.random() * 0.8 + 0.2;
+    const missions = [
+      { text: "Fix the broken circuit in the control panel", reward: 15 },
+      { text: "Search the junkyard for reusable metal", reward: 20 },
+      { text: "Help a farmer with drone repairs in exchange for parts", reward: 25 },
+      { text: "Decode an old satellite for usable data chips", reward: 18 },
+      { text: "Trade spare bolts with a traveling engineer", reward: 22 },
+      { text: "Reprogram a scrapyard robot to assist you", reward: 30 },
+      { text: "Survive a thunderstorm while collecting parts", reward: 10 },
+      { text: "Hack into an abandoned facility for tools", reward: 28 }
+    ];
+
+    let shuttleParts = [
+      { name: "Base Frame", cost: 20, built: false },
+      { name: "Engine", cost: 40, built: false },
+      { name: "Fuel Tank", cost: 60, built: false },
+      { name: "Cockpit", cost: 80, built: false },
+      { name: "Wings", cost: 100, built: false }
+    ];
+
+    function startGame() {
+      document.getElementById('homeScreen').classList.remove('visible');
+      document.getElementById('gameScreen').classList.add('visible');
+      renderUpgrades();
     }
-    update() {
-      this.x += this.speedX;
-      this.y += this.speedY;
-      if (this.x > width) this.x = 0;
-      else if (this.x < 0) this.x = width;
-      if (this.y > height) this.y = 0;
-      else if (this.y < 0) this.y = height;
+
+    function startMission() {
+      const mission = missions[Math.floor(Math.random() * missions.length)];
+      scraps += mission.reward;
+
+      document.getElementById('scrapCount').innerText = scraps;
+      document.getElementById('missionText').innerText = `✅ Mission Complete: ${mission.text} (+${mission.reward} scraps)`;
+
+      renderUpgrades();
     }
-    draw() {
-      ctx.beginPath();
-      ctx.fillStyle = `rgba(0, 255, 255, ${this.alpha})`;
-      ctx.shadowColor = '#00ffffaa';
-      ctx.shadowBlur = 8;
-      ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-      ctx.fill();
-    }
-  }
 
-  for (let i=0; i<150; i++) particles.push(new Particle());
+    function renderUpgrades() {
+      const upgradeDiv = document.getElementById('upgradeButtons');
+      upgradeDiv.innerHTML = '';
+      document.getElementById('testResult').innerText = '';
 
-  function animate() {
-    ctx.clearRect(0, 0, width, height);
-    for (let p of particles) {
-      p.update();
-      p.draw();
-    }
-    requestAnimationFrame(animate);
-  }
-  animate();
+      let allBuilt = true;
 
-  // APP LOGIC
+      shuttleParts.forEach((part) => {
+        if (!part.built) {
+          allBuilt = false;
+          const btn = document.createElement('button');
+          btn.className = 'upgrade';
+          btn.innerText = `Build ${part.name} (${part.cost} scraps)`;
+          btn.disabled = scraps < part.cost;
 
-  // References to DOM
-  const mainMenu = document.getElementById('main-menu');
-  const navScreen = document.getElementById('nav-screen');
-  const jetSelectionScreen = document.getElementById('jet-selection-screen');
-  const techTreeScreen = document.getElementById('tech-tree-screen');
-  const treeWrapper = document.getElementById('tree-wrapper');
-  const treeContainer = document.getElementById('tree-container');
-  const linesSvg = document.getElementById('lines');
-  const tooltip = document.getElementById('tooltip');
+          btn.onclick = () => {
+            scraps -= part.cost;
+            part.built = true;
+            document.getElementById('scrapCount').innerText = scraps;
+            renderUpgrades();
+          };
 
-  // Buttons
-  const navTechTreeBtn = document.getElementById('nav-tech-tree');
-  const navJetSelectBtn = document.getElementById('nav-jet-selection');
-  const navPlayBtn = document.getElementById('nav-play');
-  const navBackBtn = document.getElementById('nav-back-button');
-  const jetBackBtn = document.getElementById('jet-back-button');
-  const techBackBtn = document.getElementById('back-button');
-
-  let selectedNation = null;
-  let selectedJet = null;
-
-  // Nation buttons event
-  document.querySelectorAll('.nation-button').forEach(button => {
-    button.addEventListener('click', () => {
-      selectedNation = button.dataset.nation;
-      showNavScreen();
-    });
-  });
-
-  // Show nav screen
-  function showNavScreen() {
-    mainMenu.style.display = 'none';
-    jetSelectionScreen.classList.remove('active');
-    techTreeScreen.classList.remove('active');
-    navScreen.classList.add('active');
-  }
-
-  // Back to main menu from nav
-  navBackBtn.addEventListener('click', () => {
-    navScreen.classList.remove('active');
-    mainMenu.style.display = 'flex';
-    selectedNation = null;
-    selectedJet = null;
-  });
-
-  // Nav buttons actions
-  navTechTreeBtn.addEventListener('click', () => {
-    showTechTree();
-  });
-
-  navJetSelectBtn.addEventListener('click', () => {
-    showJetSelection();
-  });
-
-  navPlayBtn.addEventListener('click', () => {
-    if (!selectedJet) {
-      alert('Please select a jet first!');
-      showJetSelection();
-    } else {
-      alert(`Starting battle with ${selectedJet.name} of ${capitalize(selectedNation)}! (Gameplay not implemented yet)`);
-      // Here you can add actual gameplay start logic
-    }
-  });
-
-  // Jet selection back
-  jetBackBtn.addEventListener('click', () => {
-    jetSelectionScreen.classList.remove('active');
-    navScreen.classList.add('active');
-  });
-
-  // Tech tree back
-  techBackBtn.addEventListener('click', () => {
-    techTreeScreen.classList.remove('active');
-    navScreen.classList.add('active');
-  });
-
-  // Show jet selection screen
-  function showJetSelection() {
-    navScreen.classList.remove('active');
-    jetSelectionScreen.classList.add('active');
-    populateJets();
-  }
-
-  // Capitalize helper
-  function capitalize(str) {
-    if (!str) return '';
-    return str.charAt(0).toUpperCase() + str.slice(1);
-  }
-
-  // JET DATA EXPANDED
-  const jetsData = {
-    usa: [
-      { id: 'f22', name: 'F-22 Raptor', speed: '2410 km/h', armament: 'AIM-120 AMRAAM, M61 Vulcan', role: 'Stealth air superiority' },
-      { id: 'f35', name: 'F-35 Lightning II', speed: '1930 km/h', armament: 'AIM-120, GAU-22/A', role: 'Multirole stealth fighter' },
-      { id: 'f16', name: 'F-16 Fighting Falcon', speed: '2400 km/h', armament: 'AIM-9 Sidewinder, M61 Vulcan', role: 'Multirole fighter' },
-      { id: 'b2', name: 'B-2 Spirit', speed: '1010 km/h', armament: 'Conventional and nuclear bombs', role: 'Stealth bomber' }
-    ],
-    russia: [
-      { id: 'su57', name: 'Su-57 Felon', speed: '2600 km/h', armament: 'R-77, 30mm cannon', role: 'Stealth multirole' },
-      { id: 'mig29', name: 'MiG-29 Fulcrum', speed: '2450 km/h', armament: 'R-73, GSh-30-1 cannon', role: 'Air superiority' },
-      { id: 'su35', name: 'Su-35 Flanker-E', speed: '2500 km/h', armament: 'R-77, 30mm cannon', role: 'Supermaneuverable multirole' },
-      { id: 'tu160', name: 'Tu-160 Blackjack', speed: '2220 km/h', armament: 'Cruise missiles, bombs', role: 'Supersonic bomber' }
-    ],
-    uk: [
-      { id: 'typhoon', name: 'Eurofighter Typhoon', speed: '2495 km/h', armament: 'Meteor, Mauser cannon', role: 'Multirole' },
-      { id: 'tornado', name: 'Panavia Tornado', speed: '2670 km/h', armament: 'Storm Shadow missiles', role: 'Strike fighter' },
-      { id: 'harrier', name: 'Harrier Jump Jet', speed: '1222 km/h', armament: 'Various missiles and bombs', role: 'V/STOL ground attack' }
-    ],
-    china: [
-      { id: 'j20', name: 'Chengdu J-20', speed: '2100 km/h', armament: 'PL-15, PL-10 missiles', role: 'Stealth air superiority' },
-      { id: 'j10', name: 'Chengdu J-10', speed: '2230 km/h', armament: 'PL-12 missiles', role: 'Multirole' },
-      { id: 'j15', name: 'Shenyang J-15', speed: '2200 km/h', armament: 'PL-12, bombs', role: 'Carrier-based multirole' }
-    ],
-    france: [
-      { id: 'rafale', name: 'Dassault Rafale', speed: '1912 km/h', armament: 'MICA missiles', role: 'Multirole' },
-      { id: 'mirage2000', name: 'Mirage 2000', speed: '2163 km/h', armament: 'Magic missiles', role: 'Interceptor' }
-    ],
-    japan: [
-      { id: 'f2', name: 'Mitsubishi F-2', speed: '2400 km/h', armament: 'AAM-3, 20mm cannon', role: 'Multirole' },
-      { id: 'f15j', name: 'Mitsubishi F-15J', speed: '2655 km/h', armament: 'AIM-7 Sparrow, M61 Vulcan', role: 'Air superiority' }
-    ],
-    germany: [
-      { id: 'typhoon', name: 'Eurofighter Typhoon', speed: '2495 km/h', armament: 'Meteor, Mauser cannon', role: 'Multirole' },
-      { id: 'tornado', name: 'Panavia Tornado', speed: '2670 km/h', armament: 'Storm Shadow missiles', role: 'Strike fighter' }
-    ],
-    india: [
-      { id: 'su30mki', name: 'Sukhoi Su-30MKI', speed: '2450 km/h', armament: 'R-77, BrahMos missile', role: 'Multirole' },
-      { id: 'tejas', name: 'HAL Tejas', speed: '2040 km/h', armament: 'R-73, cannon', role: 'Light multirole' }
-    ],
-  };
-
-  // Expanded TECH TREE DATA
-  const techTrees = {
-    usa: {
-      nodes: [
-        { id: 'us-f16', name: 'F-16 Fighting Falcon', x: 100, y: 50, desc: 'Multirole fighter with solid combat capabilities.' },
-        { id: 'us-f22', name: 'F-22 Raptor', x: 350, y: 50, desc: 'Stealth air superiority fighter.' },
-        { id: 'us-f35', name: 'F-35 Lightning II', x: 600, y: 50, desc: 'Multirole stealth fighter.' },
-        { id: 'us-b2', name: 'B-2 Spirit', x: 850, y: 50, desc: 'Stealth bomber for strategic strikes.' },
-        { id: 'us-aim120', name: 'AIM-120 AMRAAM', x: 200, y: 200, desc: 'Advanced medium-range air-to-air missile.' },
-        { id: 'us-m61', name: 'M61 Vulcan', x: 400, y: 200, desc: 'Rotary cannon for close combat.' },
-        { id: 'us-gau22', name: 'GAU-22/A', x: 650, y: 200, desc: '4-barrel rotary cannon on F-35.' },
-        { id: 'us-bombs', name: 'Conventional Bombs', x: 850, y: 200, desc: 'High-explosive bombs for ground targets.' },
-        { id: 'us-radar', name: 'Advanced Radar', x: 100, y: 350, desc: 'Improves target detection and tracking.' },
-        { id: 'us-ecm', name: 'ECM Suite', x: 400, y: 350, desc: 'Electronic countermeasures for defense.' },
-        { id: 'us-stealth', name: 'Stealth Tech', x: 650, y: 350, desc: 'Reduces radar signature.' }
-      ],
-      connections: [
-        ['us-f16', 'us-aim120'], ['us-f16', 'us-m61'],
-        ['us-f22', 'us-aim120'], ['us-f22', 'us-stealth'], ['us-f22', 'us-m61'],
-        ['us-f35', 'us-aim120'], ['us-f35', 'us-gau22'], ['us-f35', 'us-stealth'],
-        ['us-b2', 'us-bombs'],
-        ['us-aim120', 'us-radar'], ['us-m61', 'us-ecm'], ['us-gau22', 'us-ecm'], ['us-stealth', 'us-ecm']
-      ]
-    },
-
-    russia: {
-      nodes: [
-        { id: 'ru-mig29', name: 'MiG-29 Fulcrum', x: 100, y: 50, desc: 'Agile air superiority fighter.' },
-        { id: 'ru-su35', name: 'Su-35 Flanker-E', x: 350, y: 50, desc: 'Supermaneuverable multirole fighter.' },
-        { id: 'ru-su57', name: 'Su-57 Felon', x: 600, y: 50, desc: 'Stealth multirole fighter.' },
-        { id: 'ru-tu160', name: 'Tu-160 Blackjack', x: 850, y: 50, desc: 'Supersonic strategic bomber.' },
-        { id: 'ru-r77', name: 'R-77 Missile', x: 200, y: 200, desc: 'Medium-range active radar homing missile.' },
-        { id: 'ru-gsh30', name: 'GSh-30-1 Cannon', x: 400, y: 200, desc: '30mm autocannon.' },
-        { id: 'ru-cruise', name: 'Cruise Missiles', x: 850, y: 200, desc: 'Long-range precision strike weapons.' },
-        { id: 'ru-radar', name: 'Phased Array Radar', x: 100, y: 350, desc: 'Advanced radar system for detection.' },
-        { id: 'ru-ecm', name: 'Electronic Warfare', x: 400, y: 350, desc: 'Disrupts enemy targeting systems.' },
-        { id: 'ru-stealth', name: 'Stealth Features', x: 650, y: 350, desc: 'Radar absorbing materials and design.' }
-      ],
-      connections: [
-        ['ru-mig29', 'ru-r77'], ['ru-mig29', 'ru-gsh30'],
-        ['ru-su35', 'ru-r77'], ['ru-su35', 'ru-gsh30'], ['ru-su35', 'ru-ecm'],
-        ['ru-su57', 'ru-r77'], ['ru-su57', 'ru-stealth'], ['ru-su57', 'ru-ecm'],
-        ['ru-tu160', 'ru-cruise'],
-        ['ru-r77', 'ru-radar'], ['ru-ecm', 'ru-stealth']
-      ]
-    },
-
-    uk: {
-      nodes: [
-        { id: 'uk-typhoon', name: 'Eurofighter Typhoon', x: 100, y: 50, desc: 'Highly capable multirole fighter.' },
-        { id: 'uk-tornado', name: 'Panavia Tornado', x: 350, y: 50, desc: 'Strike and reconnaissance aircraft.' },
-        { id: 'uk-harrier', name: 'Harrier Jump Jet', x: 600, y: 50, desc: 'V/STOL ground attack aircraft.' },
-        { id: 'uk-meteor', name: 'Meteor Missile', x: 200, y: 200, desc: 'Beyond-visual-range air-to-air missile.' },
-        { id: 'uk-mauser', name: 'Mauser Cannon', x: 400, y: 200, desc: 'High rate of fire autocannon.' },
-        { id: 'uk-stormshadow', name: 'Storm Shadow', x: 600, y: 200, desc: 'Long-range air-launched cruise missile.' },
-        { id: 'uk-radar', name: 'Pulse-Doppler Radar', x: 100, y: 350, desc: 'Improved tracking and targeting.' },
-        { id: 'uk-ecm', name: 'Electronic Countermeasures', x: 400, y: 350, desc: 'Defense against enemy radar and missiles.' }
-      ],
-      connections: [
-        ['uk-typhoon', 'uk-meteor'], ['uk-typhoon', 'uk-mauser'],
-        ['uk-tornado', 'uk-stormshadow'],
-        ['uk-typhoon', 'uk-radar'], ['uk-typhoon', 'uk-ecm'],
-        ['uk-harrier', 'uk-mauser']
-      ]
-    },
-
-    china: {
-      nodes: [
-        { id: 'cn-j20', name: 'Chengdu J-20', x: 100, y: 50, desc: 'Stealth air superiority fighter.' },
-        { id: 'cn-j10', name: 'Chengdu J-10', x: 350, y: 50, desc: 'Multirole fighter.' },
-        { id: 'cn-j15', name: 'Shenyang J-15', x: 600, y: 50, desc: 'Carrier-based multirole fighter.' },
-        { id: 'cn-pl15', name: 'PL-15 Missile', x: 200, y: 200, desc: 'Long-range active radar missile.' },
-        { id: 'cn-pl10', name: 'PL-10 Missile', x: 400, y: 200, desc: 'Short-range heat-seeking missile.' },
-        { id: 'cn-radar', name: 'Advanced Radar', x: 100, y: 350, desc: 'Enhanced detection and targeting.' },
-        { id: 'cn-ecm', name: 'Electronic Warfare', x: 400, y: 350, desc: 'Jamming and deception systems.' }
-      ],
-      connections: [
-        ['cn-j20', 'cn-pl15'], ['cn-j20', 'cn-pl10'], ['cn-j20', 'cn-ecm'],
-        ['cn-j10', 'cn-pl10'],
-        ['cn-j15', 'cn-pl15'],
-        ['cn-pl15', 'cn-radar'],
-        ['cn-ecm', 'cn-radar']
-      ]
-    },
-
-    france: {
-      nodes: [
-        { id: 'fr-rafale', name: 'Dassault Rafale', x: 100, y: 50, desc: 'Multirole fighter with advanced avionics.' },
-        { id: 'fr-mirage', name: 'Mirage 2000', x: 350, y: 50, desc: 'Interceptor fighter.' },
-        { id: 'fr-mica', name: 'MICA Missile', x: 200, y: 200, desc: 'Air-to-air missile with active radar or IR seeker.' },
-        { id: 'fr-magic', name: 'Magic Missile', x: 400, y: 200, desc: 'Short-range IR missile.' },
-        { id: 'fr-radar', name: 'Pulse-Doppler Radar', x: 100, y: 350, desc: 'Improved target tracking.' },
-        { id: 'fr-ecm', name: 'Electronic Countermeasures', x: 400, y: 350, desc: 'Electronic defense systems.' }
-      ],
-      connections: [
-        ['fr-rafale', 'fr-mica'], ['fr-mirage', 'fr-magic'],
-        ['fr-mica', 'fr-radar'],
-        ['fr-ecm', 'fr-radar']
-      ]
-    },
-
-    japan: {
-      nodes: [
-        { id: 'jp-f2', name: 'Mitsubishi F-2', x: 100, y: 50, desc: 'Multirole fighter with US tech.' },
-        { id: 'jp-f15j', name: 'Mitsubishi F-15J', x: 350, y: 50, desc: 'Air superiority fighter.' },
-        { id: 'jp-aam3', name: 'AAM-3 Missile', x: 200, y: 200, desc: 'Infrared homing missile.' },
-        { id: 'jp-m61', name: 'M61 Vulcan Cannon', x: 400, y: 200, desc: 'Rotary cannon for close combat.' },
-        { id: 'jp-radar', name: 'Advanced Radar', x: 100, y: 350, desc: 'Improved detection systems.' },
-        { id: 'jp-ecm', name: 'Electronic Countermeasures', x: 400, y: 350, desc: 'Jamming and defense systems.' }
-      ],
-      connections: [
-        ['jp-f2', 'jp-aam3'], ['jp-f2', 'jp-m61'],
-        ['jp-f15j', 'jp-aam3'],
-        ['jp-ecm', 'jp-radar']
-      ]
-    },
-
-    germany: {
-      nodes: [
-        { id: 'de-typhoon', name: 'Eurofighter Typhoon', x: 100, y: 50, desc: 'Multirole fighter.' },
-        { id: 'de-tornado', name: 'Panavia Tornado', x: 350, y: 50, desc: 'Strike fighter.' },
-        { id: 'de-meteor', name: 'Meteor Missile', x: 200, y: 200, desc: 'Beyond visual range missile.' },
-        { id: 'de-stormshadow', name: 'Storm Shadow', x: 400, y: 200, desc: 'Cruise missile.' },
-        { id: 'de-radar', name: 'Pulse-Doppler Radar', x: 100, y: 350, desc: 'Advanced radar system.' },
-        { id: 'de-ecm', name: 'Electronic Countermeasures', x: 400, y: 350, desc: 'Defense systems.' }
-      ],
-      connections: [
-        ['de-typhoon', 'de-meteor'],
-        ['de-tornado', 'de-stormshadow'],
-        ['de-typhoon', 'de-radar'], ['de-typhoon', 'de-ecm']
-      ]
-    },
-
-    india: {
-      nodes: [
-        { id: 'in-su30', name: 'Sukhoi Su-30MKI', x: 100, y: 50, desc: 'Multirole heavy fighter.' },
-        { id: 'in-tejas', name: 'HAL Tejas', x: 350, y: 50, desc: 'Light multirole fighter.' },
-        { id: 'in-r77', name: 'R-77 Missile', x: 200, y: 200, desc: 'Medium range missile.' },
-        { id: 'in-brahmos', name: 'BrahMos Missile', x: 400, y: 200, desc: 'Supersonic cruise missile.' },
-        { id: 'in-radar', name: 'Advanced Radar', x: 100, y: 350, desc: 'Improved target detection.' },
-        { id: 'in-ecm', name: 'Electronic Countermeasures', x: 400, y: 350, desc: 'Electronic defense.' }
-      ],
-      connections: [
-        ['in-su30', 'in-r77'], ['in-su30', 'in-brahmos'],
-        ['in-tejas', 'in-r77'],
-        ['in-radar', 'in-ecm']
-      ]
-    }
-  };
-
-  // Clear children helper
-  function clearChildren(element) {
-    while (element.firstChild) element.removeChild(element.firstChild);
-  }
-
-  // Populate jets list
-  function populateJets() {
-    clearChildren(document.getElementById('jet-list'));
-    const jets = jetsData[selectedNation];
-    if (!jets) return;
-
-    jets.forEach(jet => {
-      const jetDiv = document.createElement('div');
-      jetDiv.className = 'jet-card';
-      jetDiv.tabIndex = 0;
-      jetDiv.setAttribute('role', 'button');
-      jetDiv.setAttribute('aria-pressed', 'false');
-      jetDiv.innerHTML = `
-        <div class="jet-name">${jet.name}</div>
-        <div class="jet-info">Speed: ${jet.speed}</div>
-        <div class="jet-info">Armament: ${jet.armament}</div>
-        <div class="jet-info">Role: ${jet.role}</div>
-      `;
-      jetDiv.addEventListener('click', () => {
-        selectedJet = jet;
-        alert(`Selected jet: ${jet.name}`);
-      });
-      jetDiv.addEventListener('keydown', (e) => {
-        if(e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          jetDiv.click();
+          upgradeDiv.appendChild(btn);
         }
       });
-      document.getElementById('jet-list').appendChild(jetDiv);
-    });
-  }
 
-  // Show tech tree
-  function showTechTree() {
-    navScreen.classList.remove('active');
-    jetSelectionScreen.classList.remove('active');
-    techTreeScreen.classList.add('active');
-    buildTechTree(selectedNation);
-  }
-
-  // Build tech tree nodes and connections
-  function buildTechTree(nation) {
-    clearChildren(treeContainer);
-
-    // Clear old lines
-    while (linesSvg.firstChild) linesSvg.removeChild(linesSvg.firstChild);
-
-    const data = techTrees[nation];
-    if (!data) {
-      treeContainer.innerHTML = '<p style="color:#f00; padding:20px;">No tech tree data available for this nation.</p>';
-      return;
+      if (allBuilt) {
+        document.getElementById('statusText').innerText = "✅ All systems built. Run a test before launch!";
+        document.getElementById('testButton').style.display = 'inline-block';
+        document.getElementById('launchButton').style.display = 'inline-block';
+      } else {
+        document.getElementById('statusText').innerText = "🔧 Complete missions and build your shuttle.";
+        document.getElementById('testButton').style.display = 'none';
+        document.getElementById('launchButton').style.display = 'none';
+      }
     }
 
-    // Create nodes
-    const nodeElems = {};
-    data.nodes.forEach(node => {
-      const nodeDiv = document.createElement('div');
-      nodeDiv.className = 'node';
-      nodeDiv.style.left = node.x + 'px';
-      nodeDiv.style.top = node.y + 'px';
-      nodeDiv.tabIndex = 0;
-      nodeDiv.setAttribute('role', 'button');
-      nodeDiv.setAttribute('aria-describedby', 'tooltip');
-      nodeDiv.textContent = node.name;
-      treeContainer.appendChild(nodeDiv);
+    function runTest() {
+      document.getElementById('testResult').innerText = "✅ System Check Passed: Engine, Fuel, Navigation – All GO!";
+    }
 
-      // Tooltip handlers
-      nodeDiv.addEventListener('mouseenter', e => {
-        tooltip.textContent = node.desc;
-        const rect = nodeDiv.getBoundingClientRect();
-        tooltip.style.top = (rect.top + window.scrollY - 45) + 'px';
-        tooltip.style.left = (rect.left + window.scrollX + rect.width/2) + 'px';
-        tooltip.style.opacity = 1;
-      });
-      nodeDiv.addEventListener('mouseleave', () => {
-        tooltip.style.opacity = 0;
-      });
-      nodeDiv.addEventListener('focus', e => {
-        tooltip.textContent = node.desc;
-        const rect = nodeDiv.getBoundingClientRect();
-        tooltip.style.top = (rect.top + window.scrollY - 45) + 'px';
-        tooltip.style.left = (rect.left + window.scrollX + rect.width/2) + 'px';
-        tooltip.style.opacity = 1;
-      });
-      nodeDiv.addEventListener('blur', () => {
-        tooltip.style.opacity = 0;
-      });
-
-      nodeElems[node.id] = nodeDiv;
-    });
-
-    // Draw connections
-    data.connections.forEach(pair => {
-      const [fromId, toId] = pair;
-      const fromNode = nodeElems[fromId];
-      const toNode = nodeElems[toId];
-      if (fromNode && toNode) {
-        const fromRect = fromNode.getBoundingClientRect();
-        const toRect = toNode.getBoundingClientRect();
-
-        // Because container is position relative, use offsetLeft/Top
-        const fromX = fromNode.offsetLeft + fromNode.offsetWidth / 2;
-        const fromY = fromNode.offsetTop + fromNode.offsetHeight;
-        const toX = toNode.offsetLeft + toNode.offsetWidth / 2;
-        const toY = toNode.offsetTop;
-
-        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-        line.setAttribute('x1', fromX);
-        line.setAttribute('y1', fromY);
-        line.setAttribute('x2', toX);
-        line.setAttribute('y2', toY);
-        line.setAttribute('stroke', '#00ffff');
-        line.setAttribute('stroke-width', '3');
-        linesSvg.appendChild(line);
-      }
-    });
-  }
-
-  // Initialize accessibility focus trap and keyboard navigation for sections as needed
-  // (Optional enhancement)
-
-</script>
+    function launchShuttle() {
+      document.getElementById('gameScreen').classList.remove('visible');
+      document.getElementById('spaceScreen').classList.add('visible');
+    }
+  </script>
 
 </body>
 </html>
