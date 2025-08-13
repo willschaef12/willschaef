@@ -1,240 +1,617 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Mission: Get to Space</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mission: Get to Space — Deluxe</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap');
 
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
+    :root{
+      --c1:#00eaff; --c2:#80deea; --c3:#00ff99; --warn:#ffcc00; --bad:#ff5252; --ok:#66ff66;
+      --bg1:#0f0f10; --bg2:#1a1a1f; --panel:#12141a; --panel2:#0d1117; --muted:#9ab;
     }
 
-    body {
-      font-family: 'Orbitron', sans-serif;
-      background: linear-gradient(120deg, #0f0f0f, #1a1a1a);
-      color: white;
-      height: 100vh;
-      overflow: hidden;
+    *{box-sizing:border-box}
+    html,body{height:100%;}
+    body{
+      margin:0; font-family:'Orbitron',system-ui,Arial,sans-serif; color:#fff;
+      background: radial-gradient(1200px 800px at 80% -10%, #133, transparent),
+                  linear-gradient(120deg, var(--bg1), var(--bg2));
+      overflow:hidden;
     }
 
-    .screen {
-      display: none;
-      height: 100vh;
-      width: 100vw;
-      justify-content: center;
-      align-items: center;
-      flex-direction: column;
-      text-align: center;
-    }
+    /* Screens */
+    .screen{display:none; height:100%; width:100%;}
+    .visible{display:flex}
 
-    .visible {
-      display: flex;
-    }
+    button{ cursor:pointer; border:none; border-radius:10px; padding:12px 18px; font-weight:700;
+      background:var(--c1); color:#001; box-shadow:0 0 10px var(--c1),0 0 20px color-mix(in hsl, var(--c1), #000 50%);
+      transition:transform .15s ease, box-shadow .2s ease, filter .2s ease; }
+    button:hover{ transform:translateY(-2px); filter:brightness(1.1); }
+    button:disabled{opacity:.5; cursor:not-allowed; filter:grayscale(.3)}
 
-    h1 {
-      font-size: 3em;
-      color: #00eaff;
-      text-shadow: 0 0 20px #00eaff, 0 0 40px #00eaff;
-      margin-bottom: 20px;
-    }
+    /* HOME */
+    #homeScreen{flex-direction:column; align-items:center; justify-content:center; gap:20px; text-align:center; padding:24px}
+    h1.title{font-size:3rem; color:var(--c1); text-shadow:0 0 18px var(--c1), 0 0 40px var(--c1)}
+    .subtitle{max-width:700px; color:var(--c2)}
+    .home-row{display:flex; gap:16px; flex-wrap:wrap; align-items:center; justify-content:center}
+    .toggle{display:flex; align-items:center; gap:10px; background:var(--panel2); padding:12px 14px; border-radius:12px; color:var(--muted)}
 
-    p {
-      font-size: 1.2em;
-      max-width: 500px;
-      margin-bottom: 30px;
-    }
+    /* GAME LAYOUT */
+    #gameScreen{display:grid; grid-template-columns: 320px 1fr 360px; grid-template-rows: 60px 1fr; gap:10px; padding:10px}
+    .bar{grid-column:1/-1; display:flex; gap:12px; align-items:center; padding:10px 14px; background:var(--panel2); border-radius:16px}
+    .chip{background:#0b1622; border:1px solid #123; padding:6px 10px; border-radius:12px; color:#bfe}
+    .bar .spacer{flex:1}
+    .meter{height:10px; background:#222; border-radius:10px; overflow:hidden; width:220px; box-shadow:inset 0 0 5px #000}
+    .meter>span{display:block; height:100%; width:0%; background:linear-gradient(90deg, var(--c3), #32e6ff)}
 
-    button {
-      padding: 12px 30px;
-      font-size: 1.3em;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      background: #00eaff;
-      color: #000;
-      font-weight: bold;
-      box-shadow: 0 0 10px #00eaff, 0 0 20px #00eaff;
-      transition: transform 0.2s ease, box-shadow 0.3s ease;
-      margin: 10px;
-    }
+    .panel{background:var(--panel); border:1px solid #18202a; border-radius:16px; padding:12px; overflow:auto}
+    .panel h3{margin:4px 0 12px; color:var(--c2)}
+    .panel .small{color:var(--muted); font-size:.9rem}
 
-    button:hover {
-      transform: scale(1.05);
-      box-shadow: 0 0 20px #00ffff, 0 0 40px #00ffff;
-    }
+    /* LEFT: Mission & Actions */
+    #leftCol{display:flex; flex-direction:column; gap:12px}
+    .mission-box{display:flex; flex-direction:column; gap:10px}
+    .mission-msg{min-height:64px; background:#0e1820; border:1px solid #1b2a33; border-radius:10px; padding:10px}
+    .actions{display:flex; flex-wrap:wrap; gap:10px}
 
-    .upgrade {
-      margin-top: 10px;
-      padding: 10px 20px;
-      background-color: #43a047;
-      border-radius: 8px;
-      font-size: 1em;
-      border: none;
-      color: white;
-      cursor: pointer;
-      transition: background 0.3s ease;
-    }
+    /* CENTER: Workshop/Upgrades */
+    #centerCol{display:flex; flex-direction:column; gap:12px}
+    .upgrade-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(200px,1fr)); gap:10px}
+    .card{background:#0c1218; border:1px solid #15212c; border-radius:14px; padding:12px; display:flex; flex-direction:column; gap:8px}
+    .lvl{font-size:.9rem; color:#9bd}
 
-    .upgrade:hover {
-      background-color: #2e7d32;
-    }
+    /* ARCADE (mini-game) */
+    #arcadePanel{margin-top:8px}
+    #asteroidCanvas{width:100%; max-width:920px; aspect-ratio:16/9; background:#070b10; border:1px solid #15212c; border-radius:14px; box-shadow:0 10px 30px rgba(0,0,0,.35)}
+    .arcade-controls{display:flex; gap:8px; flex-wrap:wrap; margin:8px 0}
+    .arcade-help{font-size:.9rem; color:var(--muted)}
+    .lvl{font-size:.9rem; color:#9bd}
 
-    .status {
-      margin-top: 20px;
-      font-size: 1.1em;
-    }
+    /* RIGHT: Log */
+    #rightCol{display:flex; flex-direction:column; gap:12px}
+    #log{font-family: ui-monospace, Menlo, Consolas, monospace; background:#070a0e}
+    .log-line{padding:6px 0; border-bottom:1px solid #0f1720; color:#cfe}
 
-    #launchButton {
-      background: #fdd835;
-      color: black;
-    }
+    /* Launch widgets */
+    .kbd{padding:2px 6px; border-radius:6px; border:1px solid #203040; background:#0c1922; color:#cde; font-size:.9rem}
 
-    #launchButton:hover {
-      background: #fbc02d;
-    }
+    /* LAUNCH SEQUENCE */
+    #launchScreen{position:relative; align-items:center; justify-content:center; flex-direction:column; gap:14px}
+    .pad{position:relative; width:320px; height:380px; background:linear-gradient(#10151c,#0a0d12); border:1px solid #16202a; border-radius:18px; display:flex; align-items:flex-end; justify-content:center; box-shadow:0 20px 60px rgba(0,0,0,.4)}
+    .rocket{position:absolute; bottom:48px; width:60px; height:120px; background:linear-gradient(#eee,#bbb); border-radius:30px 30px 10px 10px; box-shadow:inset 0 0 10px #444}
+    .fin{position:absolute; bottom:48px; width:18px; height:26px; background:#c33}
+    .fin.l{left:48px; transform:skewY(-12deg)}
+    .fin.r{right:48px; transform:skewY(12deg)}
+    .flame{position:absolute; bottom:38px; width:18px; height:34px; background:radial-gradient(circle at 50% 0%, #fff, #ffd633 35%, #ff6a00 70%, transparent 72%); left:calc(50% - 9px); border-radius:50%}
+    .smoke{position:absolute; bottom:28px; width:220px; height:120px; filter:blur(6px); opacity:.7}
+    .smoke::before,.smoke::after{content:""; position:absolute; bottom:0; border-radius:50%; background:radial-gradient(#999,#0000 60%)}
+    .smoke::before{left:10px; width:120px; height:60px}
+    .smoke::after{right:10px; width:140px; height:70px}
+    .tower{position:absolute; left:30px; bottom:60px; width:10px; height:220px; background:#233040}
+    .tower::after{content:""; position:absolute; left:-40px; top:20px; width:50px; height:6px; background:#233040}
 
-    #testButton {
-      background: #8e24aa;
-      color: white;
-    }
+    .rise{animation:rise 6s ease-in forwards}
+    @keyframes rise{0%{transform:translateY(0)} 100%{transform:translateY(-520px)}}
 
-    #testButton:hover {
-      background: #6a1b9a;
-    }
+    /* SPACE */
+    #spaceScreen{align-items:center; justify-content:center; flex-direction:column; gap:10px}
+    .stars{position:fixed; inset:0; z-index:-1}
 
-    #testResult {
-      margin-top: 10px;
-      color: #00ff99;
-      font-size: 1.1em;
-    }
-
-    #missionText {
-      font-size: 1em;
-      margin: 20px 0;
-      color: #80deea;
-    }
+    /* CANVAS BACKGROUNDS */
+    #bgStars{position:fixed; inset:0; z-index:-2; pointer-events:none}
   </style>
 </head>
 <body>
+  <canvas id="bgStars"></canvas>
 
-  <!-- Home Screen -->
-  <div id="homeScreen" class="screen visible">
-    <h1>🚀 MISSION: GET TO SPACE 🚀</h1>
-    <p>Start in a barn. Complete missions. Gather scraps. Build your shuttle.</p>
-    <button onclick="startGame()">Start Mission</button>
-  </div>
+  <!-- HOME -->
+  <section id="homeScreen" class="screen visible">
+    <h1 class="title">🚀 MISSION: GET TO SPACE — DELUXE</h1>
+    <p class="subtitle">Start in a barn, complete missions, survive random events, and assemble a shuttle. Manage fuel and systems, then time your launch for clear skies.</p>
+    <div class="home-row">
+      <button id="startBtn">Start Mission</button>
+      <button id="howBtn" style="background:#8e24aa;color:#fff">How to Play</button>
+      <label class="toggle"><input id="hardToggle" type="checkbox"> Hard Mode</label>
+    </div>
+    <div id="howPanel" class="panel" style="max-width:860px; display:none">
+      <h3>How to Play</h3>
+      <ul style="text-align:left; line-height:1.5">
+        <li>Click <b>Start Next Mission</b> to earn scraps (and sometimes fuel).</li>
+        <li>Use scraps to upgrade <b>Base Frame / Engine / Fuel Tank / Cockpit / Wings</b> up to Mk III.</li>
+        <li>Random Events can help (bonus scraps) or hurt (lost parts). Tools mitigate risk.</li>
+        <li>Refine fuel to reach <b>100%</b>. Run a system test. Wait for <b>Good</b> weather. Then <b>Launch</b>.</li>
+        <li>Hard Mode: reduced rewards, more mishaps, and higher test threshold.</li>
+      </ul>
+    </div>
+  </section>
 
-  <!-- Game Screen -->
-  <div id="gameScreen" class="screen">
-    <h1>🛠️ Barn Workshop</h1>
-    <p>Scraps Collected: <span id="scrapCount">0</span></p>
+  <!-- GAME -->
+  <section id="gameScreen" class="screen">
+    <div class="bar">
+      <div class="chip">Scraps: <span id="scrapCount">0</span></div>
+      <div class="chip">Fuel: <span id="fuelPct">0</span>%</div>
+      <div class="chip">Weather: <span id="weather">—</span></div>
+      <div class="chip">Risk: <span id="risk">Low</span></div>
+      <div class="spacer"></div>
+      <div class="chip">Shuttle Progress</div>
+      <div class="meter" title="Shuttle build completion"><span id="progressBar"></span></div>
+    </div>
 
-    <div id="missionText">Click "Start Next Mission" to begin...</div>
-    <button onclick="startMission()">🎯 Start Next Mission</button>
+    <!-- Left: Missions -->
+    <aside id="leftCol" class="panel">
+      <h3>🎯 Missions</h3>
+      <div class="mission-box">
+        <div id="missionText" class="mission-msg">Click <b>Start Next Mission</b> to begin…</div>
+        <div class="actions">
+          <button id="missionBtn">Start Next Mission</button>
+          <button id="useToolBtn" style="background:#43a047">Use Tool (Risk ↓)</button>
+          <button id="marketBtn" style="background:#fdd835;color:#000">Scrap Market</button>
+        </div>
+        <div class="small">Tools: <span id="toolCount">0</span> • Reward Multiplier: <span id="rewardMult">1.0x</span></div>
+      </div>
+    </aside>
 
-    <div id="upgradeButtons"></div>
+    <!-- Center: Upgrades -->
+    <main id="centerCol" class="panel">
+      <h3>🛠️ Barn Workshop</h3>
+      <div class="upgrade-grid" id="upgradeGrid"></div>
+      <div id="arcadePanel" class="card">
+        <b>🎮 Arcade: Asteroid Defense</b>
+        <div class="arcade-controls">
+          <button id="arcadeStartBtn">Start</button>
+          <button id="arcadePauseBtn" style="background:#fdd835;color:#000">Pause</button>
+          <button id="arcadeResetBtn" style="background:#ff6e40">Reset</button>
+          <span class="small">Score: <span id="arcadeScore">0</span> • Streak: <span id="arcadeStreak">0</span></span>
+        </div>
+        <canvas id="asteroidCanvas" width="960" height="540"></canvas>
+        <div class="arcade-help">Move <span class="kbd">←</span>/<span class="kbd">→</span> or <span class="kbd">A</span>/<span class="kbd">D</span>, Fire with <span class="kbd">Space</span>. Each asteroid destroyed grants scraps. Getting hit ends the run.</div>
+      </div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:8px">
+        <button id="refineFuelBtn" style="background:#00bcd4">Refine Fuel (+6%)</button>
+        <button id="testBtn" style="display:none; background:#8e24aa; color:#fff">Run System Test</button>
+        <button id="launchBtn" style="display:none; background:#ffb300; color:#000">LAUNCH 🚀</button>
+      </div>
+      <div id="statusText" class="small" style="margin-top:8px"></div>
+    </main>
 
-    <div class="status" id="statusText"></div>
-    <button id="testButton" onclick="runTest()" style="display: none;">🧪 Run System Test</button>
-    <button id="launchButton" onclick="launchShuttle()" style="display: none;">🚀 Launch to Space!</button>
+    <!-- Right: Log -->
+    <aside id="rightCol" class="panel">
+      <h3>📜 Mission Log</h3>
+      <div id="log" style="height:calc(100% - 40px); overflow:auto"></div>
+    </aside>
+  </section>
 
-    <div id="testResult"></div>
-  </div>
+  <!-- LAUNCH SEQUENCE -->
+  <section id="launchScreen" class="screen">
+    <div class="pad">
+      <div class="tower"></div>
+      <div id="rocket" class="rocket">
+        <div class="fin l"></div>
+        <div class="fin r"></div>
+        <div class="flame" id="flame" style="display:none"></div>
+      </div>
+      <div class="smoke" id="smoke" style="display:none"></div>
+    </div>
+    <div>
+      <div class="chip">Hold <span class="kbd">L</span> to ignite • Release to abort</div>
+      <div id="countdown" class="chip" style="margin-top:8px">T‑10…</div>
+    </div>
+  </section>
 
-  <!-- Space Screen -->
-  <div id="spaceScreen" class="screen">
-    <h1>🌌 YOU MADE IT TO SPACE! 🌌</h1>
-    <p>Congratulations, Commander. Earth is behind you. Stars await.</p>
-    <button onclick="location.reload()">Play Again</button>
-  </div>
+  <!-- SPACE -->
+  <section id="spaceScreen" class="screen">
+    <canvas class="stars" id="stars"></canvas>
+    <h1 class="title">🌌 YOU MADE IT TO SPACE! 🌌</h1>
+    <p class="subtitle">Congratulations, Commander. Earth is behind you. Stars await.</p>
+    <div class="home-row">
+      <button onclick="location.reload()">Play Again</button>
+    </div>
+  </section>
 
   <script>
+    /********************
+     * STATE & DATA
+     ********************/
+    const $ = (id)=>document.getElementById(id);
+
+    let hardMode = false;
     let scraps = 0;
+    let fuel = 0; // percent
+    let tools = 0; // risk mitigation items
+    let rewardMult = 1.0; // dynamic multiplier (market buff)
+    let testPassed = false;
 
-    const missions = [
-      { text: "Fix the broken circuit in the control panel", reward: 15 },
-      { text: "Search the junkyard for reusable metal", reward: 20 },
-      { text: "Help a farmer with drone repairs in exchange for parts", reward: 25 },
-      { text: "Decode an old satellite for usable data chips", reward: 18 },
-      { text: "Trade spare bolts with a traveling engineer", reward: 22 },
-      { text: "Reprogram a scrapyard robot to assist you", reward: 30 },
-      { text: "Survive a thunderstorm while collecting parts", reward: 10 },
-      { text: "Hack into an abandoned facility for tools", reward: 28 }
+    const parts = [
+      { key:'frame',   name:'Base Frame', baseCost: 30, level:0, max:3 },
+      { key:'engine',  name:'Engine',     baseCost: 50, level:0, max:3 },
+      { key:'tank',    name:'Fuel Tank',  baseCost: 60, level:0, max:3 },
+      { key:'cockpit', name:'Cockpit',    baseCost: 40, level:0, max:3 },
+      { key:'wings',   name:'Wings',      baseCost: 45, level:0, max:3 },
     ];
 
-    let shuttleParts = [
-      { name: "Base Frame", cost: 20, built: false },
-      { name: "Engine", cost: 40, built: false },
-      { name: "Fuel Tank", cost: 60, built: false },
-      { name: "Cockpit", cost: 80, built: false },
-      { name: "Wings", cost: 100, built: false }
+    const missionTypes = [
+      { type:'scavenge', textPool:[
+        'Search the junkyard for reusable metal',
+        'Sort barn scraps into usable alloys',
+        'Dismantle an abandoned drone swarm',
+      ], base: [12,18] },
+      { type:'assist', textPool:[
+        'Help a farmer with drone repairs in exchange for parts',
+        'Assist a mechanic rewiring a rover',
+      ], base: [14,22] },
+      { type:'tech', textPool:[
+        'Decode an old satellite for data chips',
+        'Hack an abandoned facility for tools',
+      ], base:[16,24] },
+      { type:'risk', textPool:[
+        'Brave the thunderstorm to grab rare alloys',
+        'Night raid on the scrapyard for high-value parts',
+      ], base:[22,34], risky:true },
+      { type:'fuel', textPool:[
+        'Refine stolen kerosene into usable fuel',
+        'Trade for oxidizer canisters at the back-market',
+      ], base:[8,14], givesFuel:true }
     ];
 
-    function startGame() {
-      document.getElementById('homeScreen').classList.remove('visible');
-      document.getElementById('gameScreen').classList.add('visible');
-      renderUpgrades();
+    const weatherStates = ['Good','Fair','Windy','Storm'];
+    let weather = weatherStates[0];
+
+    const logLine = (msg)=>{
+      const line = document.createElement('div');
+      line.className='log-line';
+      line.textContent = msg;
+      $('log').prepend(line);
     }
 
-    function startMission() {
-      const mission = missions[Math.floor(Math.random() * missions.length)];
-      scraps += mission.reward;
-
-      document.getElementById('scrapCount').innerText = scraps;
-      document.getElementById('missionText').innerText = `✅ Mission Complete: ${mission.text} (+${mission.reward} scraps)`;
-
-      renderUpgrades();
+    /********************
+     * AUDIO (tiny beeps)
+     ********************/
+    const beep = (freq=600, dur=90, type='sine', vol=0.03)=>{
+      try{
+        const ctx = new (window.AudioContext||window.webkitAudioContext)();
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
+        o.type=type; o.frequency.value=freq; g.gain.value=vol;
+        o.connect(g); g.connect(ctx.destination); o.start();
+        setTimeout(()=>{o.stop(); ctx.close();}, dur);
+      }catch(e){}
     }
 
-    function renderUpgrades() {
-      const upgradeDiv = document.getElementById('upgradeButtons');
-      upgradeDiv.innerHTML = '';
-      document.getElementById('testResult').innerText = '';
+    /********************
+     * UTIL
+     ********************/
+    const rand = (min,max)=> Math.floor(Math.random()*(max-min+1))+min;
+    const choice = (arr)=> arr[Math.floor(Math.random()*arr.length)];
 
-      let allBuilt = true;
+    const shuttleProgress = ()=>{
+      const sum = parts.reduce((acc,p)=> acc+p.level, 0);
+      return Math.round( (sum / (parts.length*3)) * 100 );
+    }
 
-      shuttleParts.forEach((part) => {
-        if (!part.built) {
-          allBuilt = false;
-          const btn = document.createElement('button');
-          btn.className = 'upgrade';
-          btn.innerText = `Build ${part.name} (${part.cost} scraps)`;
-          btn.disabled = scraps < part.cost;
+    const canTest = ()=> parts.every(p=>p.level>=1) && fuel>=30;
+    const canLaunch = ()=> testPassed && fuel>=100 && parts.every(p=>p.level>=1) && weather==='Good';
 
-          btn.onclick = () => {
-            scraps -= part.cost;
-            part.built = true;
-            document.getElementById('scrapCount').innerText = scraps;
-            renderUpgrades();
-          };
+    const costFor = (p)=> Math.round(p.baseCost * (p.level+1) * (hardMode?1.2:1));
 
-          upgradeDiv.appendChild(btn);
-        }
+    const setWeather = ()=>{
+      const roll = rand(1,100);
+      if(roll>80) weather='Storm'; else if(roll>55) weather='Windy'; else if(roll>35) weather='Fair'; else weather='Good';
+      $('weather').textContent=weather;
+    }
+
+    const setRiskBadge = (r)=> $('risk').textContent = r;
+
+    /********************
+     * RENDER
+     ********************/
+    function render(){
+      $('scrapCount').textContent = scraps;
+      $('fuelPct').textContent = fuel;
+      $('rewardMult').textContent = rewardMult.toFixed(1)+"x";
+      $('toolCount').textContent = tools;
+
+      // Progress bar
+      const prog = shuttleProgress();
+      $('progressBar').style.width = prog+'%';
+
+      // Upgrades
+      const grid = $('upgradeGrid'); grid.innerHTML='';
+      parts.forEach(p=>{
+        const card=document.createElement('div'); card.className='card';
+        const header=document.createElement('div'); header.innerHTML=`<b>${p.name}</b> <span class='lvl'>Mk ${p.level||'—'} / ${p.max}</span>`;
+        const need = costFor(p);
+        const btn=document.createElement('button');
+        btn.textContent = p.level<p.max ? `Upgrade to Mk ${p.level+1} (${need} scraps)` : 'MAXED';
+        btn.disabled = p.level>=p.max || scraps<need;
+        btn.onclick = ()=>{ scraps-=need; p.level++; beep(520,70,'square'); logLine(`Built ${p.name} Mk ${p.level}.`); render(); };
+        card.appendChild(header);
+        const tips=document.createElement('div'); tips.className='small';
+        tips.textContent = p.level===0?'Unlocks core function.':'Improves reliability (+test).';
+        card.appendChild(tips);
+        card.appendChild(btn);
+        grid.appendChild(card);
       });
 
-      if (allBuilt) {
-        document.getElementById('statusText').innerText = "✅ All systems built. Run a test before launch!";
-        document.getElementById('testButton').style.display = 'inline-block';
-        document.getElementById('launchButton').style.display = 'inline-block';
-      } else {
-        document.getElementById('statusText').innerText = "🔧 Complete missions and build your shuttle.";
-        document.getElementById('testButton').style.display = 'none';
-        document.getElementById('launchButton').style.display = 'none';
+      // Controls visibility
+      $('testBtn').style.display = canTest()? 'inline-block' : 'none';
+      $('launchBtn').style.display = canLaunch()? 'inline-block' : 'none';
+
+      // Status text
+      let status = [];
+      status.push(canTest()? '✅ Systems ready for test.' : '🔧 Build at least Mk I of all parts and have ≥30% fuel to test.');
+      status.push(`Weather: ${weather}.`);
+      status.push(testPassed? '✅ Test passed.' : '🧪 Test pending.');
+      $('statusText').textContent = status.join(' ');
+    }
+
+    /********************
+     * MISSIONS & EVENTS
+     ********************/
+    function mission(){
+      // bias fuel missions if fuel very low
+      let pool = missionTypes.slice();
+      if(fuel<30) pool = pool.concat(missionTypes.find(m=>m.type==='fuel'));
+
+      const m = choice(pool);
+      const text = choice(m.textPool);
+      const [a,b] = m.base;
+      let baseReward = rand(a,b);
+
+      // difficulty scaling
+      const diff = 1 + shuttleProgress()/200; // slightly scales with progress
+      baseReward = Math.round(baseReward * diff);
+
+      // hard mode modifier
+      if(hardMode) baseReward = Math.round(baseReward * 0.85);
+
+      // random variance
+      baseReward += rand(-3,3);
+      baseReward = Math.max(3, baseReward);
+
+      // risk mechanics
+      let failed = false;
+      let riskLabel = 'Low';
+      if(m.risky){
+        let chance = hardMode? 35:25;
+        chance -= tools*8; // tools mitigate
+        chance = Math.max(5, chance);
+        riskLabel = chance>25?'High':chance>12?'Med':'Low';
+        setRiskBadge(riskLabel);
+        if(rand(1,100)<=chance){ failed = true; }
+      }else{
+        setRiskBadge('Low');
       }
+
+      // outcome
+      let scrapGain=0, fuelGain=0, msg='';
+      if(!failed){
+        scrapGain = Math.round(baseReward * rewardMult);
+        if(m.givesFuel){ fuelGain = rand(3,7); }
+        scraps += scrapGain; fuel = Math.min(100, fuel+fuelGain);
+        msg = `✅ ${text} (+${scrapGain} scraps${fuelGain?`, +${fuelGain}% fuel`:''})`;
+        beep(880,90,'sine');
+      }else{
+        const penalty = rand(4,9);
+        scraps = Math.max(0, scraps - penalty);
+        // small chance of downgrading a random part
+        if(rand(1,100)<=30){
+          const have = parts.filter(p=>p.level>0);
+          if(have.length){
+            const target = choice(have); target.level--; msg = `❌ ${text} failed! Lost ${penalty} scraps and ${target.name} downgraded.`;
+          }else{ msg = `❌ ${text} failed! Lost ${penalty} scraps.`; }
+        }else{ msg = `❌ ${text} failed! Lost ${penalty} scraps.`; }
+        beep(220,120,'sawtooth');
+      }
+
+      $('missionText').textContent = msg;
+      logLine(msg);
+
+      // post-mission random event
+      randomEvent();
+      // decay temporary multiplier slightly
+      rewardMult = Math.max(1.0, +(rewardMult - 0.05).toFixed(2));
+
+      // weather may change
+      if(rand(1,100)<=35) setWeather();
+
+      // done
+      render();
     }
 
-    function runTest() {
-      document.getElementById('testResult').innerText = "✅ System Check Passed: Engine, Fuel, Navigation – All GO!";
+    function randomEvent(){
+      const roll = rand(1,100) - (hardMode?0:5); // slightly more likely on normal
+      if(roll<=70) return; // no event
+
+      const events = [
+        ()=>{ const bonus=rand(8,16); scraps+=bonus; logLine(`✨ Lucky find! +${bonus} scraps.`); beep(1200,60); },
+        ()=>{ const f=rand(4,8); fuel=Math.min(100,fuel+f); logLine(`⛽ Found spare canisters. +${f}% fuel.`); },
+        ()=>{ tools++; logLine(`🧰 Picked up a tool kit. Tools now ${tools}.`); },
+        ()=>{ if(parts.some(p=>p.level>0)){ const t=choice(parts.filter(p=>p.level>0)); t.level--; logLine(`🛑 Microfracture! ${t.name} -1 level.`); beep(160,150,'triangle'); } },
+        ()=>{ rewardMult = +(rewardMult + 0.25).toFixed(2); logLine(`📈 Market surge! Reward multiplier now ${rewardMult}x for a bit.`); }
+      ];
+      choice(events)();
     }
 
-    function launchShuttle() {
-      document.getElementById('gameScreen').classList.remove('visible');
-      document.getElementById('spaceScreen').classList.add('visible');
+    /********************
+     * MARKET & TOOLS
+     ********************/
+    function openMarket(){
+      const choice = prompt("SCRAP MARKET\n1) Buy Tool (risk -8) — 20 scraps\n2) Boost Rewards (+0.4x) — 25 scraps\n3) Sell 10% Fuel — +18 scraps\nChoose 1/2/3 or Cancel");
+      if(!choice) return;
+      if(choice==='1' && scraps>=20){ scraps-=20; tools++; logLine('🧰 Bought a Tool.'); beep(600,80,'square'); }
+      else if(choice==='2' && scraps>=25){ scraps-=25; rewardMult=+(rewardMult+0.4).toFixed(2); logLine(`💹 Reward Multiplier boosted to ${rewardMult}x.`); }
+      else if(choice==='3' && fuel>=10){ fuel-=10; scraps+=18; logLine('⛽ Sold 10% fuel for 18 scraps.'); }
+      else { logLine('… Transaction failed (insufficient resources or invalid option).'); }
+      render();
     }
+
+    function useTool(){
+      if(tools<=0){ logLine('No tools available. Buy some in the market.'); return; }
+      tools--; rewardMult = +(rewardMult+0.1).toFixed(2);
+      logLine('Tool primed: risk reduced and rewards slightly boosted for next mission.');
+      render();
+    }
+
+    /********************
+     * TEST / FUEL / LAUNCH
+     ********************/
+    function refineFuel(){
+      const cost = hardMode? 14:10; // scraps
+      if(scraps<cost){ logLine(`Need ${cost} scraps to refine fuel.`); return; }
+      scraps-=cost; const gain = hardMode?5:6; fuel = Math.min(100, fuel+gain);
+      logLine(`Refined fuel: +${gain}% (cost ${cost} scraps).`);
+      render();
+    }
+
+    function runTest(){
+      if(!canTest()){ logLine('Systems not ready for test.'); return; }
+      // base threshold improved by part levels
+      const levelBonus = parts.reduce((a,p)=>a+p.level,0); // 0..15
+      const threshold = (hardMode?78:70) - levelBonus; // lower is easier
+      const roll = rand(1,100);
+      if(roll>threshold){ testPassed=true; logLine(`🧪 System Check PASSED (roll ${roll} > ${threshold}).`); beep(1000,140);
+      } else { testPassed=false; logLine(`🧪 System Check FAILED (roll ${roll} ≤ ${threshold}).`); beep(200,160,'triangle'); }
+      render();
+    }
+
+    function tryLaunch(){
+      if(!canLaunch()){ logLine('Launch conditions not met (need Good weather, fuel 100%, test passed, Mk I+ all parts).'); return; }
+      switchScreen('gameScreen','launchScreen');
+      startLaunchSequence();
+    }
+
+    function startLaunchSequence(){
+      let counting = true; let t=10;
+      const cd = $('countdown');
+      const rocket = $('rocket');
+      const flame = $('flame');
+      const smoke = $('smoke');
+
+      function tick(){
+        cd.textContent = `T-${t}… Hold L to ignite`; t--; beep(400+t*10,50);
+        if(t<0){ ignite(); return; }
+        if(counting) setTimeout(tick, 600);
+      }
+
+      function ignite(){
+        cd.textContent = 'IGNITION'; flame.style.display='block'; smoke.style.display='block';
+        rocket.classList.add('rise'); beep(80,260,'sawtooth');
+        setTimeout(()=>switchScreen('launchScreen','spaceScreen'), 6200);
+      }
+
+      // hold-to-ignite safety
+      let holding=false; let abort=false;
+      window.onkeydown = (e)=>{ if(e.key==='l'||e.key==='L'){ holding=true; }}
+      window.onkeyup = (e)=>{ if(e.key==='l'||e.key==='L'){ holding=false; if(t>0){ abort=true; cd.textContent='ABORTED'; logLine('Launch aborted.'); switchScreen('launchScreen','gameScreen'); }} }
+
+      tick();
+    }
+
+    /********************
+     * SWITCH / INIT
+     ********************/
+    function switchScreen(from,to){
+      $(from).classList.remove('visible');
+      $(to).classList.add('visible');
+    }
+
+    function resetGame(){
+      scraps=0; fuel=0; tools=0; rewardMult=1.0; testPassed=false;
+      parts.forEach(p=>p.level=0);
+      setWeather();
+      $('missionText').textContent = 'Click "Start Next Mission" to begin…';
+      $('log').innerHTML='';
+      render();
+    }
+
+    /********************
+     * STARFIELDS (BG & SPACE)
+     ********************/
+    function starfield(canvas, speed=0.2, density=0.0015){
+      const ctx = canvas.getContext('2d');
+      const stars=[]; let w,h; const init=()=>{w=canvas.width=innerWidth; h=canvas.height=innerHeight; stars.length=0; const count=Math.floor(w*h*density); for(let i=0;i<count;i++){ stars.push({x:Math.random()*w, y:Math.random()*h, z:Math.random()*1+0.2, s:Math.random()*1.4+0.2}); }}; init();
+      window.addEventListener('resize', init);
+      (function loop(){ ctx.clearRect(0,0,w,h); ctx.fillStyle='#fff'; for(const st of stars){ st.y+=st.z*speed; if(st.y>h){ st.y=0; st.x=Math.random()*w; } ctx.globalAlpha = st.z; ctx.fillRect(st.x, st.y, st.s, st.s); } requestAnimationFrame(loop); })();
+    }
+
+    // BG starfield
+    starfield($('bgStars'), 0.07, 0.0009);
+
+    // Space starfield will start on space screen show
+    const spaceStartObserver = new MutationObserver(()=>{
+      if($('spaceScreen').classList.contains('visible')){
+        starfield($('stars'), 0.5, 0.002);
+        spaceStartObserver.disconnect();
+      }
+    });
+    spaceStartObserver.observe(document.body,{subtree:true, attributes:true, attributeFilter:['class']});
+
+    /* ARCADE MINI-GAME */
+    const arcade = {
+      running:false, paused:false, score:0, streak:0,
+      ship:{x:480, y:500, w:40, h:16, speed:6},
+      bullets:[], asteroids:[],
+      lastSpawn:0, spawnEvery:800, // ms
+      canvas:$('asteroidCanvas'), ctx:null, lastT:0,
+    };
+    arcade.ctx = arcade.canvas.getContext('2d');
+
+    const key = {left:false, right:false, fire:false};
+    window.addEventListener('keydown', e=>{ if(['ArrowLeft','a','A'].includes(e.key)) key.left=true; if(['ArrowRight','d','D'].includes(e.key)) key.right=true; if(e.code==='Space'){ key.fire=true; e.preventDefault(); }});
+    window.addEventListener('keyup', e=>{ if(['ArrowLeft','a','A'].includes(e.key)) key.left=false; if(['ArrowRight','d','D'].includes(e.key)) key.right=false; if(e.code==='Space') key.fire=false; });
+
+    function arcadeReset(){
+      arcade.running=false; arcade.paused=false; arcade.score=0; arcade.streak=0; arcade.ship.x=arcade.canvas.width/2; arcade.bullets.length=0; arcade.asteroids.length=0; arcade.lastT=0; $('arcadeScore').textContent=0; $('arcadeStreak').textContent=0; drawArcadeSplash();
+    }
+
+    function drawArcadeSplash(){ const c=arcade.ctx, w=arcade.canvas.width, h=arcade.canvas.height; c.clearRect(0,0,w,h); c.fillStyle='#0a1218'; c.fillRect(0,0,w,h); c.fillStyle='#0ff'; c.font='24px Orbitron'; c.fillText('Asteroid Defense', 30,40); c.fillStyle='#9ab'; c.font='16px Orbitron'; c.fillText('Press Start. Arrow keys or A/D to move, Space to fire.',30,70); }
+
+    function spawnAst(){ const size = Math.random()<0.75? 18:32; const hp = size===18?1:2; const speed = size===18? (2+Math.random()*1.5) : (1.4+Math.random()*1.2); arcade.asteroids.push({x:Math.random()*(arcade.canvas.width-40)+20, y:-size, r:size, hp, vy:speed}); }
+
+    function fire(){ if(!arcade.running||arcade.paused) return; const last = arcade.bullets.at(-1); if(last && (performance.now()-last.t)<140) return; arcade.bullets.push({x:arcade.ship.x, y:arcade.ship.y-10, vy:8, t:performance.now()}); beep(900,60,'square'); }
+
+    function hitAst(i){ const ast = arcade.asteroids[i]; ast.hp--; if(ast.hp<=0){ const reward = ast.r<=20? 3 : 6; scraps += reward; arcade.score += reward; arcade.streak++; rewardMult = +(rewardMult + 0.02).toFixed(2); $('arcadeScore').textContent = arcade.score; $('arcadeStreak').textContent = arcade.streak; logLine(`🛰️ Asteroid destroyed: +${reward} scraps.`); render(); beep(1200,70,'sine'); arcade.asteroids.splice(i,1); } else { beep(500,40,'triangle'); }}
+
+    function endRun(){ arcade.running=false; arcade.paused=false; logLine(`💥 Hit by asteroid. Arcade run over. Score ${arcade.score}.`); beep(200,200,'sawtooth'); }
+
+    function loop(ts){ if(!arcade.running){ return; } if(arcade.paused){ arcade.lastT = ts; requestAnimationFrame(loop); return; } const dt = arcade.lastT? (ts-arcade.lastT): 16; arcade.lastT = ts; const c=arcade.ctx, w=arcade.canvas.width, h=arcade.canvas.height; c.clearRect(0,0,w,h);
+      if(key.left) arcade.ship.x-=arcade.ship.speed; if(key.right) arcade.ship.x+=arcade.ship.speed; arcade.ship.x = Math.max(20, Math.min(w-20, arcade.ship.x)); if(key.fire) fire();
+      for(let i=arcade.bullets.length-1;i>=0;i--){ const b=arcade.bullets[i]; b.y-=b.vy; if(b.y<-10){ arcade.bullets.splice(i,1); continue; } }
+      arcade.lastSpawn += dt; if(arcade.lastSpawn>arcade.spawnEvery){ arcade.lastSpawn=0; spawnAst(); if(hardMode && arcade.spawnEvery>450) arcade.spawnEvery-=10; }
+      for(const a of arcade.asteroids){ a.y += a.vy; }
+      for(let i=arcade.asteroids.length-1;i>=0;i--){ const a=arcade.asteroids[i]; for(let j=arcade.bullets.length-1;j>=0;j--){ const b=arcade.bullets[j]; const dx=b.x-a.x, dy=b.y-a.y; if(dx*dx+dy*dy < (a.r*a.r)){ arcade.bullets.splice(j,1); hitAst(i); break; } } }
+      for(const a of arcade.asteroids){ if(a.y>h-40){ endRun(); } const dx = arcade.ship.x - a.x, dy = (arcade.ship.y-8) - a.y; if(dx*dx+dy*dy < (a.r+16)*(a.r+16)){ endRun(); } }
+      c.fillStyle='#19f'; c.beginPath(); c.moveTo(arcade.ship.x, arcade.ship.y); c.lineTo(arcade.ship.x-20, arcade.ship.y+16); c.lineTo(arcade.ship.x+20, arcade.ship.y+16); c.closePath(); c.fill();
+      c.fillStyle='#0ff'; for(const b of arcade.bullets){ c.fillRect(b.x-2,b.y-10,4,10); }
+      for(const a of arcade.asteroids){ c.fillStyle = a.r>20 ? '#b85' : '#985'; c.beginPath(); c.arc(a.x,a.y,a.r,0,Math.PI*2); c.fill(); }
+      requestAnimationFrame(loop);
+    }
+
+    $('arcadeStartBtn').onclick = ()=>{ if(!arcade.running){ arcadeReset(); arcade.running=true; requestAnimationFrame(loop); } else { arcade.paused=false; }};
+    $('arcadePauseBtn').onclick = ()=>{ if(arcade.running){ arcade.paused=!arcade.paused; }};
+    $('arcadeResetBtn').onclick = ()=>{ arcadeReset(); };
+
+    arcadeReset();
+
+    /********************
+     * HOOK UP UI
+     ********************/
+    $('startBtn').onclick = ()=>{ hardMode = $('hardToggle').checked; switchScreen('homeScreen','gameScreen'); resetGame(); logLine(hardMode? 'HARD MODE ENABLED.' : 'NORMAL MODE.'); };
+    $('howBtn').onclick = ()=>{ const p=$('howPanel'); p.style.display = p.style.display==='none'?'block':'none'; };
+
+    $('missionBtn').onclick = mission;
+    $('useToolBtn').onclick = useTool;
+    $('marketBtn').onclick = openMarket;
+
+    $('refineFuelBtn').onclick = refineFuel;
+    $('testBtn').onclick = runTest;
+    $('launchBtn').onclick = tryLaunch;
+
+    // Weather initial
+    setWeather();
+    render();
   </script>
-
 </body>
 </html>
