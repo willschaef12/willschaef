@@ -216,15 +216,10 @@
       ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke();
     }
     ctx.setLineDash([]);
-    // Cars
-    function car(x,y,col){
-      ctx.fillStyle=col; ctx.fillRect(x-18,y-28,36,56);
-      ctx.fillStyle='#222'; ctx.fillRect(x-16,y-8,32,14);
-      ctx.fillStyle='#ddd'; ctx.fillRect(x-10,y-24,20,10);
-    }
-    car(w*0.25, h*0.75, '#ff3b6b');
-    car(w*0.25 + w*0.7/3, h*0.52, '#3ad17a');
-    car(w*0.25 + 2*w*0.7/3, h*0.30, '#ffd166');
+    // Cars (pixel-art F1)
+    carSprite(ctx, w*0.25, h*0.75, '#ff3b6b');
+    carSprite(ctx, w*0.25 + w*0.7/3, h*0.52, '#3ad17a');
+    carSprite(ctx, w*0.25 + 2*w*0.7/3, h*0.30, '#ffd166');
     // Title
     ctx.fillStyle='rgba(255,255,255,.08)'; ctx.font='900 90px system-ui';
     ctx.fillText('F1', w*0.55, 110);
@@ -344,10 +339,58 @@
     const x = trackX + trackW/6 + Math.sin(t)*8;
     carSprite(ctx, x, h*0.75, '#ff3b6b');
   }
-  function carSprite(ctx, x,y, col){
-    ctx.fillStyle=col; ctx.fillRect(x-16,y-24,32,48);
-    ctx.fillStyle='#1e1e1e'; ctx.fillRect(x-14,y-6,28,12);
-    ctx.fillStyle='#cfd8ff'; ctx.fillRect(x-10,y-20,20,8);
+  function carSprite(ctx, cx, cy, bodyColor){
+    const px = 3;                // pixel size for chunky style
+    const w = 11, h = 17;        // sprite grid (approx 33x51 px)
+    const x0 = Math.round(cx - (w*px)/2);
+    const y0 = Math.round(cy - (h*px)/2);
+    const wing = '#d9dfff';      // wings/accents
+    const tyre = '#1a1a1a';      // tyres
+    const cockpit = '#9ecaff';   // windshield
+    const shadow = '#0f1730';    // subtle shadow/detail
+
+    function rect(col, row, cw, rh, color){
+      ctx.fillStyle = color;
+      ctx.fillRect(x0 + col*px, y0 + row*px, cw*px, rh*px);
+    }
+
+    // Front wing (wide)
+    rect(1, 0, 9, 1, wing);
+    rect(2, 1, 7, 1, wing);
+
+    // Nose
+    rect(4, 1, 3, 3, bodyColor);
+
+    // Cockpit + upper body
+    rect(4, 4, 3, 1, bodyColor);
+    rect(5, 4, 1, 1, cockpit);
+
+    // Main body spine
+    rect(4, 5, 3, 8, bodyColor);
+
+    // Sidepod shading
+    rect(3, 6, 1, 6, shadow);
+    rect(7, 6, 1, 6, shadow);
+
+    // Tyres (front)
+    rect(1, 5, 2, 2, tyre);
+    rect(8, 5, 2, 2, tyre);
+    // Tyres (rear)
+    rect(1, 10, 2, 2, tyre);
+    rect(8, 10, 2, 2, tyre);
+
+    // Engine cover/rear spine
+    rect(4, 13, 3, 1, bodyColor);
+    rect(4, 14, 3, 1, bodyColor);
+
+    // Rear wing
+    rect(2, 15, 7, 1, wing);
+    rect(2, 16, 7, 1, wing);
+
+    // Small highlight stripe down the center
+    ctx.globalAlpha = 0.25;
+    rect(5, 6, 1, 6, '#ffffff');
+    ctx.globalAlpha = 1.0;
   }
 
   // ---------- Racing ----------
@@ -375,12 +418,7 @@
     const rivals = [];
     const lanes = [W*0.1 + (W*0.8/6), W*0.1 + (W*0.8/2), W*0.1 + (W*0.8*5/6)];
     let laneIdx = 1, targetX = lanes[laneIdx];
-    // Canvas
-    render('tpl-strategy', ()=>{}); // reuse canvas area layout
-    const cv = document.getElementById('raceCanvas');
-    const ctx = cv.getContext('2d');
-
-    // Replace UI with live HUD
+    // Replace UI with live HUD (create first, then grab canvas)
     const hud = document.createElement('div');
     hud.className='card';
     hud.innerHTML = `
@@ -406,6 +444,10 @@
         </div>
       </div>`;
     $ui.innerHTML=''; $ui.appendChild(hud);
+
+    // Canvas (must be selected after HUD is mounted)
+    const cv = document.getElementById('raceCanvas');
+    const ctx = cv.getContext('2d');
 
     const ersBar = document.getElementById('ersBar');
     const wearBar = document.getElementById('wearBar');
