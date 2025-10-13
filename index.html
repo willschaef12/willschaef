@@ -2,850 +2,671 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Neon Bullet Hell — Wheel + Themes + Waves/Bosses</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>F1: Pixel Paddock</title>
 <style>
   :root{
-    --bg:#0b0e13; --fg:#e8f7ff; --muted:#8fb3c2;
-    --accent:#24c8ff; --accent2:#00ffa8; --danger:#ff5d7d; --gold:#ffd166;
+    --bg:#0b0f1a; --panel:#121a2b; --accent:#ff2d55; --text:#e9f0ff; --muted:#9bb0ff;
+    --good:#3ad17a; --warn:#ffcc00; --bad:#ff6666;
   }
-  html,body{height:100%;margin:0;background:#05070a;color:var(--fg);font-family:system-ui,Segoe UI,Roboto,Inter,sans-serif;}
-  .wrap{display:grid;place-items:center;height:100%;padding:16px;}
-  #game{width:min(100vw,900px);height:min(100vh - 200px, 600px);border-radius:18px;box-shadow:0 20px 80px #000c, 0 0 0 1px #1a2430 inset;background:radial-gradient(1200px 700px at 70% 20%, #0f1520, #070a0f 55%, #05070a 100%);}
-  #ui{position:fixed;inset:0;pointer-events:none;display:grid;grid-template-rows:auto 1fr auto;}
-  .topbar{display:flex;gap:16px;align-items:center;justify-content:center;padding:8px 12px;color:var(--muted);font-weight:600;text-shadow:0 0 8px #0008;}
-  .chip{background:#0e141bcc;border:1px solid #1a2430; padding:6px 10px;border-radius:999px;backdrop-filter:blur(6px);}
-  .hud{position:fixed;left:12px;bottom:12px;display:flex;flex-direction:column;gap:8px}
-  .bar{width:240px;height:10px;border-radius:999px;background:#0e141b;overflow:hidden;border:1px solid #1a2430}
-  .fill{height:100%}
-  .center{pointer-events:none; position:fixed; inset:0; display:grid; place-items:center;}
-  .overlay-inner{pointer-events:auto; display:grid; gap:16px;}
-  .card{background:#0b1118ee;border:1px solid #1a2430;border-radius:16px;padding:18px 22px;box-shadow:0 20px 80px #000a}
-  .title{font-size:20px;font-weight:800;letter-spacing:.5px;margin-bottom:8px}
-  .big{font-size:46px;font-weight:900;letter-spacing:1px;text-align:center}
-  .btn{pointer-events:auto; display:inline-block; background:linear-gradient(90deg,var(--accent),var(--accent2));
-       color:#001018; font-weight:800; padding:10px 14px; border-radius:999px; border:none; cursor:pointer}
-  .btn.secondary{background:#0e141bcc;color:var(--fg);border:1px solid #1a2430}
-  .hint{color:var(--muted);font-size:13px;margin-top:8px}
-  .kbd{font-variant:all-small-caps;letter-spacing:.5px;font-weight:700}
-  .grid{display:grid;grid-template-columns:repeat(3,minmax(220px,1fr));gap:14px}
-  .grid-2{display:grid;grid-template-columns:repeat(2,minmax(220px,1fr));gap:14px}
-  .pick{cursor:pointer; transition:transform .08s ease, box-shadow .08s ease; border-radius:14px; border:1px solid #1a2430; padding:14px; background:#0b1118f0}
-  .pick:hover{transform:translateY(-2px); box-shadow:0 8px 30px #000a}
-  .pick h3{margin:0 0 6px 0; font-size:16px}
-  .pick p{margin:0; color:var(--muted); font-size:13px; line-height:1.35}
-  .toast{position:fixed;right:12px;bottom:12px;background:#0b1118ee;border:1px solid #1a2430;border-radius:12px;padding:10px 12px;color:var(--fg);pointer-events:none}
-  /* Boss bar */
-  .bossbar{position:fixed; top:54px; left:50%; transform:translateX(-50%);
-           width:min(860px,90vw); height:16px; background:#0e141b; border:1px solid #1a2430; border-radius:999px; overflow:hidden; display:none}
-  .bossfill{height:100%; background:linear-gradient(90deg,#ff5d7d,#ffd166)}
-  /* Home wheel */
-  .wheel-wrap{display:grid;gap:14px;justify-items:center}
-  .wheel-row{display:grid;grid-template-columns: 360px 1fr; gap:18px; align-items:center}
-  #wheel{width:360px;height:360px;border-radius:50%;background:#0b1118;border:1px solid #1a2430;box-shadow:0 20px 60px #000a}
-  .pointer{width:0;height:0;border-left:12px solid transparent;border-right:12px solid transparent;border-bottom:18px solid var(--gold);margin-bottom:-8px;filter:drop-shadow(0 4px 8px rgba(0,0,0,.5))}
-  .rarity{padding:6px 10px;border-radius:999px;border:1px solid #1a2430;display:inline-block}
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;background:radial-gradient(1200px 600px at 50% 0%, #121a2b 0%, #0b0f1a 60%, #05070c 100%);color:var(--text);font-family:system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', Arial;}
+  #ui{position:fixed;inset:0;display:grid;place-items:center;padding:12px}
+  .card{width:min(1100px,95vw);background:linear-gradient(180deg,#151e33 0%, #0f1530 100%);border:1px solid #1d2a4d;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.5);padding:18px}
+  h1{margin:0 0 8px;font-size:28px;letter-spacing:.5px}
+  h2{margin:14px 0 8px;font-size:20px}
+  .row{display:flex;gap:14px;flex-wrap:wrap}
+  .col{flex:1 1 300px}
+  .btn{background:linear-gradient(180deg,#ff3b6b,#ff0f4d);border:none;color:white;padding:12px 16px;border-radius:10px;font-weight:700;letter-spacing:.4px;cursor:pointer;box-shadow:0 6px 18px rgba(255,45,85,.35);transition:.15s transform}
+  .btn:hover{transform:translateY(-2px)}
+  .btn.secondary{background:linear-gradient(180deg,#263155,#1c2548);color:#bcd0ff;box-shadow:none;border:1px solid #28335b}
+  .btn.ghost{background:transparent;border:1px dashed #384a87;color:#a9b9ff}
+  .btn.small{padding:8px 10px;border-radius:8px;font-size:13px}
+  .stat{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border:1px solid #253464;border-radius:10px;margin:6px 0;background:#0f1730}
+  .progress{height:8px;background:#26335d;border-radius:999px;overflow:hidden;flex:1;margin-left:8px}
+  .bar{height:100%;background:linear-gradient(90deg,#3ad17a,#7af2ad)}
+  .money{color:var(--good);font-weight:700}
+  canvas{display:block;width:100%;height:auto;background:#06080f;border-radius:12px;border:1px solid #142042}
+  .pill{display:inline-block;padding:6px 10px;border-radius:999px;border:1px solid #2b3a6b;background:#10183a;color:#b7c8ff;font-size:12px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(180px, 1fr));gap:10px}
+  .tile{border:1px solid #263564;background:#0f1730;padding:10px;border-radius:12px}
+  .big{font-size:40px;font-weight:800;letter-spacing:1px}
+  .kbd{background:#1b2547;border:1px solid #2c3a6e;padding:2px 6px;border-radius:6px;font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;font-size:12px}
+  .footer{opacity:.75;font-size:12px;margin-top:6px}
+  .note{color:var(--muted);font-size:13px}
+  .muted{color:#a9b4d9}
 </style>
 </head>
 <body>
-  <div class="wrap">
-    <canvas id="game" width="900" height="600" aria-label="Bullet Hell Game"></canvas>
-  </div>
-
-  <div id="ui">
-    <div class="topbar" id="hudTop" style="display:none">
-      <div class="chip">Score: <span id="score">0</span></div>
-      <div class="chip">Wave: <span id="wave">0</span></div>
-      <div class="chip">Enemies Left: <span id="left">0</span></div>
-      <div class="chip">Fire Rate: <span id="firerate">1.0</span>x</div>
-      <div class="chip">Damage: <span id="damage">1</span></div>
-      <div class="chip">Pierce: <span id="pierce">0</span></div>
-      <div class="chip">Multishot: <span id="multishot">1</span></div>
-      <div class="chip">Dash: <span id="dash">Ready</span></div>
+<div id="ui"></div>
+<template id="tpl-menu">
+  <div class="card">
+    <h1>F1: <span style="color:var(--accent)">Pixel Paddock</span></h1>
+    <div class="row">
+      <div class="col">
+        <p class="muted">Build your team, pick a tire strategy, and race in lane-based, arcade action inspired by retro sports sims.</p>
+        <div class="grid">
+          <div class="tile">
+            <h2>Career</h2>
+            <p>Season race with cash & points. Upgrade your car to compete for the title.</p>
+            <button class="btn" data-action="career">Start Career Race</button>
+          </div>
+          <div class="tile">
+            <h2>Quick Race</h2>
+            <p>Jump straight into a 3-lap sprint with basic spec.</p>
+            <button class="btn secondary" data-action="quick">Quick Race</button>
+          </div>
+          <div class="tile">
+            <h2>Garage</h2>
+            <p>Spend prize money on performance.</p>
+            <button class="btn secondary" data-action="garage">Open Garage</button>
+          </div>
+        </div>
+        <p class="footer">Controls: <span class="kbd">←</span>/<span class="kbd">→</span> lanes · <span class="kbd">Space</span> ERS · <span class="kbd">P</span> Pit · <span class="kbd">M</span> Mute</p>
+      </div>
+      <div class="col">
+        <canvas id="preview" width="520" height="360"></canvas>
+      </div>
     </div>
-
-    <div class="hud" id="hudBars" style="display:none">
-      <div class="chip">HP</div>
-      <div class="bar"><div id="hpFill" class="fill" style="background:linear-gradient(90deg,#4ade80,#22d3ee);width:100%"></div></div>
-      <div class="chip">XP</div>
-      <div class="bar"><div id="xpFill" class="fill" style="background:linear-gradient(90deg,#ffd166,#ff9f1c);width:0%"></div></div>
-    </div>
-
-    <div id="overlay" class="center"></div>
-    <div id="toast" class="toast" style="display:none"></div>
-
-    <div class="bossbar" id="bossbar"><div id="bossfill" class="bossfill" style="width:100%"></div></div>
   </div>
+</template>
+
+<template id="tpl-garage">
+  <div class="card">
+    <h1>Garage & Upgrades</h1>
+    <div class="row">
+      <div class="col">
+        <div class="stat"><span>Bank</span><span class="money" id="bank"></span></div>
+        <div class="stat"><span>Engine (Top Speed)</span><div class="progress"><div id="engineBar" class="bar" style="width:0%"></div></div><button class="btn small" data-upg="engine">+ Upgrade</button></div>
+        <div class="stat"><span>Aero (Handling)</span><div class="progress"><div id="aeroBar" class="bar" style="width:0%"></div></div><button class="btn small" data-upg="aero">+ Upgrade</button></div>
+        <div class="stat"><span>Pit Crew (Stop Time)</span><div class="progress"><div id="pitBar" class="bar" style="width:0%"></div></div><button class="btn small" data-upg="pitcrew">+ Upgrade</button></div>
+        <p class="note">Each upgrade increases performance and cost scales with level.</p>
+      </div>
+      <div class="col">
+        <div class="tile">
+          <h2>Season Summary</h2>
+          <p>Races: <b id="races"></b></p>
+          <p>Points: <b id="points"></b></p>
+          <p>Wins: <b id="wins"></b></p>
+        </div>
+        <div class="tile">
+          <button class="btn" data-action="career">Next Career Race</button>
+          <button class="btn secondary" data-action="menu">Back to Menu</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<template id="tpl-strategy">
+  <div class="card">
+    <h1>Race Strategy</h1>
+    <div class="row">
+      <div class="col">
+        <h2>Circuit</h2>
+        <div id="circuit" class="pill">—</div>
+        <p class="muted">Laps: <b id="laps"></b> · Weather: <b id="weather"></b></p>
+        <h2>Tires</h2>
+        <div class="grid">
+          <div class="tile"><h3>Soft</h3><p>Fast but wears quickly.</p><button class="btn small" data-tire="soft">Select Soft</button></div>
+          <div class="tile"><h3>Medium</h3><p>Balanced performance.</p><button class="btn small" data-tire="medium">Select Medium</button></div>
+          <div class="tile"><h3>Hard</h3><p>Slower but durable.</p><button class="btn small" data-tire="hard">Select Hard</button></div>
+          <div class="tile"><h3>Inter</h3><p>For light rain.</p><button class="btn small" data-tire="inter">Select Inter</button></div>
+        </div>
+        <p class="note">You may pit once to change tires. Pit window opens each time you cross the line.</p>
+        <button class="btn" data-action="startRace">Start Race</button>
+        <button class="btn secondary" data-action="menu">Cancel</button>
+      </div>
+      <div class="col">
+        <canvas id="raceCanvas" width="520" height="600"></canvas>
+      </div>
+    </div>
+  </div>
+</template>
+
+<template id="tpl-results">
+  <div class="card">
+    <h1>Race Results</h1>
+    <div class="row">
+      <div class="col">
+        <div class="grid" id="resultGrid"></div>
+        <p class="note" id="payout"></p>
+        <button class="btn" data-action="garage">Go to Garage</button>
+        <button class="btn secondary" data-action="career">Next Race</button>
+        <button class="btn ghost" data-action="menu">Main Menu</button>
+      </div>
+      <div class="col">
+        <canvas id="summaryCanvas" width="520" height="360"></canvas>
+      </div>
+    </div>
+  </div>
+</template>
 
 <script>
 (() => {
-  // ---------- Helpers ----------
-  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-  const rnd = (a=1,b=0) => Math.random()*(b-a)+a;
-  const dist = (x1,y1,x2,y2)=>Math.hypot(x2-x1,y2-y1);
-  const now = () => performance.now();
-  const pickN = (arr,n) => { const a=[...arr]; for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a.slice(0,n); };
-  const easeOutCubic = t => 1 - Math.pow(1 - t, 3);
-
-  // ---------- Canvas ----------
-  const canvas = document.getElementById('game');
-  const ctx = canvas.getContext('2d');
-  const DPR = Math.min(window.devicePixelRatio || 1, 2);
-  canvas.width = Math.floor(canvas.width * DPR);
-  canvas.height = Math.floor(canvas.height * DPR);
-  ctx.scale(DPR, DPR);
-  const W = canvas.width / DPR, H = canvas.height / DPR;
-
-  // ---------- UI refs ----------
-  const ui = {
-    hudTop: document.getElementById('hudTop'),
-    hudBars: document.getElementById('hudBars'),
-    score: document.getElementById('score'),
-    wave: document.getElementById('wave'),
-    left: document.getElementById('left'),
-    firerate: document.getElementById('firerate'),
-    damage: document.getElementById('damage'),
-    pierce: document.getElementById('pierce'),
-    multishot: document.getElementById('multishot'),
-    dash: document.getElementById('dash'),
-    hpFill: document.getElementById('hpFill'),
-    xpFill: document.getElementById('xpFill'),
-    overlay: document.getElementById('overlay'),
-    toast: document.getElementById('toast'),
-    bossbar: document.getElementById('bossbar'),
-    bossfill: document.getElementById('bossfill'),
+  // ---------- Persistent State ----------
+  const defaultSave = {
+    bank: 2000, points: 0, wins: 0, races: 0,
+    upgrades: { engine: 1, aero: 1, pitcrew: 1 },
   };
-  function showToast(text){
-    ui.toast.textContent = text;
-    ui.toast.style.display = 'block';
-    clearTimeout(showToast._t);
-    showToast._t = setTimeout(()=> ui.toast.style.display='none', 1800);
+  let save = loadSave();
+
+  function loadSave(){
+    try{
+      const s = JSON.parse(localStorage.getItem('f1_pp_save') || 'null');
+      if(!s) return structuredClone(defaultSave);
+      // Backfill
+      s.upgrades ??= {engine:1,aero:1,pitcrew:1};
+      return s;
+    }catch(e){ return structuredClone(defaultSave); }
+  }
+  function writeSave(){ localStorage.setItem('f1_pp_save', JSON.stringify(save)); }
+
+  // ---------- Audio ----------
+  const sfx = {
+    click: mkBeep(300, .04),
+    coin: mkBeep(660, .06),
+    overtake: mkBeep(520, .05),
+    bump: mkBeep(140, .06),
+    lap: mkBeep(880, .09),
+    finish: mkBeep(420, .2),
+  };
+  let muted = false;
+  function play(name){ if(muted) return; sfx[name]?.(); }
+  function mkBeep(freq=440, dur=0.08){
+    const ctx = new (window.AudioContext||window.webkitAudioContext)();
+    return ()=> {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type='square'; o.frequency.value=freq;
+      g.gain.setValueAtTime(.0001, ctx.currentTime);
+      g.gain.linearRampToValueAtTime(.08, ctx.currentTime+.01);
+      g.gain.exponentialRampToValueAtTime(.0001, ctx.currentTime+dur);
+      o.connect(g).connect(ctx.destination);
+      o.start(); o.stop(ctx.currentTime+dur+.02);
+    };
+  }
+  window.addEventListener('keydown', e => {
+    if(e.key.toLowerCase()==='m'){ muted=!muted; }
+  });
+
+  // ---------- DOM helpers ----------
+  const $ui = document.getElementById('ui');
+  function render(tplId, enhancer){
+    $ui.innerHTML='';
+    const tpl = document.getElementById(tplId).content.cloneNode(true);
+    $ui.appendChild(tpl);
+    enhancer?.();
+  }
+  function fmtMoney(n){ return '$' + n.toLocaleString(); }
+
+  // ---------- Menu / Preview ----------
+  function drawPreview(){
+    const cv = document.getElementById('preview');
+    if(!cv) return;
+    const ctx = cv.getContext('2d');
+    const w = cv.width, h = cv.height;
+    ctx.clearRect(0,0,w,h);
+    // Track
+    ctx.fillStyle = '#0a0f1a'; ctx.fillRect(0,0,w,h);
+    ctx.fillStyle='#111b33'; ctx.fillRect(w*0.15,0,w*0.7,h);
+    // Lanes
+    ctx.setLineDash([12,12]); ctx.strokeStyle='#5b6ea8'; ctx.lineWidth=3;
+    for(let i=1;i<3;i++){
+      const x = w*0.15 + (w*0.7/3)*i;
+      ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke();
+    }
+    ctx.setLineDash([]);
+    // Cars
+    function car(x,y,col){
+      ctx.fillStyle=col; ctx.fillRect(x-18,y-28,36,56);
+      ctx.fillStyle='#222'; ctx.fillRect(x-16,y-8,32,14);
+      ctx.fillStyle='#ddd'; ctx.fillRect(x-10,y-24,20,10);
+    }
+    car(w*0.25, h*0.75, '#ff3b6b');
+    car(w*0.25 + w*0.7/3, h*0.52, '#3ad17a');
+    car(w*0.25 + 2*w*0.7/3, h*0.30, '#ffd166');
+    // Title
+    ctx.fillStyle='rgba(255,255,255,.08)'; ctx.font='900 90px system-ui';
+    ctx.fillText('F1', w*0.55, 110);
+    ctx.fillStyle='#bcd0ff'; ctx.font='700 16px system-ui';
+    ctx.fillText('Arcade Career • Lane Racing • ERS • Pit Stops', 20, h-16);
   }
 
-  // ---------- Theme (wheel reward) ----------
-  const THEMES = [
-    // name, hex, rarity, weight (higher = more common), text outline color
-    {name:'Ice Blue', hex:'#24c8ff', rarity:'Common',    weight:30},
-    {name:'Lime Pulse', hex:'#00ffa8', rarity:'Common', weight:30},
-    {name:'Sun Gold', hex:'#ffd166', rarity:'Uncommon', weight:18},
-    {name:'Violet Core', hex:'#b388ff', rarity:'Rare',  weight:12},
-    {name:'Neon Pink', hex:'#ff5d7d', rarity:'Rare',    weight:12},
-    {name:'Abyss Teal', hex:'#19f0ff', rarity:'Epic',   weight:6},
-    {name:'Crimson Nova', hex:'#ff3355', rarity:'Epic', weight:6},
-    {name:'Galaxy Prism', hex:'#6cf', rarity:'Legendary', weight:3},
-    {name:'Aurora Blaze', hex:'#f0f', rarity:'Legendary', weight:3},
-  ];
-  const rarityColors = {
-    Common:'#9db5c4', Uncommon:'#9ae6b4', Rare:'#a78bfa', Epic:'#f6ad55', Legendary:'#fbbf24'
-  };
-  function weightedPick(items){
-    const total = items.reduce((s,i)=>s+i.weight,0);
-    let r = Math.random()*total;
-    for(let i=0;i<items.length;i++){ r -= items[i].weight; if(r<=0) return i; }
-    return items.length-1;
-  }
+  // ---------- Garage ----------
+  function openGarage(){
+    render('tpl-garage', () => {
+      document.getElementById('bank').textContent = fmtMoney(save.bank);
+      const maxLv = 10;
+      const pct = lv => Math.min(100, (lv-1)/(maxLv-1)*100);
+      document.getElementById('engineBar').style.width = pct(save.upgrades.engine)+'%';
+      document.getElementById('aeroBar').style.width = pct(save.upgrades.aero)+'%';
+      document.getElementById('pitBar').style.width = pct(save.upgrades.pitcrew)+'%';
+      document.getElementById('races').textContent = save.races;
+      document.getElementById('points').textContent = save.points;
+      document.getElementById('wins').textContent = save.wins;
 
-  let theme = JSON.parse(localStorage.getItem('nh-theme')||'null') || THEMES[0];
-
-  // ---------- Game State ----------
-  const input = { w:false,a:false,s:false,d:false, mouseDown:false, mx: W/2, my:H/2, dash:false };
-  const state = { screen:'home', running:false, paused:false, gameover:false, score:0 };
-
-  const waves = {
-    number: 0, intermission: true, waitingForUpgrade: false, bossMode:false,
-    intermissionTime: 0, toSpawn: 0, alive: 0, spawnDelay: 600, spawnTimer: 0,
-    plan(n){
-      const baseCount = Math.floor(10 + n*3 + Math.min(20, n*1.4));
-      const tanks = (n%5===0) ? Math.max(2, Math.floor(n/2)) : 0;
-      const delay = Math.max(180, 600 - n*20);
-      return { count: baseCount, tanks, delay };
-    },
-    startNext(){
-      this.number++;
-      const isBoss = (this.number % 10 === 0);
-      this.bossMode = isBoss;
-      this.toSpawn = 0;
-      this.alive = 0;
-      this.spawnDelay = 400;
-      this.spawnTimer = 0;
-      this.intermission = false;
-      this.waitingForUpgrade = false;
-      this.intermissionTime = 0;
-      banner(isBoss ? `⚠ Boss Wave ${this.number}` : `Wave ${this.number}`);
-      player.hp = Math.min(player.hpMax, player.hp + 10);
-      if(isBoss){ spawnBoss(); }
-      else {
-        const p = this.plan(this.number);
-        this.toSpawn = p.count + p.tanks;
-        this.spawnDelay = p.delay;
-      }
-    },
-    endWave(){
-      this.intermission = true;
-      this.waitingForUpgrade = true;
-      this.intermissionTime = 0;
-      presentUpgradePicker(this.bossMode ? 4 : 3);
-      this.bossMode = false;
-    },
-  };
-
-  const player = {
-    x: W/2, y:H/2, r: 10,
-    baseSpeed: 240, speedBonus: 0, vx:0, vy:0,
-    get speed(){ return this.baseSpeed * (1 + this.speedBonus); },
-
-    hp: 100, hpMax:100,
-    xp: 0, xpMax: 50,
-
-    fireCooldown: 0,
-    baseFireDelay: 160, fireMult: 1.0,
-    bulletSpeed: 560, damage: 1, pierce: 0, multishot: 1,
-
-    dashReady:true, dashCooldown:0, dashIFrames:0, dashCDBase:1400, dashCDMod:1.0,
-    homing:false, dashDmg:false,
-  };
-
-  const bullets=[] , ebullets=[], enemies=[], particles=[], powerups=[];
-  let boss = null;
-
-  // ---------- Upgrades ----------
-  const upgradePool = [
-    { id:'firerate', name:'Rapid Fire', desc:'+15% fire rate (max 3.0x)', can: () => player.fireMult < 3.0,
-      apply: () => { player.fireMult = Math.min(3.0, (player.fireMult + 0.15)); showToast('Fire rate up!'); } },
-    { id:'damage', name:'Overcharged Rounds', desc:'+1 bullet damage (max 6)', can: () => player.damage < 6,
-      apply: () => { player.damage = Math.min(6, player.damage + 1); showToast('Damage +1'); } },
-    { id:'pierce', name:'Piercing Shots', desc:'+1 bullet pierce (max 3)', can: () => player.pierce < 3,
-      apply: () => { player.pierce = Math.min(3, player.pierce + 1); showToast('Pierce +1'); } },
-    { id:'multishot', name:'Twin Barrel', desc:'+1 projectile per shot (max 4)', can: () => player.multishot < 4,
-      apply: () => { player.multishot = Math.min(4, player.multishot + 1); showToast('Multishot +1'); } },
-    { id:'speed', name:'Lightfoot', desc:'+10% move speed (max +50%)', can: () => player.speedBonus < 0.5,
-      apply: () => { player.speedBonus = Math.min(0.5, player.speedBonus + 0.10); showToast('Move speed up'); } },
-    { id:'maxhp', name:'Reinforced Core', desc:'+20 max HP and heal 20', can: () => player.hpMax < 220,
-      apply: () => { player.hpMax = Math.min(220, player.hpMax + 20); player.hp = Math.min(player.hpMax, player.hp + 20); showToast('Max HP +20'); } },
-    { id:'dash', name:'Afterimage', desc:'-15% Dash cooldown (min 55%)', can: () => player.dashCDMod > 0.55,
-      apply: () => { player.dashCDMod = Math.max(0.55, player.dashCDMod - 0.15); showToast('Dash cooldown ↓'); } },
-    { id:'bulletspd', name:'Accelerated Rounds', desc:'+15% bullet speed', can: () => player.bulletSpeed < 1200,
-      apply: () => { player.bulletSpeed = Math.min(1200, Math.round(player.bulletSpeed * 1.15)); showToast('Bullet speed up'); } },
-    // Rare boss-tier flavor
-    { id:'homing', name:'Homing Tips (Rare)', desc:'Bullets lightly home', can: () => !player.homing,
-      apply: () => { player.homing = true; showToast('Bullets now lightly home'); } },
-    { id:'dashdmg', name:'Cutting Dash (Rare)', desc:'Dash deals 25 damage nearby', can: () => !player.dashDmg,
-      apply: () => { player.dashDmg = true; showToast('Dash now damages'); } },
-  ];
-
-  function presentUpgradePicker(nChoices=3){
-    const valid = upgradePool.filter(u => u.can());
-    const pool = valid.length >= nChoices ? valid : upgradePool;
-    const choices = pickN(pool, nChoices);
-
-    ui.overlay.innerHTML = `
-      <div class="overlay-inner card">
-        <div class="title">Choose an Upgrade ${nChoices===4?'(Boss Reward)':''}</div>
-        <div class="${nChoices===4?'grid-2 grid-2':'grid'}" style="${nChoices===4?'grid-template-columns:repeat(4,minmax(200px,1fr))':''}">
-          ${choices.map((c,i)=>`
-            <div class="pick" data-idx="${i}">
-              <h3>${c.name}</h3>
-              <p>${c.desc}</p>
-            </div>
-          `).join('')}
-        </div>
-        <div class="hint">Pick 1 to begin the next wave.</div>
-      </div>`;
-    Array.from(ui.overlay.querySelectorAll('.pick')).forEach(el=>{
-      el.addEventListener('click', ()=>{
-        const idx = Number(el.getAttribute('data-idx'));
-        const chosen = choices[idx];
-        chosen.apply();
-        ui.overlay.innerHTML = '';
-        waves.waitingForUpgrade = false;
-        waves.intermissionTime = 1500;
-        banner('Intermission');
-      }, { once:true });
+      $ui.querySelectorAll('[data-upg]').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          const key = btn.getAttribute('data-upg');
+          const lv = save.upgrades[key];
+          if(lv>=maxLv){ alert('Max level reached.'); return; }
+          const cost = 1500 + Math.floor(Math.pow(lv,2.1)*600);
+          if(save.bank < cost){ alert('Not enough funds.\nCost: '+fmtMoney(cost)); return; }
+          save.bank -= cost;
+          save.upgrades[key]++;
+          writeSave();
+          play('coin');
+          openGarage();
+        });
+      });
+      $ui.querySelector('[data-action="career"]').onclick = ()=> startCareerFlow();
+      $ui.querySelector('[data-action="menu"]').onclick = ()=> openMenu();
     });
   }
 
-  // ---------- Enemies / Boss ----------
-  function enemyStatsForWave(n, type='grunt'){
-    const hpScale = 1 + n*0.18, spdScale = 1 + n*0.06;
-    if(type==='grunt'){ return { r:12, hp: Math.round(3*hpScale), speed: (85*spdScale) }; }
-    if(type==='runner'){ return { r:10, hp: Math.round(2*hpScale), speed: (120*spdScale) }; }
-    if(type==='tank'){ return { r:16, hp: Math.round(10*hpScale), speed: (60*spdScale) }; }
-    return { r:12, hp: Math.round(3*hpScale), speed:(85*spdScale) };
+  // ---------- Strategy / Race Seed ----------
+  const circuits = [
+    {name:'Monza', laps:4, grip:1.0, straights:1.2},
+    {name:'Monaco', laps:4, grip:1.1, straights:0.8},
+    {name:'Silverstone', laps:4, grip:1.05, straights:1.05},
+    {name:'Spa', laps:4, grip:1.0, straights:1.15},
+    {name:'Suzuka', laps:4, grip:1.0, straights:1.0},
+  ];
+  const weathers = [
+    {name:'Clear', wet:0.0, drag:1.0},
+    {name:'Cloudy', wet:0.0, drag:0.99},
+    {name:'Light Rain', wet:0.5, drag:0.97},
+  ];
+  const tireDefs = {
+    soft:   {base:1.08, wear:0.018, minWet:0.0},
+    medium: {base:1.00, wear:0.012, minWet:0.0},
+    hard:   {base:0.94, wear:0.008, minWet:0.0},
+    inter:  {base:0.92, wear:0.010, minWet:0.3},
+  };
+
+  let careerMode = false;
+  let currentPlan = null;
+
+  function startCareerFlow(){
+    careerMode = true;
+    openStrategy();
   }
-  function spawnEnemy(type='grunt') {
-    const edge = Math.floor(rnd(0,4));
-    let x,y;
-    if(edge===0){x=rnd(0,W); y=-20;}
-    else if(edge===1){x=W+20; y=rnd(0,H);}
-    else if(edge===2){x=rnd(0,W); y=H+20;}
-    else {x=-20; y=rnd(0,H);}
-    const s = enemyStatsForWave(waves.number, type);
-    enemies.push({ x,y,r:s.r, speed:s.speed, hp:s.hp, hitFlash:0, t:0, type });
-    waves.alive++;
-  }
-  function spawnPowerup(x,y) {
-    const kinds = ['heal','firerate','damage'];
-    const k = kinds[Math.floor(rnd(0,kinds.length))];
-    powerups.push({x,y,r:10, kind:k, t:0});
+  function quickRace(){
+    careerMode = false;
+    openStrategy(true);
   }
 
-  function spawnBoss(){
-    const scale = 1 + waves.number*0.18;
-    boss = { x: W*0.5, y: H*0.28, r: 26, hpMax: Math.round(280*scale), hp: Math.round(280*scale),
-      phase:0,timer:0,tele:0,attackStep:0,invuln:800,enrage:false,summon66:false,summon33:false };
-    ui.bossbar.style.display = 'block';
-    ui.bossfill.style.width = '100%';
-    addBurst(boss.x,boss.y,32,'rgba(255,93,125,','rgba(255,159,28,');
+  function openStrategy(quick=false){
+    const circuit = circuits[Math.floor(Math.random()*circuits.length)];
+    // Weather: in quick, bias to clear; in career random
+    const weather = quick ? weathers[0] : weathers[Math.floor(Math.random()*weathers.length)];
+    const laps = circuit.laps;
+
+    render('tpl-strategy', () => {
+      document.getElementById('circuit').textContent = circuit.name;
+      document.getElementById('laps').textContent = laps;
+      document.getElementById('weather').textContent = weather.name;
+      // Preview loop
+      const cv = document.getElementById('raceCanvas'), ctx = cv.getContext('2d');
+      let t=0; (function loop(){
+        if(!cv.isConnected) return;
+        t+=0.016; drawRacePreview(ctx, cv.width, cv.height, t); requestAnimationFrame(loop);
+      })();
+
+      let chosen='medium';
+      $ui.querySelectorAll('[data-tire]').forEach(b=>{
+        b.addEventListener('click', ()=>{ chosen=b.getAttribute('data-tire'); play('click'); });
+      });
+      $ui.querySelector('[data-action="startRace"]').onclick = ()=>{
+        currentPlan = { circuit, weather, laps, tire: chosen };
+        play('click');
+        startRace(currentPlan);
+      };
+      $ui.querySelector('[data-action="menu"]').onclick = ()=> openMenu();
+    });
   }
-  function bossUpdate(dt){
-    if(!boss) return;
-    boss.timer += dt; if(boss.invuln>0) boss.invuln -= dt;
-    if(!boss.enrage && boss.hp/boss.hpMax <= 0.25){ boss.enrage = true; addBurst(boss.x,boss.y,40,'rgba(255,209,102,','rgba(255,93,125,'); }
-    if(!boss.summon66 && boss.hp/boss.hpMax <= 0.66){ boss.summon66 = true; for(let i=0;i<6;i++) spawnEnemy(i%2?'runner':'grunt'); }
-    if(!boss.summon33 && boss.hp/boss.hpMax <= 0.33){ boss.summon33 = true; for(let i=0;i<8;i++) spawnEnemy(i%3? 'grunt':'tank'); }
 
-    boss.x = clamp(boss.x + Math.sin(boss.timer*0.002)*(boss.enrage? 0.9:0.6), 40, W-40);
-    boss.y = clamp(boss.y + Math.sin(boss.timer*0.0016)*(boss.enrage? 0.8:0.5), 40, H*0.55);
-
-    const accel = boss.enrage ? 0.8 : 1.0;
-    if(boss.phase === 0){ // ring
-      if(boss.attackStep === 0){ boss.tele += dt; if(boss.tele > 900*accel){ ringFire(26, boss.enrage?3:2); boss.tele=0; boss.attackStep++; } }
-      else if(boss.attackStep === 1){ boss.tele += dt; if(boss.tele > 600*accel){ ringFire(36,1); boss.tele=0; boss.attackStep++; } }
-      else { boss.phase = 1; boss.attackStep=0; boss.tele=0; }
-    } else if(boss.phase === 1){ // aimed volley
-      boss.tele += dt; if(boss.tele > 450*accel){ aimedVolley(7); boss.attackStep++; boss.tele=0; if(boss.attackStep>=3){ boss.phase=2; boss.attackStep=0; } }
-    } else if(boss.phase === 2){ // charge
-      if(boss.attackStep === 0){ boss.chargeAngle = Math.atan2(player.y - boss.y, player.x - boss.x); boss.tele += dt; if(boss.tele>700*accel){ boss.attackStep=1; boss.tele=0; } }
-      else {
-        const sp = (boss.enrage? 500:420);
-        boss.x += Math.cos(boss.chargeAngle) * sp * (dt/1000);
-        boss.y += Math.sin(boss.chargeAngle) * sp * (dt/1000);
-        if(Math.random()<0.3) ebullets.push(mkEBullet(boss.x,boss.y, boss.chargeAngle+Math.PI/2, 120, 2200, 10));
-        if(Math.random()<0.3) ebullets.push(mkEBullet(boss.x,boss.y, boss.chargeAngle-Math.PI/2, 120, 2200, 10));
-        boss.tele += dt; if(boss.tele > 420*accel){ boss.phase=0; boss.attackStep=0; boss.tele=0; }
-      }
+  function drawRacePreview(ctx,w,h,t){
+    ctx.clearRect(0,0,w,h);
+    ctx.fillStyle='#0b0f1a'; ctx.fillRect(0,0,w,h);
+    const trackX = w*0.1, trackW = w*0.8;
+    ctx.fillStyle='#111b33'; ctx.fillRect(trackX,0,trackW,h);
+    ctx.setLineDash([10,10]); ctx.strokeStyle='#4e5f95'; ctx.lineWidth=3;
+    for(let i=1;i<3;i++){ const x=trackX+(trackW/3)*i; ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke(); }
+    ctx.setLineDash([]);
+    // Move stripes to imply scrolling
+    const stripeH=30, gap=60, scroll=(t*160)% (stripeH+gap);
+    ctx.fillStyle='#d9dfff';
+    for(let y=-stripeH;y<h;y+=stripeH+gap){
+      ctx.fillRect(trackX+trackW/2-4, y+scroll, 8, stripeH);
     }
-    for(let i=ebullets.length-1;i>=0;i--){
-      const b = ebullets[i]; b.x += b.vx*(dt/1000); b.y += b.vy*(dt/1000); b.life -= dt;
-      if(b.life<=0 || b.x<-50||b.x>W+50||b.y<-50||b.y>H+50) ebullets.splice(i,1);
-    }
+    // Player car pulsing
+    const x = trackX + trackW/6 + Math.sin(t)*8;
+    carSprite(ctx, x, h*0.75, '#ff3b6b');
   }
-  function mkEBullet(x,y,ang,speed,life=3000, r=6){ return { x,y, vx:Math.cos(ang)*speed, vy:Math.sin(ang)*speed, life, r }; }
-  function ringFire(n, rings=1){
-    for(let k=0;k<rings;k++){
-      const delay = k*90;
-      setTimeout(()=>{ for(let i=0;i<n;i++){ const a = (i/n)*Math.PI*2; ebullets.push(mkEBullet(boss.x,boss.y,a, boss.enrage? 220:180, 3500, 5)); } }, delay);
-    }
-    addBurst(boss.x,boss.y,18,'rgba(255,93,125,','rgba(255,159,28,');
-  }
-  function aimedVolley(count=6){
-    for(let i=0;i<count;i++){ const a = Math.atan2(player.y - boss.y, player.x - boss.x) + rnd(-0.2,0.2);
-      ebullets.push(mkEBullet(boss.x,boss.y,a, boss.enrage? 300:240, 2600, 5)); }
+  function carSprite(ctx, x,y, col){
+    ctx.fillStyle=col; ctx.fillRect(x-16,y-24,32,48);
+    ctx.fillStyle='#1e1e1e'; ctx.fillRect(x-14,y-6,28,12);
+    ctx.fillStyle='#cfd8ff'; ctx.fillRect(x-10,y-20,20,8);
   }
 
-  // ---------- Shooting ----------
-  function shootTowards(mx,my) {
-    const baseAng = Math.atan2(my-player.y, mx-player.x);
-    const count = player.multishot;
-    const totalSpread = Math.min(0.3, 0.06 * (count-1));
-    for(let i=0;i<count;i++){
-      const t = (count===1) ? 0 : (i/(count-1) - 0.5);
-      const a = baseAng + t*totalSpread + rnd(-0.02,0.02);
-      const spd = player.bulletSpeed;
-      const vx = Math.cos(a)*spd, vy = Math.sin(a)*spd;
-      bullets.push({x:player.x, y:player.y, vx, vy, r:4, life:1200, pierce: player.pierce, homing: !!player.homing });
-    }
-  }
+  // ---------- Racing ----------
+  function startRace(plan){
+    const W = 520, H = 600;
+    let gameOver=false;
 
-  // ---------- Input ----------
-  window.addEventListener('keydown', (e)=>{
-    const k = e.key.toLowerCase();
-    if(k==='w') input.w=true;
-    if(k==='a') input.a=true;
-    if(k==='s') input.s=true;
-    if(k==='d') input.d=true;
-    if(k==='shift') input.dash=true;
-    if(k==='p'){ togglePause(); }
-    if(k===' ' && state.screen==='home'){ /* ignore space on home */ }
-    if(k===' ' && !state.running && state.screen==='game'){ startGame(); }
-  });
-  window.addEventListener('keyup', (e)=>{
-    const k = e.key.toLowerCase();
-    if(k==='w') input.w=false;
-    if(k==='a') input.a=false;
-    if(k==='s') input.s=false;
-    if(k==='d') input.d=false;
-    if(k==='shift') input.dash=false;
-  });
-  canvas.addEventListener('mousemove', (e)=>{
-    const rect = canvas.getBoundingClientRect();
-    input.mx = (e.clientX - rect.left) * (W/rect.width);
-    input.my = (e.clientY - rect.top) * (H/rect.height);
-  });
-  canvas.addEventListener('mousedown', ()=> input.mouseDown = (state.screen==='game'));
-  window.addEventListener('mouseup', ()=> input.mouseDown = false);
+    // Parameters influenced by upgrades:
+    const topSpeed = 7.5 + save.upgrades.engine * 0.45;     // px per frame baseline
+    const handling = 1.0 + save.upgrades.aero * 0.05;       // lane change smoothness & collision mitigation
+    const pitSkill = Math.max(1.0 - save.upgrades.pitcrew*0.05, 0.55); // pit time multiplier
 
-  // ---------- UI overlays ----------
-  function banner(text){
-    ui.overlay.innerHTML = `<div class="card"><div class="big">${text}</div></div>`;
-    setTimeout(()=>{ if(state.running && !state.paused && !state.gameover && !waves.waitingForUpgrade) ui.overlay.innerHTML=''; }, 900);
-  }
-  function showHome(){
-    state.screen = 'home';
-    ui.hudTop.style.display='none'; ui.hudBars.style.display='none';
-    ui.bossbar.style.display='none';
-    ui.overlay.innerHTML = `
-      <div class="overlay-inner card" style="max-width:960px">
-        <div class="title">Home — Spin for a Player Color</div>
-        <div class="wheel-wrap">
-          <div class="pointer"></div>
-          <canvas id="wheel" width="360" height="360"></canvas>
-          <div class="wheel-row">
-            <div></div>
-            <div>
-              <div style="margin:4px 0 10px 0">Current theme: 
-                <span class="rarity" id="themeBadge" style="border-color:#1a2430">${theme.name} — 
-                  <span id="themeRarity" style="color:${rarityColors[theme.rarity]||'#9db5c4'}">${theme.rarity}</span>
-                </span>
-              </div>
-              <button class="btn" id="spinBtn">Spin</button>
-              <button class="btn secondary" id="startBtn" style="margin-left:8px">Start Game</button>
-              <div class="hint" style="margin-top:10px">
-                Rarities: <b style="color:${rarityColors.Legendary}">Legendary</b> &gt; <b style="color:${rarityColors.Epic}">Epic</b> &gt; <b style="color:${rarityColors.Rare}">Rare</b> &gt; <b style="color:${rarityColors.Uncommon}">Uncommon</b> &gt; <b style="color:${rarityColors.Common}">Common</b>.
-              </div>
-            </div>
+    const baseDrag = plan.weather.drag;
+    const wet = plan.weather.wet;
+    const tire = tireDefs[plan.tire];
+    const tireOk = (wet>=tire.minWet) || (tire.minWet===0 && wet<0.3);
+    let tireWear = 0; // 0..1
+    let battery = 1;  // ERS 0..1
+    let lap=1, position=12; // start P12
+    let distance=0; // increases; a lap ~= 1000 units
+    let pitReady=true, pitted=false, inPit=false, pitTimer=0;
+    const lapDistance = 1000;
+    const totalDistance = lapDistance * plan.laps;
+    // Rival cars
+    const rivals = [];
+    const lanes = [W*0.1 + (W*0.8/6), W*0.1 + (W*0.8/2), W*0.1 + (W*0.8*5/6)];
+    let laneIdx = 1, targetX = lanes[laneIdx];
+    // Canvas
+    render('tpl-strategy', ()=>{}); // reuse canvas area layout
+    const cv = document.getElementById('raceCanvas');
+    const ctx = cv.getContext('2d');
+
+    // Replace UI with live HUD
+    const hud = document.createElement('div');
+    hud.className='card';
+    hud.innerHTML = `
+      <h1>Racing: <span class="pill">${plan.circuit.name}</span></h1>
+      <div class="row">
+        <div class="col">
+          <canvas id="raceCanvas" width="${W}" height="${H}"></canvas>
+          <p class="note">Laps ${lap}/${plan.laps} · Pos P<span id="pos">${position}</span> · Tire: <b>${plan.tire.toUpperCase()}</b> ${tireOk?'':'<span style="color:var(--warn)">(sub-optimal for weather)</span>'}</p>
+          <div class="stat"><span>ERS</span><div class="progress"><div id="ersBar" class="bar" style="width:100%"></div></div></div>
+          <div class="stat"><span>Tire Wear</span><div class="progress"><div id="wearBar" class="bar" style="width:0%;background:linear-gradient(90deg,#3ad17a,#ffd166,#ff7171)"></div></div></div>
+          <p class="footer">Pit: press <span class="kbd">P</span> across the line when <span class="pill">PIT OPEN</span> shows. Avoid contact!</p>
+        </div>
+        <div class="col">
+          <div class="tile"><h2>Telemetry</h2>
+            <p>Speed: <b><span id="spd">0</span></b></p>
+            <p>Lap Dist: <b><span id="lapd">0</span> / ${lapDistance}</b></p>
+            <p>Total Dist: <b><span id="tDist">0</span> / ${totalDistance}</b></p>
+            <p>Weather: <b>${plan.weather.name}</b></p>
+          </div>
+          <div class="tile">
+            <button class="btn secondary" id="abort">Retire (DNF)</button>
           </div>
         </div>
       </div>`;
-    setupWheel();
-  }
-  function showGameUI(){
-    ui.hudTop.style.display='flex'; ui.hudBars.style.display='flex';
-  }
-  function showGameOver() {
-    ui.overlay.innerHTML = `
-      <div class="card">
-        <div class="title">Game Over</div>
-        <div>Your score: <b>${state.score}</b> — Wave <b>${waves.number}</b></div>
-        <div class="grid-2" style="margin-top:10px">
-          <button class="btn" id="againBtn">Play Again</button>
-          <button class="btn secondary" id="homeBtn">Home</button>
-        </div>
-      </div>`;
-    document.getElementById('againBtn').onclick = startGame;
-    document.getElementById('homeBtn').onclick = showHome;
-    ui.overlay.onclick = null;
-  }
-  function clearOverlay(){ ui.overlay.innerHTML = ''; ui.overlay.onclick = null; }
-  function togglePause() {
-    if(state.screen!=='game' || !state.running || state.gameover) return;
-    state.paused = !state.paused;
-    if(state.paused){
-      ui.overlay.innerHTML = `<div class="card"><div class="title">Paused</div>
-        <div class="hint">Press <span class="kbd">P</span> to resume.</div></div>`;
-    } else { clearOverlay(); last = now(); loop(); }
-  }
+    $ui.innerHTML=''; $ui.appendChild(hud);
 
-  // ---------- Start / Reset ----------
-  function startGame() {
-    state.screen='game'; clearOverlay(); showGameUI();
-    state.running = true; state.paused=false; state.gameover=false; state.score=0;
+    const ersBar = document.getElementById('ersBar');
+    const wearBar = document.getElementById('wearBar');
+    const spdEl = document.getElementById('spd');
+    const lapdEl = document.getElementById('lapd');
+    const tDistEl = document.getElementById('tDist');
+    const posEl = document.getElementById('pos');
+    document.getElementById('abort').onclick = ()=>{ gameOver=true; finishRace(true); };
 
-    player.x=W/2; player.y=H/2; player.vx=0; player.vy=0;
-    player.hpMax=100; player.hp=100; player.xp=0; player.xpMax=50;
-    player.baseFireDelay=160; player.fireMult=1.0; player.damage=1;
-    player.pierce=0; player.multishot=1; player.speedBonus=0;
-    player.dashReady=true; player.dashCooldown=0; player.dashIFrames=0; player.dashCDMod=1.0;
-    player.homing=false; player.dashDmg=false;
+    // Input
+    const keys = {};
+    window.addEventListener('keydown', e=>{
+      keys[e.key]=true;
+      if(e.key==='ArrowLeft'){ laneIdx = Math.max(0, laneIdx-1); play('click'); }
+      if(e.key==='ArrowRight'){ laneIdx = Math.min(2, laneIdx+1); play('click'); }
+      if(e.key.toLowerCase()==='p' && pitReady && !inPit){ inPit=true; pitTimer = 120 * pitSkill; play('bump'); }
+    });
+    window.addEventListener('keyup', e=>{ keys[e.key]=false; });
 
-    bullets.length=0; ebullets.length=0; enemies.length=0; particles.length=0; powerups.length=0;
-    boss = null; ui.bossbar.style.display='none';
-
-    waves.number = 0; waves.intermission = true; waves.waitingForUpgrade = false;
-    waves.intermissionTime = 1200; waves.toSpawn = 0; waves.alive = 0; waves.spawnTimer=0;
-
-    last = now(); loop();
-  }
-
-  // ---------- Particles ----------
-  function addBurst(x,y,count,clrA,clrB){
-    // default to theme glow if not provided
-    const ca = clrA || hexToRGBA(theme.hex, 0.6);
-    const cb = clrB || 'rgba(0,0,0,0)';
-    for(let i=0;i<count;i++){
-      const a = rnd(0,Math.PI*2), s = rnd(60,220);
-      particles.push({ x,y, vx:Math.cos(a)*s, vy:Math.sin(a)*s, life:rnd(250,550), r:rnd(1,2),
-        colorA:ca.replace(')',','), colorB:cb.replace(')',','), t:0 });
+    // Spawn rivals regularly
+    let spawnTimer=0;
+    function spawnRival(){
+      const lane = Math.floor(Math.random()*3);
+      const relY = -80; // appears ahead (moving downwards)
+      const color = ['#3ad17a','#ffd166','#66e0ff','#ff9ce6'][Math.floor(Math.random()*4)];
+      // Each rival has a baseSpeed slightly below/above you
+      const base = topSpeed * (0.85 + Math.random()*0.2);
+      rivals.push({ lane, x: lanes[lane], y: relY, spd: base, color });
     }
-  }
-  function hexToRGBA(hex, a=1){
-    const n = hex.replace('#','');
-    const bigint = parseInt(n.length===3 ? n.split('').map(c=>c+c).join('') : n,16);
-    const r=(bigint>>16)&255,g=(bigint>>8)&255,b=bigint&255;
-    return `rgba(${r},${g},${b},${a})`;
-  }
 
-  // ---------- Loop ----------
-  let last = now();
-  function loop() {
-    if(state.screen!=='game' || !state.running || state.paused) return;
-    const t = now(); const dt = Math.min(32, t - last); last = t;
-    update(dt); render();
-    if(state.running && !state.paused) requestAnimationFrame(loop);
-  }
+    // Loop
+    let lastTs=performance.now();
+    requestAnimationFrame(tick);
 
-  function update(dt) {
-    // Intermission & upgrades
-    if(waves.intermission){
-      if(waves.waitingForUpgrade){ /* waiting for pick */ }
-      else { waves.intermissionTime -= dt; if(waves.intermissionTime<=0) waves.startNext(); }
-    } else {
-      if(!waves.bossMode){
-        waves.spawnTimer -= dt;
-        if(waves.toSpawn > 0 && waves.spawnTimer<=0){
-          const milestone = (waves.number % 5 === 0);
-          let type = 'grunt'; const roll = Math.random();
-          if(milestone && waves.toSpawn <= Math.ceil((waves.plan(waves.number).tanks))) type = 'tank';
-          else if(roll < Math.min(0.35, 0.12 + waves.number*0.02)) type = 'runner';
-          spawnEnemy(type); waves.toSpawn--; waves.spawnTimer = waves.spawnDelay;
-        }
-        if(waves.toSpawn===0 && waves.alive===0){
-          waves.endWave(); player.hp = Math.min(player.hpMax, player.hp + 10);
-          addBurst(player.x, player.y, 28, 'rgba(255,209,102,','rgba(255,159,28,');
-        }
-      } else {
-        bossUpdate(dt);
-        if(boss && boss.hp<=0){
-          state.score += 25; addBurst(boss.x,boss.y,64,'rgba(255,209,102,','rgba(255,93,125,');
-          boss = null; ui.bossbar.style.display='none'; waves.endWave();
+    function tick(ts){
+      if(gameOver) return;
+      const dt = Math.max(0.016, Math.min(0.040, (ts-lastTs)/1000)); // clamp
+      lastTs = ts;
+      update(dt);
+      draw();
+      requestAnimationFrame(tick);
+    }
+
+    function update(dt){
+      targetX = lanes[laneIdx];
+      // Tire wear
+      tireWear = Math.min(1, tireWear + tire.wear * dt * (1 + (keys[' ']?0.8:0)) * (tireOk?1.0:1.6));
+      // ERS
+      if(keys[' '] && battery>0 && !inPit){ battery = Math.max(0, battery - 0.25*dt); } else {
+        battery = Math.min(1, battery + 0.12*dt);
+      }
+      // Speed model
+      let speed = topSpeed;
+      speed *= plan.circuit.straights;
+      speed *= baseDrag;
+      speed *= tire.base * (1 - 0.45*tireWear); // worn tires slower
+      if(keys[' '] && battery>0) speed *= 1.18; // ERS
+      speed *= (0.98 + (save.upgrades.aero*0.004)); // aero small additive
+      if(inPit){ speed = 2.2; }
+
+      // Move player forward (distance)
+      distance += speed * dt * 6; // scale factor to make progress per frame
+      spdEl.textContent = Math.round(speed*28) + ' km/h';
+      lapdEl.textContent = Math.floor(distance % lapDistance);
+      tDistEl.textContent = Math.floor(distance);
+      ersBar.style.width = Math.floor(battery*100)+'%';
+      wearBar.style.width = Math.floor(tireWear*100)+'%';
+
+      // Lap handling
+      const prevLap = lap;
+      lap = Math.min(plan.laps, Math.floor(distance / lapDistance) + 1);
+      if(lap!==prevLap){ play('lap'); pitReady=true; }
+
+      // Pit
+      if(inPit){
+        pitTimer -= dt*60;
+        if(pitTimer<=0){
+          inPit=false; pitted=true; tireWear=0;
+          play('coin');
         }
       }
-    }
 
-    // Movement
-    const ax = (input.d?1:0) - (input.a?1:0);
-    const ay = (input.s?1:0) - (input.w?1:0);
-    let mag = Math.hypot(ax,ay) || 1;
-    const spd = player.speed * (player.dashIFrames>0 ? 1.45 : 1);
-    player.vx = (ax/mag) * spd; player.vy = (ay/mag) * spd;
-    player.x = clamp(player.x + player.vx * (dt/1000), 12, W-12);
-    player.y = clamp(player.y + player.vy * (dt/1000), 12, H-12);
-
-    // Dash
-    if(input.dash && player.dashReady){
-      player.dashReady=false;
-      player.dashCooldown = player.dashCDBase * player.dashCDMod;
-      player.dashIFrames = 300;
-      addBurst(player.x, player.y, 24);
-      if(player.dashDmg){
-        for(let i=enemies.length-1;i>=0;i--){
-          if(dist(player.x,player.y,enemies[i].x,enemies[i].y) < 36){ enemies[i].hp -= 25; if(enemies[i].hp<=0){ killEnemy(i); } }
-        }
-        if(boss && dist(player.x,player.y,boss.x,boss.y) < 42 && boss.invuln<=0){ boss.hp -= 25; ui.bossfill.style.width = Math.max(0, (boss.hp/boss.hpMax*100)) + '%'; }
+      // Rival spawns
+      spawnTimer -= dt;
+      if(spawnTimer<=0){
+        spawnRival();
+        spawnTimer = 0.7 + Math.random()*0.6;
       }
-    }
-    if(!player.dashReady){ player.dashCooldown -= dt; if(player.dashCooldown<=0){ player.dashReady=true; } }
-    if(player.dashIFrames>0) player.dashIFrames -= dt;
-    ui.dash.textContent = player.dashReady ? 'Ready' : 'Recharging';
-
-    // Shooting
-    player.fireCooldown -= dt;
-    if(input.mouseDown && player.fireCooldown<=0){
-      shootTowards(input.mx,input.my);
-      player.fireCooldown = player.baseFireDelay / player.fireMult;
-    }
-
-    // Player bullets
-    for(let i=bullets.length-1;i>=0;i--){
-      const b = bullets[i];
-      if(b.homing){
-        let nearest=null, nd=1e9;
-        if(boss){ const d = dist(b.x,b.y,boss.x,boss.y); if(d<nd){ nd=d; nearest={x:boss.x,y:boss.y}; } }
-        for(const e of enemies){ const d=dist(b.x,b.y,e.x,e.y); if(d<nd){ nd=d; nearest=e; } }
-        if(nearest){
-          const a = Math.atan2(nearest.y-b.y, nearest.x-b.x);
-          const cur = Math.atan2(b.vy,b.vx);
-          const na = cur + Math.sign(a-cur)*0.05;
-          const spd = Math.hypot(b.vx,b.vy);
-          b.vx = Math.cos(na)*spd; b.vy = Math.sin(na)*spd;
-        }
+      // Update rivals (they move toward bottom; if pass, update position)
+      for(const r of rivals){
+        const relSpeed = speed - r.spd;
+        r.y += (speed*dt*120) - (r.spd*dt*120*0.92);
+        // Overtake detection: if you pass a rival (y increases down screen),
+        // use lane and collision
       }
-      b.x += b.vx * (dt/1000); b.y += b.vy * (dt/1000); b.life -= dt;
-      if(b.x<-20||b.x>W+20||b.y<-20||b.y>H+20||b.life<=0) bullets.splice(i,1);
-    }
-
-    // Enemy bullets
-    for(let i=ebullets.length-1;i>=0;i--){
-      const eb = ebullets[i];
-      if(dist(eb.x,eb.y,player.x,player.y) < eb.r + player.r){
-        if(player.dashIFrames<=0){ player.hp -= 10; addBurst(player.x, player.y, 12, 'rgba(255,93,125,','rgba(255,93,125,'); }
-        ebullets.splice(i,1);
-        continue;
-      }
-    }
-
-    // Enemies
-    for(let i=enemies.length-1;i>=0;i--){
-      const e = enemies[i]; e.t += dt;
-      const weave = (e.type==='runner') ? Math.sin(e.t*0.012)*0.5 : Math.sin(e.t*0.006)*0.3;
-      const ang = Math.atan2(player.y - e.y, player.x - e.x) + weave;
-      const vx = Math.cos(ang)*e.speed, vy = Math.sin(ang)*e.speed;
-      e.x += vx*(dt/1000); e.y += vy*(dt/1000);
-      e.hitFlash = Math.max(0, e.hitFlash - dt);
-
-      if(dist(e.x,e.y,player.x,player.y) < e.r + player.r){
-        if(player.dashIFrames<=0){
-          const hitDmg = (e.type==='tank') ? 18 : (e.type==='runner' ? 8 : 10);
-          player.hp -= hitDmg; addBurst(player.x, player.y, 18, 'rgba(255,93,125,','rgba(255,93,125,');
-          enemies.splice(i,1); waves.alive--;
-        } else {
-          addBurst(e.x, e.y, 26);
-          state.score += 2; if(Math.random()<0.12) spawnPowerup(e.x,e.y);
-          enemies.splice(i,1); waves.alive--;
-        }
-      }
-    }
-
-    // Bullet hits
-    for(let i=enemies.length-1;i>=0;i--){
-      const e = enemies[i];
-      for(let j=bullets.length-1;j>=0;j--){
-        const b = bullets[j];
-        if(dist(e.x,e.y,b.x,b.y) < e.r + b.r){
-          e.hp -= player.damage; e.hitFlash = 120;
-          if(b.pierce > 0) b.pierce--; else bullets.splice(j,1);
-          if(e.hp<=0){ killEnemy(i); }
-          break;
-        }
-      }
-    }
-    if(boss){
-      for(let j=bullets.length-1;j>=0;j--){
-        const b = bullets[j];
-        if(dist(boss.x,boss.y,b.x,b.y) < boss.r + b.r){
-          if(boss.invuln<=0){
-            boss.hp -= player.damage; ui.bossfill.style.width = Math.max(0, (boss.hp/boss.hpMax*100)) + '%';
+      // Collision & passing
+      const carY = H*0.75;
+      const curX = getPlayerX();
+      for(const r of rivals){
+        const dx = Math.abs(curX - r.x);
+        const dy = Math.abs(carY - r.y);
+        if(dy<46 && dx<26 && !inPit){
+          // contact -> speed penalty and small knock
+          play('bump');
+          distance = Math.max(0, distance - 12);
+          // Auto nudge if handling good
+          if(handling>1.2){
+            laneIdx = dx<0 ? Math.min(2, laneIdx+1) : Math.max(0, laneIdx-1);
           }
-          if(b.pierce > 0) b.pierce--; else bullets.splice(j,1);
+        }
+        // If rival goes beyond your car, check pass
+        if(r.y > carY+60 && !r.counted){
+          r.counted = true;
+          position = Math.max(1, position-1);
+          posEl.textContent = position;
+          play('overtake');
         }
       }
-    }
+      // Cull rivals behind
+      for(let i=rivals.length-1;i>=0;i--){
+        if(rivals[i].y>H+80) rivals.splice(i,1);
+      }
 
-    // Powerups
-    for(let i=powerups.length-1;i>=0;i--){
-      const p = powerups[i]; p.t += dt;
-      if(dist(p.x,p.y,player.x,player.y) < p.r + player.r + 2){
-        if(p.kind==='heal'){ player.hp = Math.min(player.hpMax, player.hp + 20); }
-        if(p.kind==='firerate'){ player.fireMult = Math.min(3.0, player.fireMult + 0.15); }
-        if(p.kind==='damage'){ player.damage = Math.min(6, player.damage + 1); }
-        addBurst(p.x,p.y,18,'rgba(255,209,102,','rgba(36,200,255,'); powerups.splice(i,1);
+      // Finish
+      if(distance>=totalDistance){
+        gameOver=true;
+        play('finish');
+        finishRace(false);
       }
     }
 
-    // Particles
-    for(let i=particles.length-1;i>=0;i--){
-      const p = particles[i]; p.t += dt; p.x += p.vx*(dt/1000); p.y += p.vy*(dt/1000);
-      p.vx *= 0.985; p.vy *= 0.985; if(p.t > p.life) particles.splice(i,1);
+    function getPlayerX(){
+      const cv = document.getElementById('raceCanvas');
+      const ctx = cv.getContext('2d');
+      // Smooth move toward targetX based on handling
+      if(!cv._px) cv._px = targetX;
+      const k = Math.min(1, 0.12 * handling);
+      cv._px = cv._px + (targetX - cv._px)*k;
+      return cv._px;
     }
 
-    // UI
-    ui.score.textContent = state.score;
-    ui.wave.textContent = waves.number;
-    ui.left.textContent = (waves.intermission ? 0 : (waves.alive + waves.toSpawn) + (boss?1:0));
-    ui.firerate.textContent = player.fireMult.toFixed(2)+'x';
-    ui.damage.textContent = player.damage;
-    ui.pierce.textContent = player.pierce;
-    ui.multishot.textContent = player.multishot;
-    ui.hpFill.style.width = (player.hp/player.hpMax*100)+'%';
+    function draw(){
+      // Background track
+      ctx.fillStyle='#0b0f1a'; ctx.fillRect(0,0,W,H);
+      ctx.fillStyle='#111b33'; ctx.fillRect(W*0.1,0,W*0.8,H);
+      // Center stripes scrolling per lap progress
+      const stripeH=36, gap=64;
+      const scroll=((distance*0.25)% (stripeH+gap));
+      ctx.fillStyle='#d9dfff';
+      for(let y=-stripeH;y<H;y+=stripeH+gap){
+        ctx.fillRect(W*0.5-4, y+scroll, 8, stripeH);
+      }
+      // Lane dashed
+      ctx.setLineDash([12,12]); ctx.strokeStyle='#4e5f95'; ctx.lineWidth=3;
+      for(let i=1;i<3;i++){
+        const x=W*0.1+(W*0.8/3)*i;
+        ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke();
+      }
+      ctx.setLineDash([]);
 
-    if(player.hp<=0 && !state.gameover){
-      state.gameover=true; state.running=false; setTimeout(showGameOver, 150);
+      // Pit indicator
+      if((distance % lapDistance) < 80 && !inPit){
+        // pit open zone
+        ctx.fillStyle='rgba(250, 219, 120, 0.18)';
+        ctx.fillRect(0,0,W,26);
+        ctx.fillStyle='#ffd166';
+        ctx.font='700 14px system-ui';
+        ctx.fillText('PIT OPEN — press P to pit', 12,18);
+        pitReady=true;
+      } else {
+        pitReady=false;
+      }
+
+      // Rivals
+      for(const r of rivals){
+        carSprite(ctx, r.x, r.y, r.color);
+      }
+      // Player car
+      carSprite(ctx, getPlayerX(), H*0.75, '#ff3b6b');
+
+      // HUD overlay mini
+      ctx.fillStyle='rgba(0,0,0,.25)'; ctx.fillRect(8,H-68, W-16, 60);
+      ctx.fillStyle='#bcd0ff'; ctx.font='700 14px system-ui';
+      ctx.fillText(`Lap ${lap}/${plan.laps}  •  P${position}`, 16, H-46);
+      // ERS bar inline
+      ctx.fillStyle='#6fa8ff'; ctx.fillRect(16, H-36, (W-32)*battery, 8);
+      ctx.strokeStyle='#4a5a8e'; ctx.strokeRect(16, H-36, W-32, 8);
+      // Wear bar
+      ctx.fillStyle='#7af2ad'; ctx.fillRect(16, H-22, (W-32)*(1-tireWear), 6);
+      ctx.fillStyle='#ff7171'; ctx.fillRect(16+(W-32)*(1-tireWear), H-22, (W-32)*tireWear, 6);
+      ctx.strokeStyle='#4a5a8e'; ctx.strokeRect(16, H-22, W-32, 6);
+    }
+
+    function finishRace(retired){
+      // Simple points: P1 25, P2 18, P3 15, 12, 10, 8, 6, 4, 2, 1, else 0
+      const ptsTable=[25,18,15,12,10,8,6,4,2,1];
+      let pos = retired? 'DNF' : `P${position}`;
+      const pts = retired?0: (position<=10? ptsTable[position-1]:0);
+      const prize = retired? 200 : Math.max(200, (12-position)*250);
+      if(careerMode){
+        save.races++;
+        if(!retired){
+          save.points += pts;
+          if(position===1) save.wins++;
+        }
+        save.bank += prize;
+        writeSave();
+      }
+      showResults({ retired, position, pts, prize, tire: plan.tire, laps: plan.laps, pitted, circuit: plan.circuit.name, weather: plan.weather.name });
     }
   }
 
-  function killEnemy(i){
-    const e = enemies[i];
-    state.score += (e.type==='tank') ? 4 : (e.type==='runner' ? 1 : 2);
-    addBurst(e.x,e.y, 22);
-    if(Math.random() < 0.09) spawnPowerup(e.x,e.y);
-    enemies.splice(i,1); waves.alive--;
+  // ---------- Results ----------
+  function showResults(res){
+    render('tpl-results', ()=>{
+      const grid = document.getElementById('resultGrid');
+      grid.innerHTML = `
+        <div class="tile"><h3>Position</h3><p class="big">${res.retired? 'DNF' : 'P'+res.position}</p></div>
+        <div class="tile"><h3>Points</h3><p class="big">${res.pts}</p></div>
+        <div class="tile"><h3>Prize</h3><p class="big money">${fmtMoney(res.prize)}</p></div>
+        <div class="tile"><h3>Tire</h3><p class="big" style="font-size:28px">${res.tire.toUpperCase()}</p></div>
+        <div class="tile"><h3>Pitted</h3><p class="big">${res.pitted? 'Yes' : 'No'}</p></div>
+        <div class="tile"><h3>Circuit</h3><p class="big" style="font-size:22px">${res.circuit}</p></div>
+        <div class="tile"><h3>Weather</h3><p class="big" style="font-size:22px">${res.weather}</p></div>
+      `;
+      document.getElementById('payout').textContent = 'Career earnings and points are saved automatically.';
+      // Summary canvas
+      const cv = document.getElementById('summaryCanvas'), ctx = cv.getContext('2d');
+      ctx.fillStyle='#0b0f1a'; ctx.fillRect(0,0,cv.width,cv.height);
+      ctx.fillStyle='#121a2b'; ctx.fillRect(0,0,cv.width,cv.height);
+      // Simple celebratory banner
+      ctx.fillStyle='#1b284a'; ctx.fillRect(0,cv.height-90,cv.width,90);
+      ctx.fillStyle='#bcd0ff'; ctx.font='900 80px system-ui';
+      ctx.fillText(res.retired?'DNF':('P'+res.position), 24, 110);
+      ctx.fillStyle='#7af2ad'; ctx.font='700 24px system-ui';
+      ctx.fillText(res.circuit + ' • ' + res.weather, 24, 150);
+      // Trophy if podium
+      if(!res.retired && res.position<=3){
+        ctx.fillStyle=res.position===1?'#ffd166':(res.position===2?'#dfe3ee':'#c88a55');
+        ctx.fillRect(340, 60, 40, 80);
+        ctx.beginPath(); ctx.arc(360, 55, 18, 0, Math.PI*2); ctx.fill();
+      }
+
+      $ui.querySelector('[data-action="garage"]').onclick = ()=> openGarage();
+      $ui.querySelector('[data-action="menu"]').onclick = ()=> openMenu();
+      $ui.querySelector('[data-action="career"]').onclick = ()=> startCareerFlow();
+    });
   }
 
-  // ---------- Render ----------
-  function render(){
-    ctx.clearRect(0,0,W,H);
-    // subtle grid
-    ctx.save(); ctx.globalAlpha = 0.08; ctx.strokeStyle = '#1b2636'; ctx.lineWidth = 1;
-    for(let x=0;x<W;x+=40){ ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
-    for(let y=0;y<H;y+=40){ ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
-    ctx.restore();
-
-    // Particles
-    for(const p of particles){
-      const a = 1 - (p.t/p.life);
-      ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
-      const g = ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.r*4);
-      g.addColorStop(0, hexToRGBA(theme.hex, 0.45*a)); g.addColorStop(1, 'rgba(0,0,0,0)');
-      ctx.fillStyle = g; ctx.fill();
-    }
-
-    // Powerups
-    for(const pu of powerups){
-      const pul = (Math.sin(pu.t*0.01)+1)/2;
-      ctx.beginPath(); ctx.arc(pu.x,pu.y, pu.r + pul*2, 0, Math.PI*2);
-      let col = '#ffd166'; if(pu.kind==='firerate') col = '#24c8ff'; if(pu.kind==='damage') col = '#00ffa8';
-      ctx.fillStyle = col + 'cc'; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = '#ffffff22'; ctx.stroke();
-      ctx.fillStyle = '#001018'; ctx.font = 'bold 10px system-ui';
-      const map = { heal:'+', firerate:'⟲', damage:'✦' }; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(map[pu.kind]||'★', pu.x, pu.y+0.5);
-    }
-
-    // Enemies
-    for(const e of enemies){
-      ctx.save(); if(e.hitFlash>0){ ctx.shadowColor= (e.type==='tank') ? '#ff9f1c' : '#24c8ff'; ctx.shadowBlur=14; }
-      ctx.beginPath(); ctx.arc(e.x,e.y,e.r,0,Math.PI*2);
-      const base = (e.type==='tank') ? 'rgba(255,159,28,' : (e.type==='runner' ? 'rgba(36,200,255,' : 'rgba(255,93,125,');
-      const g = ctx.createRadialGradient(e.x,e.y,0,e.x,e.y,e.r*2.4);
-      g.addColorStop(0, base + '0.9)'); g.addColorStop(1, base + '0.15)'); ctx.fillStyle = g; ctx.fill(); ctx.restore();
-    }
-
-    // Boss
-    if(boss){
-      ctx.save();
-      ctx.beginPath(); ctx.arc(boss.x,boss.y,boss.r,0,Math.PI*2);
-      const gb = ctx.createRadialGradient(boss.x,boss.y,0,boss.x,boss.y,boss.r*2.6);
-      gb.addColorStop(0,'rgba(255,93,125,0.95)'); gb.addColorStop(1,'rgba(255,159,28,0.18)');
-      ctx.fillStyle = gb; ctx.shadowColor = '#ff5d7d'; ctx.shadowBlur = 24; ctx.fill();
-      ctx.restore();
-
-      // Telegraphs
-      if(waves.bossMode){
-        if(boss.phase===2 && boss.attackStep===0){
-          const a = Math.atan2(player.y - boss.y, player.x - boss.x);
-          ctx.save(); ctx.globalAlpha = 0.6; ctx.strokeStyle = '#ffd166aa'; ctx.lineWidth = 3;
-          ctx.beginPath(); ctx.moveTo(boss.x,boss.y); ctx.lineTo(boss.x + Math.cos(a)*1200, boss.y + Math.sin(a)*1200); ctx.stroke(); ctx.restore();
-        }
-        if(boss.phase===0){ ctx.save(); ctx.globalAlpha = 0.25; ctx.beginPath(); ctx.arc(boss.x,boss.y, boss.r + 24 + Math.sin(boss.tele*0.02)*6, 0, Math.PI*2); ctx.strokeStyle = '#ff5d7d'; ctx.lineWidth=4; ctx.stroke(); ctx.restore(); }
-      }
-    }
-
-    // Enemy bullets
-    ctx.save(); ctx.shadowColor = '#ff9f1c'; ctx.shadowBlur = 12;
-    for(const b of ebullets){ ctx.beginPath(); ctx.arc(b.x,b.y,b.r,0,Math.PI*2); ctx.fillStyle = '#ff9f1c'; ctx.fill(); }
-    ctx.restore();
-
-    // Player bullets (theme color)
-    ctx.save(); ctx.shadowColor = theme.hex; ctx.shadowBlur = 12;
-    for(const b of bullets){ ctx.beginPath(); ctx.arc(b.x,b.y,b.r,0,Math.PI*2); ctx.fillStyle = theme.hex; ctx.fill(); }
-    ctx.restore();
-
-    // Player (theme glow)
-    ctx.save();
-    if(player.dashIFrames>0){ ctx.globalAlpha = 0.8; ctx.shadowColor=theme.hex; ctx.shadowBlur=24; }
-    ctx.beginPath(); ctx.arc(player.x,player.y,player.r,0,Math.PI*2);
-    const gp = ctx.createRadialGradient(player.x,player.y,0, player.x,player.y,player.r*2.2);
-    gp.addColorStop(0,'#e8f7ff'); gp.addColorStop(1, hexToRGBA(theme.hex, 0.27));
-    ctx.fillStyle = gp; ctx.fill(); ctx.restore();
-
-    // Aim reticle (theme)
-    const mx = input.mx, my = input.my;
-    ctx.beginPath(); ctx.arc(mx,my,10,0,Math.PI*2);
-    ctx.strokeStyle = hexToRGBA(theme.hex, 0.4); ctx.lineWidth=2; ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(mx-14,my); ctx.lineTo(mx+14,my); ctx.moveTo(mx,my-14); ctx.lineTo(mx,my+14); ctx.stroke();
-  }
-
-  // ---------- Wheel on Home ----------
-  function setupWheel(){
-    const wheelCanvas = document.getElementById('wheel');
-    const wctx = wheelCanvas.getContext('2d');
-    const C = wheelCanvas.width, R = C/2, CX=R, CY=R;
-    const segs = THEMES.length, segAngle = Math.PI*2/segs;
-
-    let angle = 0, spinning=false;
-
-    function drawWheel(){
-      wctx.clearRect(0,0,C,C);
-      wctx.save();
-      wctx.translate(CX,CY);
-      wctx.rotate(angle);
-      for(let i=0;i<segs;i++){
-        const t = THEMES[i];
-        const a0 = i*segAngle, a1 = a0 + segAngle;
-        // slice
-        const grad = wctx.createRadialGradient(0,0,0,0,0,R);
-        grad.addColorStop(0, '#0b1118');
-        grad.addColorStop(1, t.hex+'');
-        wctx.beginPath();
-        wctx.moveTo(0,0);
-        wctx.arc(0,0,R-2, a0, a1);
-        wctx.closePath();
-        wctx.fillStyle = grad; wctx.fill();
-        wctx.strokeStyle = '#0e141b'; wctx.lineWidth = 2; wctx.stroke();
-
-        // label
-        const mid = (a0+a1)/2;
-        wctx.save();
-        wctx.rotate(mid);
-        wctx.translate(R*0.62, 0);
-        wctx.rotate(Math.PI/2);
-        wctx.fillStyle = '#001018';
-        wctx.font = 'bold 12px system-ui';
-        wctx.textAlign='center';
-        wctx.fillText(t.name, 0, 0);
-        wctx.restore();
-      }
-      wctx.restore();
-
-      // center cap
-      wctx.beginPath(); wctx.arc(CX,CY,26,0,Math.PI*2);
-      wctx.fillStyle = '#0b1118'; wctx.fill();
-      wctx.strokeStyle = '#1a2430'; wctx.stroke();
-    }
-
-    function spin(){
-      if(spinning) return;
-      spinning = true;
-      const idx = weightedPick(THEMES);
-      const targetSegCenter = (idx + 0.5) * segAngle;
-      const current = (angle % (Math.PI*2) + Math.PI*2)%(Math.PI*2);
-      let delta = targetSegCenter - current;
-      if(delta < 0) delta += Math.PI*2;
-      const spins = rnd(6,9) * Math.PI*2;
-      const targetAngle = angle + delta + spins;
-
-      const start = now(), dur = 4200;
-      (function anim(){
-        const t = (now() - start)/dur;
-        if(t>=1){
-          angle = targetAngle; spinning=false; onResult(idx);
-          drawWheel(); return;
-        }
-        const k = easeOutCubic(t);
-        angle = (1-k)*angle + k*targetAngle;
-        drawWheel();
-        requestAnimationFrame(anim);
-      })();
-    }
-
-    function onResult(idx){
-      theme = THEMES[idx];
-      localStorage.setItem('nh-theme', JSON.stringify(theme));
-      const badge = document.getElementById('themeBadge');
-      const rar = document.getElementById('themeRarity');
-      badge.textContent = `${theme.name} — `;
-      rar.textContent = theme.rarity;
-      rar.style.color = rarityColors[theme.rarity] || '#9db5c4';
-      badge.appendChild(rar);
-      showToast(`Theme unlocked: ${theme.name} (${theme.rarity})`);
-    }
-
-    drawWheel();
-    document.getElementById('spinBtn').onclick = spin;
-    document.getElementById('startBtn').onclick = startGame;
+  // ---------- Menu ----------
+  function openMenu(){
+    render('tpl-menu', ()=>{
+      drawPreview();
+      $ui.querySelector('[data-action="career"]').onclick = ()=> startCareerFlow();
+      $ui.querySelector('[data-action="quick"]').onclick = ()=> quickRace();
+      $ui.querySelector('[data-action="garage"]').onclick = ()=> openGarage();
+    });
   }
 
   // ---------- Boot ----------
-  showHome();
-
+  openMenu();
 })();
 </script>
 </body>
