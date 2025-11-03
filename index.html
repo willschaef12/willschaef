@@ -1,76 +1,483 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Simple Dictionary</title>
-    <style>
-      :root{
-        --bg:#0b0f1a; --panel:#121a2b; --accent:#ff2d55; --text:#e9f0ff; --muted:#9bb0ff;
-      }
-      *{box-sizing:border-box}
-      html,body{height:100%;margin:0;background:radial-gradient(1200px 600px at 50% 0%, #121a2b 0%, #0b0f1a 60%, #05070c 100%);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Arial}
-      .wrap{min-height:100%;display:grid;place-items:center;padding:20px}
-      .card{width:min(760px,95vw);background:linear-gradient(180deg,#151e33 0%, #0f1530 100%);border:1px solid #1d2a4d;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.5);padding:20px}
-      h1{margin:0 0 12px;font-size:26px;letter-spacing:.3px}
-      p.muted{color:#a9b4d9;margin:6px 0 18px}
-      .row{display:flex;gap:10px}
-      input[type=text]{flex:1;padding:12px 14px;border-radius:10px;border:1px solid #26356a;background:#0f1730;color:#e9f0ff;font-size:16px;outline:none}
-      button{background:linear-gradient(180deg,#ff3b6b,#ff0f4d);border:none;color:white;padding:12px 16px;border-radius:10px;font-weight:700;letter-spacing:.3px;cursor:pointer;box-shadow:0 6px 18px rgba(255,45,85,.35);transition:.15s transform}
-      button:hover{transform:translateY(-1px)}
-      .result{margin-top:16px;padding:14px;border:1px solid #253464;border-radius:12px;background:#0f1730;min-height:64px}
-      .word{font-weight:800;letter-spacing:.5px}
-      .loading{opacity:.8;font-style:italic}
-      footer{opacity:.7;font-size:12px;margin-top:10px}
-      a{color:#ff7aa1}
-    </style>
-  </head>
-  <body>
-    <div class="wrap">
-      <div class="card">
-        <h1>Simple Dictionary</h1>
-        <p class="muted">Type a word to get a short, easy-to-understand definition.</p>
-        <div class="row">
-          <input id="wordInput" type="text" placeholder="Enter a word..." autocomplete="off" />
-          <button id="defineBtn">Define</button>
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Level Helper — Finish Any Level</title>
+<meta name="description" content="Type a video game and level, get a step-by-step guide to finish it." />
+<style>
+  :root{
+    --bg:#0b1020; --panel:#121a2f; --muted:#a4b1d3; --text:#e9eeff; --accent:#6ad1ff;
+    --ok:#32d583; --warn:#facc15; --bad:#ef4444; --ink:#0d1327; --edge:#243165;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;background:radial-gradient(1200px 700px at 50% -10%, #1a2244 0%, #0b1020 60%, #060914 100%);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Arial}
+  a{color:var(--accent);text-decoration:none}
+  .wrap{max-width:1100px;margin:0 auto;padding:24px}
+  header{display:flex;gap:16px;align-items:center;justify-content:space-between;margin-bottom:18px}
+  .brand{display:flex;gap:12px;align-items:center}
+  .logo{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#60a5fa,#22d3ee);box-shadow:0 6px 20px rgba(34,211,238,.35)}
+  h1{font-size:22px;margin:0}
+  .tag{font-size:12px;color:var(--muted)}
+
+  .search{display:grid;grid-template-columns:1.2fr 1fr auto;gap:10px;background:rgba(255,255,255,.04);padding:12px;border-radius:14px;border:1px solid rgba(255,255,255,.07)}
+  input,textarea,select{background:#0c1330;border:1px solid var(--edge);color:var(--text);padding:10px 12px;border-radius:10px;outline:none}
+  input:focus,textarea:focus,select:focus{border-color:#4f63c6;box-shadow:0 0 0 3px rgba(106,209,255,.15)}
+  button{background:linear-gradient(180deg,#6ad1ff,#4aa8ff);color:#082032;border:0;padding:10px 14px;border-radius:12px;font-weight:700;cursor:pointer}
+  button.ghost{background:transparent;border:1px solid #2a376a;color:var(--text)}
+  button.warn{background:linear-gradient(180deg,#facc15,#f59e0b);color:#1a1300}
+  button.danger{background:linear-gradient(180deg,#ef4444,#f87171);color:#2b0606}
+  .grid{display:grid;grid-template-columns: 1.1fr .9fr;gap:14px;margin-top:16px}
+  .card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:14px}
+  .card h2{font-size:16px;margin:0 0 10px 0;color:#dbe5ff}
+  .meta{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 14px 0}
+  .pill{background:#0b1438;border:1px solid #29356c;color:#bcd1ff;padding:6px 10px;border-radius:999px;font-size:12px}
+  .empty{opacity:.7;font-style:italic}
+
+  .steps{display:flex;flex-direction:column;gap:8px}
+  .step{display:flex;gap:10px;align-items:flex-start;padding:10px;border-radius:12px;border:1px solid rgba(255,255,255,.08);background:#0a1333}
+  .step input[type="checkbox"]{margin-top:2px}
+  .step label{line-height:1.35}
+  .controls{display:flex;gap:8px;flex-wrap:wrap}
+  .progress{height:10px;background:#0c173d;border:1px solid #243165;border-radius:999px;overflow:hidden}
+  .progress > i{display:block;height:100%;width:0%;background:linear-gradient(90deg,#4aa8ff,#6ad1ff)}
+
+  .rightcol .card + .card{margin-top:14px}
+  .tips li{margin:6px 0}
+  .small{font-size:12px;color:var(--muted)}
+
+  .row{display:flex;gap:8px;flex-wrap:wrap}
+  .row > *{flex:1}
+  .row .tight{flex:0}
+
+  .footer{margin-top:18px;display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:12px}
+
+  dialog{border:1px solid #2b3c76;border-radius:16px;background:#0b1333;color:var(--text);width:min(800px,92vw);padding:0}
+  dialog header{padding:14px 16px;border-bottom:1px solid #253166}
+  dialog .content{padding:14px 16px}
+  dialog .actions{display:flex;justify-content:flex-end;gap:10px;padding:12px 16px;border-top:1px solid #253166}
+  dialog::backdrop{background:rgba(0,10,30,.6)}
+
+  .kbd{background:#111a3a;padding:2px 6px;border-radius:6px;border:1px solid #2a376a;font-size:12px}
+  .hl{color:#9fe2ff}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <div>
+          <h1>Level Helper</h1>
+          <div class="tag">Type a game + level. Get a step-by-step plan.</div>
         </div>
-        <div id="result" class="result"></div>
-        <footer>
-          Tip: Press Enter to define. API key is stored securely in Azure Static Web Apps application settings.
-        </footer>
       </div>
+      <div class="row tight">
+        <button id="btn-export" class="ghost" title="Export all guides as JSON">Export</button>
+        <button id="btn-import" class="ghost" title="Import guides from JSON">Import</button>
+        <button id="btn-new" title="Create or edit a guide">New / Edit</button>
+      </div>
+    </header>
+
+    <div class="search">
+      <input id="game" placeholder="Game (e.g., Elden Ring)" aria-label="Game" />
+      <input id="level" placeholder="Level, quest, mission… (e.g., Stormveil Castle)" aria-label="Level" />
+      <button id="go">Get Guide</button>
     </div>
 
-    <script>
-      const $input = document.getElementById('wordInput');
-      const $btn = document.getElementById('defineBtn');
-      const $result = document.getElementById('result');
+    <div class="grid">
+      <section class="card" id="guide-card">
+        <div class="meta">
+          <span class="pill" id="title-pill">Guide</span>
+          <span class="pill" id="count-pill">0 steps</span>
+          <span class="pill" id="progress-pill">0% complete</span>
+        </div>
+        <div class="progress" aria-label="Progress">
+          <i id="progressbar" style="width:0%"></i>
+        </div>
+        <div id="steps" class="steps" style="margin-top:12px"></div>
+        <div id="empty" class="empty" style="display:none;margin-top:10px">No guide found yet. Try typing a game and level above, or click <span class="hl">New / Edit</span> to create one.</div>
+        <div class="controls" style="margin-top:12px">
+          <button id="btn-reset" class="ghost">Reset progress</button>
+          <button id="btn-share" class="ghost">Share link</button>
+        </div>
+      </section>
 
-      function show(msg, asLoading=false){
-        $result.textContent = msg;
-        $result.classList.toggle('loading', !!asLoading);
-      }
+      <aside class="rightcol">
+        <section class="card">
+          <h2>Tips & Notes</h2>
+          <ul id="tips" class="tips"></ul>
+          <div id="notips" class="empty">No tips yet.</div>
+        </section>
+        <section class="card" id="boss-card">
+          <h2>Boss / Final Challenge</h2>
+          <div id="boss-wrap"></div>
+          <div id="noboss" class="empty">No boss for this level.</div>
+        </section>
+        <section class="card">
+          <h2>Tools</h2>
+          <div class="row">
+            <button id="btn-timer" class="ghost">Start Timer</button>
+            <button id="btn-timer-reset" class="ghost">Clear</button>
+          </div>
+          <div style="margin-top:8px"><span class="small">Timer:</span> <span id="timer" class="hl">00:00</span></div>
+        </section>
+      </aside>
+    </div>
 
-      async function defineWord(){
-        const word = ($input.value || '').trim();
-        if(!word){ show('Please enter a word.'); return; }
-        show('Thinking…', true);
-        try{
-          const r = await fetch(`/api/define?word=${encodeURIComponent(word)}`);
-          const data = await r.json();
-          if(!r.ok){ throw new Error(data?.error || 'Error from API'); }
-          show(`${data.word}: ${data.definition}`);
-        }catch(err){
-          show(`Sorry, something went wrong. ${err.message || ''}`.trim());
-        }
-      }
+    <div class="footer">
+      <div>Pro tip: press <span class="kbd">Enter</span> in the level box to search quickly.</div>
+      <div>Data saves to your browser (localStorage). No account required.</div>
+    </div>
+  </div>
 
-      $btn.addEventListener('click', defineWord);
-      $input.addEventListener('keydown', (e)=>{
-        if(e.key === 'Enter') defineWord();
-      });
-      $input.focus();
-    </script>
-  </body>
+  <!-- Create / Edit dialog -->
+  <dialog id="editor">
+    <header>
+      <strong>Create or Edit Guide</strong>
+    </header>
+    <div class="content">
+      <div class="row">
+        <input id="e-game" placeholder="Game (exact name)" />
+        <input id="e-level" placeholder="Level / Quest / Mission (exact)" />
+      </div>
+      <div class="row" style="margin-top:8px">
+        <textarea id="e-steps" rows="8" placeholder="Steps — one per line"></textarea>
+      </div>
+      <div class="row" style="margin-top:8px">
+        <textarea id="e-tips" rows="4" placeholder="Tips — one per line (optional)"></textarea>
+      </div>
+      <details style="margin-top:8px">
+        <summary>Boss / Final Challenge (optional)</summary>
+        <div class="row" style="margin-top:8px">
+          <input id="e-boss-name" placeholder="Boss name" />
+          <input id="e-boss-hp" placeholder="HP (number)" />
+        </div>
+        <textarea id="e-boss-phases" rows="4" placeholder="Boss phases — one per line (optional)" style="margin-top:8px;width:100%"></textarea>
+      </details>
+    </div>
+    <div class="actions">
+      <button id="e-cancel" class="ghost">Cancel</button>
+      <button id="e-save">Save Guide</button>
+    </div>
+  </dialog>
+
+  <input id="file" type="file" accept="application/json" hidden />
+  <textarea id="scratch" hidden></textarea>
+
+<script>
+// ===== Utilities =====
+const $ = sel => document.querySelector(sel);
+const $$ = sel => Array.from(document.querySelectorAll(sel));
+const slug = s => s.toLowerCase().trim().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'');
+const keyFor = (game, level) => `${slug(game)}__${slug(level)}`;
+const readLines = t => t.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+const copy = async txt => { try{ await navigator.clipboard.writeText(txt); alert('Link copied to clipboard'); }catch{ prompt('Copy this link:', txt); } };
+
+// ===== Data =====
+const LS_GUIDES = 'levelhelper.guides.v1';
+const LS_PROGRESS = 'levelhelper.progress.v1';
+
+const demoGuides = {
+  [keyFor('Elden Ring','Stormveil Castle')]: {
+    game:'Elden Ring', level:'Stormveil Castle',
+    steps:[
+      'From the Gatefront, take the cliffside path and speak to Gatekeeper Gostoc.',
+      'Use the side entrance; sneak past the first patrol and backstab the knight.',
+      'Climb the ladder near the birds; loot the throwing knives for the next rooftop section.',
+      'Activate the Rampart Tower Site of Grace.',
+      'Take the lift down, open the shortcut door back to the courtyard.',
+      'Prepare for Margit: craft Fire Grease, equip a 100% physical shield.',
+      'Boss: Margit — learn the delayed combos; roll late; punish after his glowing dagger toss.'
+    ],
+    tips:[
+      'Stance-break with charged heavies to get ripostes.',
+      'Summon Spirit Ashes if struggling; Lone Wolves help vs Margit.',
+      'Fire Grease boosts damage vs many enemies here.'
+    ],
+    boss:{ name:'Margit, the Fell Omen', hp: 4300, phases:['Opener dagger toss','Slow staff sweeps','Hammer phase (glowing)'] }
+  },
+  [keyFor('Super Mario Odyssey','Cascade Kingdom')]: {
+    game:'Super Mario Odyssey', level:'Cascade Kingdom',
+    steps:[
+      'Capture Chain Chomp to break the Big Rock and reveal the first Power Moon.',
+      'Follow the waterfall path, use Triple Jump to reach the high ledge.',
+      'Fight Madame Broode using Chain Chomp — pull back, release to hit.',
+      'Collect enough Power Moons to repair the Odyssey.'
+    ],
+    tips:['Ground Pound on fossils for coins','Use cap throw + dive for distance'],
+    boss:{ name:'Madame Broode', hp: 3, phases:['Chain Chomp control','Avoid her charge','Final hit'] }
+  },
+  [keyFor('Fortnite','First Victory Royale')]: {
+    game:'Fortnite', level:'First Victory Royale',
+    steps:[
+      'Hot-drop? Don\'t. Land at a quieter POI near the second circle.',
+      'Grab an AR + shotgun; carry at least 2 heals.',
+      'Third-party fights: wait 3–5 seconds after shots stop, then push.',
+      'Late game: play cover-to-cover, crouch-walk, and pre-aim corners.',
+      'Final 1v1: build a right-hand-peek or use natural cover; strafe unpredictably.'
+    ],
+    tips:['Prioritize positional advantage over kills','Keep high ground when safe','Upgrade weapons at benches when possible']
+  }
+};
+
+function loadGuides(){
+  try{ return JSON.parse(localStorage.getItem(LS_GUIDES)) || {...demoGuides}; }
+  catch{ return {...demoGuides}; }
+}
+function saveGuides(data){ localStorage.setItem(LS_GUIDES, JSON.stringify(data)); }
+function loadProgress(){ try{ return JSON.parse(localStorage.getItem(LS_PROGRESS)) || {}; } catch{ return {}; } }
+function saveProgress(p){ localStorage.setItem(LS_PROGRESS, JSON.stringify(p)); }
+
+let GUIDES = loadGuides();
+let PROGRESS = loadProgress();
+
+// ===== Rendering =====
+function renderGuide(guide){
+  const stepsEl = $('#steps');
+  stepsEl.innerHTML = '';
+  if(!guide){
+    $('#title-pill').textContent = 'Guide';
+    $('#count-pill').textContent = '0 steps';
+    $('#progress-pill').textContent = '0% complete';
+    $('#progressbar').style.width = '0%';
+    $('#tips').innerHTML = '';
+    $('#notips').style.display = 'block';
+    $('#noboss').style.display = 'block';
+    $('#boss-wrap').innerHTML = '';
+    $('#empty').style.display = 'block';
+    return;
+  }
+  $('#empty').style.display = 'none';
+  const k = keyFor(guide.game, guide.level);
+  const checked = new Set(PROGRESS[k]||[]);
+
+  $('#title-pill').textContent = `${guide.game} • ${guide.level}`;
+  $('#count-pill').textContent = `${guide.steps.length} step${guide.steps.length!==1?'s':''}`;
+
+  guide.steps.forEach((text, idx)=>{
+    const row = document.createElement('div');
+    row.className = 'step';
+    const id = `step-${idx}`;
+    row.innerHTML = `
+      <input type="checkbox" id="${id}" ${checked.has(idx)?'checked':''} />
+      <label for="${id}">${escapeHtml(text)}</label>
+    `;
+    const box = row.querySelector('input');
+    box.addEventListener('change', ()=>{
+      if(box.checked) checked.add(idx); else checked.delete(idx);
+      PROGRESS[k] = Array.from(checked);
+      saveProgress(PROGRESS);
+      updateProgress(guide, checked);
+    });
+    stepsEl.appendChild(row);
+  });
+  updateProgress(guide, checked);
+
+  // Tips
+  const tips = guide.tips||[];
+  const tipsEl = $('#tips');
+  tipsEl.innerHTML = tips.map(t=>`<li>${escapeHtml(t)}</li>`).join('');
+  $('#notips').style.display = tips.length? 'none':'block';
+
+  // Boss
+  const b = guide.boss;
+  const noboss = $('#noboss');
+  const wrap = $('#boss-wrap');
+  wrap.innerHTML = '';
+  if(b && (b.name || b.phases?.length || b.hp)){
+    noboss.style.display = 'none';
+    const hp = Number(b.hp)||0;
+    const el = document.createElement('div');
+    el.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
+        <div><strong>${escapeHtml(b.name||'Boss')}</strong> ${hp?`<span class="small">(${hp} HP)</span>`:''}</div>
+        <div class="row tight">
+          <button class="ghost" id="boss-hit">- Hit</button>
+          <button class="ghost" id="boss-heal">+ Heal</button>
+          <button class="ghost" id="boss-reset">Reset</button>
+        </div>
+      </div>
+      <div class="progress" style="margin-top:8px"><i id="bossbar" style="width:${hp?100:0}%"></i></div>
+      ${ (b.phases?.length? `<ol style="margin-top:8px">${b.phases.map(p=>`<li>${escapeHtml(p)}</li>`).join('')}</ol>` : '') }
+    `;
+    wrap.appendChild(el);
+    let hpNow = hp;
+    const setW = () => { const pct = hp? Math.max(0, Math.min(100, (hpNow/hp)*100)) : 0; $('#bossbar').style.width = pct+'%'; };
+    $('#boss-hit').onclick = ()=>{ if(hp){ hpNow=Math.max(0,hpNow-Math.ceil(hp*0.1)); setW(); } };
+    $('#boss-heal').onclick = ()=>{ if(hp){ hpNow=Math.min(hp,hpNow+Math.ceil(hp*0.1)); setW(); } };
+    $('#boss-reset').onclick = ()=>{ hpNow=hp; setW(); };
+  } else {
+    noboss.style.display = 'block';
+  }
+}
+
+function updateProgress(guide, checkedSet){
+  const done = checkedSet.size;
+  const total = guide.steps.length||1;
+  const pct = Math.round((done/total)*100);
+  $('#progressbar').style.width = pct + '%';
+  $('#progress-pill').textContent = `${pct}% complete`;
+}
+
+function escapeHtml(s){
+  return s.replace(/[&<>"]+/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]));
+}
+
+// ===== Search & Routing =====
+function findGuide(game, level){
+  // exact match first
+  const k = keyFor(game,level);
+  if(GUIDES[k]) return GUIDES[k];
+  // soft match (startsWith on slug)
+  const gslug = slug(game), lslug = slug(level);
+  const hit = Object.values(GUIDES).find(g=> slug(g.game).startsWith(gslug) && slug(g.level).startsWith(lslug));
+  return hit || null;
+}
+
+async function generateGuide(game, level){
+  const empty = $('#empty');
+  empty.style.display = 'block';
+  empty.textContent = 'Generating guide with AI…';
+  try{
+    const res = await fetch('/api/guide', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ game, level })
+    });
+    const data = await res.json().catch(()=>({ error:'Invalid server response' }));
+    if(!res.ok) throw new Error(data?.error || 'Failed to generate');
+    const k = keyFor(data.game || game, data.level || level);
+    GUIDES[k] = {
+      game: data.game || game,
+      level: data.level || level,
+      steps: Array.isArray(data.steps)? data.steps: [],
+      tips: Array.isArray(data.tips)? data.tips: undefined,
+      boss: data.boss && (data.boss.name || data.boss.hp || (data.boss.phases&&data.boss.phases.length)) ? data.boss : undefined
+    };
+    saveGuides(GUIDES);
+    empty.style.display = 'none';
+    renderGuide(GUIDES[k]);
+  }catch(err){
+    empty.style.display = 'block';
+    empty.textContent = 'Could not generate guide. ' + (err?.message || 'Please try again.');
+  }
+}
+
+function routeFromHash(){
+  const h = location.hash.slice(1);
+  if(!h) return;
+  try{
+    const obj = JSON.parse(decodeURIComponent(h));
+    if(obj.g && obj.l){
+      $('#game').value = obj.g; $('#level').value = obj.l;
+      const guide = findGuide(obj.g, obj.l);
+      if(!guide) generateGuide(obj.g, obj.l); else renderGuide(guide);
+    }
+  }catch{}
+}
+
+function shareCurrent(){
+  const g = $('#game').value.trim();
+  const l = $('#level').value.trim();
+  if(!g||!l){ alert('Enter game and level first.'); return; }
+  const link = location.origin + location.pathname + '#'+encodeURIComponent(JSON.stringify({g,l}));
+  copy(link);
+}
+
+// ===== Editor =====
+function openEditor(prefill){
+  $('#e-game').value = prefill?.game || $('#game').value.trim();
+  $('#e-level').value = prefill?.level || $('#level').value.trim();
+  $('#e-steps').value = (prefill?.steps||[]).join('\n');
+  $('#e-tips').value = (prefill?.tips||[]).join('\n');
+  $('#e-boss-name').value = prefill?.boss?.name || '';
+  $('#e-boss-hp').value = prefill?.boss?.hp || '';
+  $('#e-boss-phases').value = (prefill?.boss?.phases||[]).join('\n');
+  $('#editor').showModal();
+}
+
+function saveEditor(){
+  const game = $('#e-game').value.trim();
+  const level = $('#e-level').value.trim();
+  if(!game || !level){ alert('Game and Level are required.'); return; }
+  const steps = readLines($('#e-steps').value);
+  if(!steps.length){ alert('Add at least one step.'); return; }
+  const tips = readLines($('#e-tips').value);
+  const bname = $('#e-boss-name').value.trim();
+  const bhp = Number($('#e-boss-hp').value.trim());
+  const phases = readLines($('#e-boss-phases').value);
+  const boss = (bname||bhp||phases.length)? { name:bname||undefined, hp:isNaN(bhp)?undefined:bhp, phases:phases.length?phases:undefined } : undefined;
+  const k = keyFor(game, level);
+  GUIDES[k] = { game, level, steps, tips: tips.length?tips:undefined, boss };
+  saveGuides(GUIDES);
+  $('#editor').close();
+  $('#game').value = game; $('#level').value = level;
+  renderGuide(GUIDES[k]);
+}
+
+// ===== Import / Export =====
+function exportGuides(){
+  const blob = new Blob([JSON.stringify(GUIDES,null,2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = Object.assign(document.createElement('a'),{href:url,download:'level-helper-guides.json'});
+  document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+}
+
+function importGuides(file){
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    try{
+      const data = JSON.parse(reader.result);
+      if(typeof data !== 'object' || Array.isArray(data)) throw new Error('Invalid JSON');
+      GUIDES = data; saveGuides(GUIDES);
+      alert('Imported guides successfully.');
+      const g = $('#game').value.trim(), l = $('#level').value.trim();
+      if(g&&l) renderGuide(findGuide(g,l)); else renderGuide(null);
+    }catch(e){ alert('Import failed: '+e.message); }
+  };
+  reader.readAsText(file);
+}
+
+// ===== Timer =====
+let timerInt = null; let timerSec = 0;
+function fmt(n){ return n.toString().padStart(2,'0'); }
+function tick(){ timerSec++; const m=Math.floor(timerSec/60), s=timerSec%60; $('#timer').textContent = `${fmt(m)}:${fmt(s)}`; }
+function startTimer(){ if(timerInt) return; timerInt = setInterval(tick, 1000); }
+function clearTimer(){ if(timerInt){ clearInterval(timerInt); timerInt=null; } timerSec=0; $('#timer').textContent='00:00'; }
+
+// ===== Events =====
+$('#go').addEventListener('click', ()=>{
+  const g=$('#game').value.trim(); const l=$('#level').value.trim();
+  const guide = findGuide(g,l);
+  if(!guide){ generateGuide(g,l); return; }
+  renderGuide(guide);
+});
+$('#level').addEventListener('keydown', e=>{ if(e.key==='Enter') $('#go').click(); });
+$('#btn-reset').addEventListener('click', ()=>{
+  const g=$('#game').value.trim(); const l=$('#level').value.trim(); if(!g||!l) return;
+  const k = keyFor(g,l); delete PROGRESS[k]; saveProgress(PROGRESS);
+  const guide = findGuide(g,l); renderGuide(guide);
+});
+$('#btn-share').addEventListener('click', shareCurrent);
+
+$('#btn-new').addEventListener('click', ()=>{
+  const g=$('#game').value.trim(); const l=$('#level').value.trim();
+  openEditor(findGuide(g,l)||{game:g,level:l,steps:[]});
+});
+$('#e-save').addEventListener('click', saveEditor);
+$('#e-cancel').addEventListener('click', ()=>$('#editor').close());
+
+$('#btn-export').addEventListener('click', exportGuides);
+$('#btn-import').addEventListener('click', ()=> $('#file').click());
+$('#file').addEventListener('change', e=>{ const f=e.target.files[0]; if(f) importGuides(f); e.target.value=''; });
+
+$('#btn-timer').addEventListener('click', startTimer);
+$('#btn-timer-reset').addEventListener('click', clearTimer);
+
+window.addEventListener('hashchange', routeFromHash);
+routeFromHash();
+renderGuide(null);
+</script>
+</body>
 </html>
-
