@@ -1,904 +1,773 @@
-<!DOCTYPE html>
+﻿<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Detective Case Files</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Card & Comic Values</title>
   <style>
-    :root {
-      --bg: #050612;
-      --panel: #131525;
-      --accent: #ff3b6b;
-      --accent-soft: rgba(255,59,107,0.12);
-      --text: #f5f5ff;
-      --muted: #9ca3c7;
-      --good: #3ddc8d;
-      --bad: #ff6666;
+    :root{
+      --bg:#0b0f17;
+      --card:#121a27;
+      --muted:#91a4c7;
+      --text:#eaf0ff;
+      --accent:#5eead4;
+      --accent2:#60a5fa;
+      --danger:#fb7185;
+      --border:rgba(255,255,255,.08);
     }
-
-    * { box-sizing: border-box; }
-
-    body {
-      margin: 0;
-      min-height: 100vh;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-      background:
-        radial-gradient(circle at top, #222546 0, transparent 50%),
-        radial-gradient(circle at bottom, #090a18 0, #02030a 70%);
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      background: radial-gradient(900px 600px at 20% 10%, rgba(96,165,250,.18), transparent 60%),
+                  radial-gradient(900px 600px at 80% 0%, rgba(94,234,212,.14), transparent 55%),
+                  var(--bg);
+      color:var(--text);
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:24px;
+    }
+    .app{
+      width:min(980px, 100%);
+      border:1px solid var(--border);
+      background: linear-gradient(180deg, rgba(255,255,255,.03), transparent 40%), var(--card);
+      border-radius:18px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.45);
+      overflow:hidden;
+    }
+    header{
+      padding:18px 20px;
+      border-bottom:1px solid var(--border);
+      display:flex;
+      gap:12px;
+      align-items:center;
+      justify-content:space-between;
+    }
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      font-weight:800;
+      letter-spacing:.2px;
+    }
+    .dot{
+      width:10px;height:10px;border-radius:50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      box-shadow:0 0 18px rgba(94,234,212,.35);
+    }
+    .sub{
+      color:var(--muted);
+      font-weight:600;
+      font-size:13px;
+    }
+    main{ padding:20px; }
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:14px;
+    }
+    @media (min-width: 860px){
+      .grid{ grid-template-columns: 1.1fr .9fr; }
+    }
+    .panel{
+      border:1px solid var(--border);
+      border-radius:16px;
+      background: rgba(0,0,0,.14);
+      padding:16px;
+    }
+    .panel h2{
+      margin:0 0 4px;
+      font-size:18px;
+    }
+    .panel p{
+      margin:0 0 14px;
+      color:var(--muted);
+      line-height:1.35;
+      font-size:14px;
+    }
+    .steps{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin: 10px 0 0;
+    }
+    .chip{
+      border:1px solid var(--border);
+      color:var(--muted);
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:700;
+    }
+    .chip.on{
+      color:var(--text);
+      border-color: rgba(94,234,212,.35);
+      background: rgba(94,234,212,.08);
+    }
+    .actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:12px;
+    }
+    button{
+      appearance:none;
+      border:1px solid var(--border);
+      color:var(--text);
+      background: rgba(255,255,255,.04);
+      padding:10px 12px;
+      border-radius:12px;
+      font-weight:800;
+      cursor:pointer;
+      transition: transform .08s ease, border-color .2s ease, background .2s ease;
+    }
+    button:hover{ border-color: rgba(96,165,250,.45); }
+    button:active{ transform: translateY(1px); }
+    button.primary{
+      border-color: rgba(94,234,212,.45);
+      background: linear-gradient(135deg, rgba(94,234,212,.18), rgba(96,165,250,.12));
+    }
+    button.danger{
+      border-color: rgba(251,113,133,.55);
+      background: rgba(251,113,133,.08);
+    }
+    .row{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:10px;
+      margin-top:10px;
+    }
+    @media (min-width: 560px){
+      .row.two{ grid-template-columns: 1fr 1fr; }
+    }
+    label{
+      display:block;
+      font-size:12px;
+      color:var(--muted);
+      font-weight:800;
+      margin: 2px 0 6px;
+    }
+    input, select{
+      width:100%;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid var(--border);
+      background: rgba(0,0,0,.25);
       color: var(--text);
-      display: flex;
-      justify-content: center;
-      padding: 16px;
+      outline:none;
+      font-weight:700;
     }
-
-    .game-shell {
-      width: 100%;
-      max-width: 1100px;
-      background: linear-gradient(135deg, rgba(255,255,255,0.03), transparent);
-      border-radius: 18px;
-      border: 1px solid rgba(255,255,255,0.06);
-      box-shadow: 0 18px 45px rgba(0,0,0,0.6);
-      padding: 16px 18px 18px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
+    input:focus, select:focus{
+      border-color: rgba(94,234,212,.45);
+      box-shadow: 0 0 0 3px rgba(94,234,212,.10);
     }
-
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-      padding-bottom: 8px;
-      border-bottom: 1px solid rgba(255,255,255,0.06);
+    .hint{
+      margin-top:8px;
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.35;
     }
-
-    .title-block h1 {
-      margin: 0;
-      font-size: 1.5rem;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
+    .resultCard{
+      border:1px solid var(--border);
+      border-radius:16px;
+      padding:14px;
+      background: rgba(0,0,0,.18);
+      display:grid;
+      gap:10px;
     }
-
-    .title-block p {
-      margin: 2px 0 0;
-      font-size: 0.8rem;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.16em;
+    .resultTop{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:10px;
     }
-
-    .stats {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      justify-content: flex-end;
-      font-size: 0.8rem;
+    .title{
+      font-weight:900;
+      font-size:14px;
+      line-height:1.25;
     }
-
-    .pill {
-      padding: 4px 9px;
-      border-radius: 999px;
-      background: rgba(0,0,0,0.35);
-      border: 1px solid rgba(255,255,255,0.08);
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      white-space: nowrap;
+    .meta{
+      color:var(--muted);
+      font-size:12px;
+      font-weight:700;
+      line-height:1.35;
     }
-
-    .pill-label {
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      color: var(--muted);
-      font-size: 0.7rem;
+    .price{
+      font-weight:950;
+      font-size:18px;
+      white-space:nowrap;
     }
-
-    .pill-value {
-      font-weight: 600;
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      color:var(--muted);
+      font-size:12px;
+      font-weight:800;
+      width:fit-content;
     }
-
-    .pill-value.good { color: var(--good); }
-    .pill-value.bad { color: var(--bad); }
-
-    main {
-      display: grid;
-      grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
-      gap: 12px;
+    .pill.good{ border-color: rgba(94,234,212,.45); color: var(--text); background: rgba(94,234,212,.08); }
+    .pill.bad{ border-color: rgba(251,113,133,.55); color: var(--text); background: rgba(251,113,133,.08); }
+    a{
+      color: var(--accent2);
+      text-decoration:none;
+      font-weight:900;
     }
-
-    @media (max-width: 850px) {
-      main {
-        grid-template-columns: 1fr;
-      }
+    a:hover{ text-decoration:underline; }
+    .small{
+      font-size:12px;
+      color:var(--muted);
+      font-weight:700;
     }
-
-    .panel {
-      background: radial-gradient(circle at top left, var(--accent-soft), transparent 60%);
-      border-radius: 14px;
-      border: 1px solid rgba(255,255,255,0.06);
-      padding: 10px 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      min-height: 0;
+    .divider{
+      height:1px;
+      background: var(--border);
+      margin:12px 0;
     }
-
-    .panel h2 {
-      margin: 0;
-      font-size: 0.95rem;
-      text-transform: uppercase;
-      letter-spacing: 0.14em;
-      color: var(--muted);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .sub {
-      font-size: 0.75rem;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-    }
-
-    .section-row {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .btn {
-      padding: 7px 10px;
-      border-radius: 10px;
-      border: 1px solid rgba(255,255,255,0.12);
-      background: rgba(0,0,0,0.45);
+    .toast{
+      display:none;
+      margin-top:10px;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid rgba(251,113,133,.55);
+      background: rgba(251,113,133,.08);
       color: var(--text);
-      font-size: 0.8rem;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
+      font-weight:800;
+      font-size:13px;
     }
-
-    .btn.small {
-      padding: 5px 8px;
-      font-size: 0.72rem;
-    }
-
-    .btn.primary {
-      background: linear-gradient(135deg, var(--accent), #ff7b91);
-      border-color: rgba(255,255,255,0.2);
-      color: #0b0710;
-      font-weight: 600;
-    }
-
-    .btn[disabled] {
-      opacity: 0.4;
-      cursor: not-allowed;
-    }
-
-    .btn:hover:not([disabled]) {
-      transform: translateY(-1px);
-      box-shadow: 0 6px 12px rgba(0,0,0,0.5);
-    }
-
-    .crime-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-      gap: 8px;
-      margin-top: 4px;
-    }
-
-    .location-btn {
-      position: relative;
-      overflow: hidden;
-    }
-
-    .location-btn span {
-      font-weight: 500;
-    }
-
-    .location-btn.searched::after {
-      content: "✓ searched";
-      position: absolute;
-      right: 6px;
-      bottom: 4px;
-      font-size: 0.6rem;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      color: var(--muted);
-    }
-
-    .scroll-block {
-      background: rgba(0,0,0,0.45);
-      border-radius: 10px;
-      border: 1px solid rgba(255,255,255,0.08);
-      padding: 8px;
-      font-size: 0.8rem;
-      max-height: 180px;
-      overflow-y: auto;
-    }
-
-    .clue-item {
-      padding: 6px 7px;
-      border-radius: 8px;
-      border: 1px solid rgba(255,255,255,0.08);
-      background: rgba(8,9,18,0.8);
-      margin-bottom: 5px;
-    }
-
-    .clue-label {
-      font-size: 0.7rem;
-      text-transform: uppercase;
-      letter-spacing: 0.14em;
-      color: var(--muted);
-    }
-
-    .clue-text {
-      margin-top: 2px;
-    }
-
-    .suspect-list {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      max-height: 180px;
-      overflow-y: auto;
-    }
-
-    .suspect-card {
-      border-radius: 10px;
-      padding: 7px 8px;
-      border: 1px solid rgba(255,255,255,0.08);
-      background: rgba(3,4,12,0.8);
-      cursor: pointer;
-      transition: background 0.15s, border-color 0.15s;
-    }
-
-    .suspect-card:hover {
-      background: rgba(255,255,255,0.03);
-      border-color: var(--accent);
-    }
-
-    .suspect-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-    }
-
-    .suspect-name {
-      font-weight: 600;
-      font-size: 0.9rem;
-    }
-
-    .suspect-role {
-      font-size: 0.7rem;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      color: var(--muted);
-    }
-
-    .suspect-meta {
-      margin-top: 3px;
-      font-size: 0.75rem;
-      color: var(--muted);
-    }
-
-    .suspect-meta span {
-      display: inline-block;
-      margin-right: 8px;
-    }
-
-    .selected {
-      border-color: var(--accent);
-      background: rgba(255,255,255,0.05);
-    }
-
-    .accuse-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      align-items: center;
-      font-size: 0.8rem;
-    }
-
-    select {
-      background: rgba(0,0,0,0.6);
-      border-radius: 8px;
-      border: 1px solid rgba(255,255,255,0.18);
-      color: var(--text);
-      padding: 5px 8px;
-      font-size: 0.8rem;
-      outline: none;
-      min-width: 130px;
-    }
-
-    footer {
-      margin-top: 6px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 0.75rem;
-      color: var(--muted);
-    }
-
-    #log {
-      border-radius: 10px;
-      border: 1px solid rgba(255,255,255,0.06);
-      background: rgba(0,0,0,0.55);
-      padding: 7px 9px;
-      font-size: 0.8rem;
-      min-height: 40px;
-    }
-
-    .log-line {
-      margin-bottom: 2px;
-    }
-
-    .log-line strong {
-      color: var(--accent);
-    }
-
-    .log-win {
-      color: var(--good);
-      font-weight: 600;
-    }
-
-    .log-lose {
-      color: var(--bad);
-      font-weight: 600;
-    }
-
+    .toast.show{ display:block; }
   </style>
 </head>
 <body>
-<div class="game-shell">
-  <header>
-    <div class="title-block">
-      <h1>Detective: Case Files</h1>
-      <p>Read the room. Read the people. Pick the killer.</p>
-    </div>
-    <div class="stats">
-      <div class="pill">
-        <span class="pill-label">Rank</span>
-        <span class="pill-value" id="rankLabel">Rookie</span>
+  <div class="app" id="app">
+    <header>
+      <div>
+        <div class="brand"><span class="dot"></span> Card & Comic Values</div>
+        <div class="sub">Pick a category â†’ graded? â†’ details â†’ finalize â†’ last sold match</div>
       </div>
-      <div class="pill">
-        <span class="pill-label">Cases Solved</span>
-        <span class="pill-value" id="casesSolvedLabel">0</span>
-      </div>
-      <div class="pill">
-        <span class="pill-label">Coins</span>
-        <span class="pill-value good" id="coinsLabel">0</span>
-      </div>
-      <div class="pill">
-        <span class="pill-label">Theme</span>
-        <span class="pill-value" id="themeLabel">Noir</span>
-      </div>
-    </div>
-  </header>
+      <button id="btnReset" class="danger" title="Start over">Reset</button>
+    </header>
 
-  <main>
-    <!-- LEFT: CRIME SCENE + CLUES -->
-    <section class="panel">
-      <h2>
-        Crime Scene
-        <button class="btn small" id="newCaseBtn">New Case</button>
-      </h2>
-      <div class="sub">Search locations to find clues. Every clue points at someone… or misleads you.</div>
+    <main>
+      <div class="grid">
+        <section class="panel">
+          <h2 id="screenTitle">Main Menu</h2>
+          <p id="screenDesc">Select what you want to price-check.</p>
 
-      <div class="crime-grid" id="locationsGrid">
-        <!-- Filled by JS -->
+          <div class="steps" id="steps"></div>
+
+          <div id="screen"></div>
+
+          <div class="toast" id="toast"></div>
+
+          <div class="hint" id="hint">
+            Demo mode is ON by default. Youâ€™ll see fake â€œlast soldâ€ results until you connect a real data source.
+          </div>
+        </section>
+
+        <aside class="panel">
+          <h2>Last Sold Result</h2>
+          <p>This is where the last sold item matching your description appears.</p>
+
+          <div id="resultArea" class="resultCard">
+            <div class="pill bad">No search yet</div>
+            <div class="small">Finalize your details to fetch the last sold match.</div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="small">
+            <strong>How to make it real:</strong><br/>
+            Browsers canâ€™t reliably pull â€œsold listingsâ€ directly from most marketplaces due to CORS + anti-scrape rules.
+            The front-end is wired to call <code>/api/last-sold</code> if you turn demo mode off.
+          </div>
+        </aside>
       </div>
+    </main>
+  </div>
 
-      <h2>Clues Discovered</h2>
-      <div class="scroll-block" id="cluesList">
-        <div class="clue-item">
-          <div class="clue-label">No clues yet</div>
-          <div class="clue-text">Search the scene to uncover what everyone else missed.</div>
+  <script>
+    /***************
+     * CONFIG
+     ***************/
+    const CONFIG = {
+      // Backend endpoint that returns an AI-generated estimate.
+      REAL_API_ENDPOINT: "/api/last-sold"
+    };
+
+    /***************
+     * STATE
+     ***************/
+    const state = {
+      step: 0,
+      category: null,        // "comics" | "cards"
+      graded: null,          // true | false
+      title: "",             // user item name
+      year: "",              // optional year
+      setOrSeries: "",       // cards: set; comics: series/publisher
+      issueOrPlayer: "",     // comics: issue; cards: player
+      gradeCompany: "",
+      gradeValue: ""
+    };
+
+    const STEPS = [
+      "Main Menu",
+      "Graded?",
+      "Item Details",
+      "Finalize"
+    ];
+
+    /***************
+     * ELEMENTS
+     ***************/
+    const elScreen = document.getElementById("screen");
+    const elTitle = document.getElementById("screenTitle");
+    const elDesc = document.getElementById("screenDesc");
+    const elSteps = document.getElementById("steps");
+    const elResultArea = document.getElementById("resultArea");
+    const elReset = document.getElementById("btnReset");
+    const elToast = document.getElementById("toast");
+
+    elReset.addEventListener("click", resetAll);
+
+    /***************
+     * UI HELPERS
+     ***************/
+    function showToast(msg){
+      elToast.textContent = msg;
+      elToast.classList.add("show");
+      setTimeout(()=> elToast.classList.remove("show"), 2600);
+    }
+
+    function renderStepChips(){
+      elSteps.innerHTML = "";
+      STEPS.forEach((name, i) => {
+        const chip = document.createElement("div");
+        chip.className = "chip" + (i === state.step ? " on" : "");
+        chip.textContent = `${i+1}. ${name}`;
+        elSteps.appendChild(chip);
+      });
+    }
+
+    function setScreen(title, desc){
+      elTitle.textContent = title;
+      elDesc.textContent = desc;
+      renderStepChips();
+    }
+
+    function htmlToNode(html){
+      const t = document.createElement("template");
+      t.innerHTML = html.trim();
+      return t.content.firstChild;
+    }
+
+    function money(n){
+      if (typeof n !== "number" || Number.isNaN(n)) return "â€”";
+      return n.toLocaleString(undefined, { style:"currency", currency:"USD" });
+    }
+
+    function safe(s){
+      return String(s || "").replace(/[<>&"]/g, c => ({
+        "<":"&lt;", ">":"&gt;", "&":"&amp;", '"':"&quot;"
+      }[c]));
+    }
+
+    /***************
+     * SCREENS
+     ***************/
+    function render(){
+      if (state.step === 0) renderMenu();
+      if (state.step === 1) renderGraded();
+      if (state.step === 2) renderDetails();
+      if (state.step === 3) renderFinalize();
+    }
+
+    function renderMenu(){
+      setScreen("Main Menu", "Select what you want to price-check.");
+      elScreen.innerHTML = "";
+
+      const node = htmlToNode(`
+        <div>
+          <div class="actions">
+            <button class="primary" id="pickComics">Comic Books</button>
+            <button class="primary" id="pickCards">Sports Cards</button>
+          </div>
+
+          <div class="hint">
+            Tip: Use the details screen to type the item name (ex: â€œInvincible #1â€ or â€œLeBron James Topps Chromeâ€).
+          </div>
         </div>
-      </div>
-    </section>
+      `);
 
-    <!-- RIGHT: SUSPECTS + ACCUSE + THEME SPINNER -->
-    <section class="panel">
-      <h2>Suspect Board</h2>
-      <div class="sub">Tap a suspect to review motive and alibi, then make your call.</div>
-
-      <div class="suspect-list" id="suspectList">
-        <!-- Filled by JS -->
-      </div>
-
-      <h2>Decision</h2>
-      <div class="accuse-row" style="margin-bottom:6px;">
-        <span>Accuse</span>
-        <select id="accuseSelect"></select>
-        <button class="btn primary small" id="accuseBtn">Lock In Accusation</button>
-      </div>
-      <div class="accuse-row">
-        <button class="btn small" id="themeSpinBtn">
-          Spin Theme (50 coins)
-        </button>
-        <span class="sub">Change colors + vibe only. Cases stay the same.</span>
-      </div>
-    </section>
-  </main>
-
-  <section id="log" aria-live="polite"></section>
-
-  <footer>
-    <span>Tip: No one lies about everything. Compare clues to motives + alibis.</span>
-    <span>Built in pure HTML/CSS/JS – drop this file into a browser to play.</span>
-  </footer>
-</div>
-
-<script>
-  // ---------- DATA ----------
-  const THEMES = {
-    "Noir": {
-      bg: "#050612",
-      panel: "#131525",
-      accent: "#ff3b6b",
-      accentSoft: "rgba(255,59,107,0.12)",
-      text: "#f5f5ff",
-      muted: "#9ca3c7"
-    },
-    "Cyberpunk": {
-      bg: "#020413",
-      panel: "#05081e",
-      accent: "#42f5ff",
-      accentSoft: "rgba(66,245,255,0.12)",
-      text: "#f0faff",
-      muted: "#7fd1ff"
-    },
-    "Haunted Manor": {
-      bg: "#05070d",
-      panel: "#111318",
-      accent: "#c78bff",
-      accentSoft: "rgba(199,139,255,0.16)",
-      text: "#fdf8ff",
-      muted: "#aaa2c6"
-    },
-    "Neon 80s": {
-      bg: "#050011",
-      panel: "#14041f",
-      accent: "#ff7bff",
-      accentSoft: "rgba(255,123,255,0.16)",
-      text: "#fff0ff",
-      muted: "#ffc7ff"
-    },
-    "Space Station": {
-      bg: "#020711",
-      panel: "#0b111c",
-      accent: "#6bff9a",
-      accentSoft: "rgba(107,255,154,0.12)",
-      text: "#f7fffe",
-      muted: "#99ccb7"
-    }
-  };
-
-  const BASE_SUSPECTS = [
-    {
-      id: "fox",
-      name: "Mr. Adrian Fox",
-      role: "Business partner",
-      motive: "The victim was about to expose Adrian's fraud at the company.",
-      alibi: "Claims he was at the gym alone from 11 PM to 1 AM.",
-      quirk: "Wears size 12 boots and hates getting his hands dirty."
-    },
-    {
-      id: "lucy",
-      name: "Lucy Hart",
-      role: "Best friend",
-      motive: "Rumors of a falling-out over a secret Lucy didn't want revealed.",
-      alibi: "Says she was streaming a movie at home. No witnesses.",
-      quirk: "Always wears dark red lipstick and never skips her late-night coffee."
-    },
-    {
-      id: "vale",
-      name: "Dr. Elias Vale",
-      role: "Researcher",
-      motive: "The victim stole credit for Dr. Vale's major breakthrough.",
-      alibi: "Claims to have been in his lab, working alone.",
-      quirk: "Carries a keycard that opens most secure doors in the building."
-    },
-    {
-      id: "ben",
-      name: "Ben Rios",
-      role: "Night janitor",
-      motive: "Recently put on warning after the victim complained about him.",
-      alibi: "Admits he was on the floor, 'just doing rounds', near the time of death.",
-      quirk: "Has master keys and knows every blind spot in the building."
-    }
-  ];
-
-  const BASE_LOCATIONS = [
-    { id: "desk", label: "Victim's Desk" },
-    { id: "trash", label: "Overflowing Trash Can" },
-    { id: "books", label: "Bookshelf" },
-    { id: "window", label: "Broken Window" },
-    { id: "coffee", label: "Spilled Coffee Mug" },
-    { id: "hallway", label: "Hallway Floor" },
-    { id: "locker", label: "Storage Locker" },
-    { id: "security", label: "Security Console" }
-  ];
-
-  // Clue templates: some are real, some are red herrings
-  const BASE_CLUES = [
-    {
-      id: "boot-print",
-      locationId: "hallway",
-      text: "A muddy size 12 boot print leading away from the office.",
-      pointsTo: "fox",
-      type: "strong"
-    },
-    {
-      id: "lipstick-mug",
-      locationId: "coffee",
-      text: "A coffee mug with dark red lipstick on the rim, still faintly warm.",
-      pointsTo: "lucy",
-      type: "strong"
-    },
-    {
-      id: "keycard",
-      locationId: "desk",
-      text: "A high-level access keycard tucked under a stack of papers.",
-      pointsTo: "vale",
-      type: "strong"
-    },
-    {
-      id: "master-keys",
-      locationId: "locker",
-      text: "A set of master keys hanging on a hook, one key recently scratched.",
-      pointsTo: "ben",
-      type: "strong"
-    },
-    {
-      id: "note-threat",
-      locationId: "trash",
-      text: "A shredded note: \"You ruined my life. Midnight. We finish this.\"",
-      pointsTo: "fox",
-      type: "medium"
-    },
-    {
-      id: "movie-ticket",
-      locationId: "books",
-      text: "A crumpled movie ticket stub from earlier in the week.",
-      pointsTo: "lucy",
-      type: "decoy"
-    },
-    {
-      id: "lab-schedule",
-      locationId: "security",
-      text: "A printout of a lab schedule with Dr. Vale’s name circled in red.",
-      pointsTo: "vale",
-      type: "medium"
-    },
-    {
-      id: "cleaning-log",
-      locationId: "window",
-      text: "A cleaning log signed by Ben at 11:45 PM, close to the time of death.",
-      pointsTo: "ben",
-      type: "medium"
-    }
-  ];
-
-  // ---------- STATE ----------
-  const STATE = {
-    suspects: [],
-    locations: [],
-    clues: [],
-    murdererId: null,
-    foundClueIds: new Set(),
-    searchedLocationIds: new Set(),
-    caseClosed: false,
-    stats: {
-      coins: 0,
-      casesSolved: 0,
-      themeName: "Noir"
-    }
-  };
-
-  // ---------- UTILITIES ----------
-  function shuffleArray(arr) {
-    const copy = [...arr];
-    for (let i = copy.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [copy[i], copy[j]] = [copy[j], copy[i]];
-    }
-    return copy;
-  }
-
-  function randomChoice(arr) {
-    return arr[Math.floor(Math.random() * arr.length)];
-  }
-
-  function logMessage(message, type = "") {
-    const logBox = document.getElementById("log");
-    const line = document.createElement("div");
-    line.classList.add("log-line");
-    if (type === "win") line.classList.add("log-win");
-    if (type === "lose") line.classList.add("log-lose");
-    line.innerHTML = message;
-    logBox.prepend(line);
-    // keep last ~7 lines
-    while (logBox.childNodes.length > 7) {
-      logBox.removeChild(logBox.lastChild);
-    }
-  }
-
-  function updateRank() {
-    const solved = STATE.stats.casesSolved;
-    let rank = "Rookie";
-    if (solved >= 3) rank = "Inspector";
-    if (solved >= 7) rank = "Lead Detective";
-    if (solved >= 12) rank = "Legend";
-
-    document.getElementById("rankLabel").textContent = rank;
-  }
-
-  function updateStatsUI() {
-    document.getElementById("coinsLabel").textContent = STATE.stats.coins;
-    document.getElementById("casesSolvedLabel").textContent = STATE.stats.casesSolved;
-    document.getElementById("themeLabel").textContent = STATE.stats.themeName;
-    updateRank();
-  }
-
-  function applyTheme(themeName) {
-    const theme = THEMES[themeName] || THEMES["Noir"];
-    STATE.stats.themeName = themeName;
-
-    const root = document.documentElement;
-    root.style.setProperty("--bg", theme.bg);
-    root.style.setProperty("--panel", theme.panel);
-    root.style.setProperty("--accent", theme.accent);
-    root.style.setProperty("--accent-soft", theme.accentSoft);
-    root.style.setProperty("--text", theme.text);
-    root.style.setProperty("--muted", theme.muted);
-
-    document.getElementById("themeLabel").textContent = themeName;
-  }
-
-  // ---------- GAME SETUP ----------
-  function createNewCase() {
-    STATE.suspects = JSON.parse(JSON.stringify(BASE_SUSPECTS));
-    STATE.locations = JSON.parse(JSON.stringify(BASE_LOCATIONS));
-    STATE.clues = JSON.parse(JSON.stringify(BASE_CLUES));
-    STATE.murdererId = randomChoice(STATE.suspects).id;
-    STATE.foundClueIds = new Set();
-    STATE.searchedLocationIds = new Set();
-    STATE.caseClosed = false;
-
-    renderLocations();
-    renderClues();
-    renderSuspects();
-    renderAccuseSelect();
-
-    logMessage(`<strong>New case:</strong> The victim has been found in their office. Eight locations, four main suspects. Find the truth.`);
-  }
-
-  // ---------- RENDERING ----------
-  function renderLocations() {
-    const grid = document.getElementById("locationsGrid");
-    grid.innerHTML = "";
-    STATE.locations.forEach(loc => {
-      const btn = document.createElement("button");
-      btn.className = "btn location-btn";
-      btn.dataset.locationId = loc.id;
-      btn.innerHTML = `<span>${loc.label}</span>`;
-      if (STATE.searchedLocationIds.has(loc.id)) {
-        btn.classList.add("searched");
-      }
-      btn.addEventListener("click", () => onSearchLocation(loc.id));
-      grid.appendChild(btn);
-    });
-  }
-
-  function renderClues() {
-    const list = document.getElementById("cluesList");
-    list.innerHTML = "";
-
-    if (STATE.foundClueIds.size === 0) {
-      const empty = document.createElement("div");
-      empty.className = "clue-item";
-      empty.innerHTML = `
-        <div class="clue-label">No clues yet</div>
-        <div class="clue-text">Nothing solves itself. Check the desk, trash, window, hallway, and more.</div>
-      `;
-      list.appendChild(empty);
-      return;
-    }
-
-    const foundClues = STATE.clues.filter(c => STATE.foundClueIds.has(c.id));
-    foundClues.forEach(clue => {
-      const item = document.createElement("div");
-      item.className = "clue-item";
-
-      let strengthLabel = "Clue";
-      if (clue.type === "strong") strengthLabel = "Key Evidence";
-      if (clue.type === "medium") strengthLabel = "Suspicious Detail";
-      if (clue.type === "decoy") strengthLabel = "Unclear Lead";
-
-      item.innerHTML = `
-        <div class="clue-label">${strengthLabel}</div>
-        <div class="clue-text">${clue.text}</div>
-      `;
-      list.appendChild(item);
-    });
-  }
-
-  function renderSuspects(selectedId = null) {
-    const list = document.getElementById("suspectList");
-    list.innerHTML = "";
-
-    STATE.suspects.forEach(s => {
-      const card = document.createElement("div");
-      card.className = "suspect-card";
-      if (selectedId === s.id) card.classList.add("selected");
-
-      card.innerHTML = `
-        <div class="suspect-header">
-          <div class="suspect-name">${s.name}</div>
-          <div class="suspect-role">${s.role}</div>
-        </div>
-        <div class="suspect-meta">
-          <span><strong>Motive:</strong> ${s.motive}</span><br>
-          <span><strong>Alibi:</strong> ${s.alibi}</span><br>
-          <span><strong>Notable:</strong> ${s.quirk}</span>
-        </div>
-      `;
-
-      card.addEventListener("click", () => {
-        renderSuspects(s.id);
-        document.getElementById("accuseSelect").value = s.id;
-        logMessage(`<strong>Profile:</strong> You review ${s.name}'s file. Motive, alibi, and quirks noted.`);
+      node.querySelector("#pickComics").addEventListener("click", () => {
+        state.category = "comics";
+        state.step = 1;
+        render();
       });
 
-      list.appendChild(card);
-    });
-  }
+      node.querySelector("#pickCards").addEventListener("click", () => {
+        state.category = "cards";
+        state.step = 1;
+        render();
+      });
 
-  function renderAccuseSelect() {
-    const select = document.getElementById("accuseSelect");
-    select.innerHTML = "";
-    STATE.suspects.forEach(s => {
-      const opt = document.createElement("option");
-      opt.value = s.id;
-      opt.textContent = s.name;
-      select.appendChild(opt);
-    });
-  }
-
-  // ---------- INTERACTIONS ----------
-  function onSearchLocation(locationId) {
-    if (STATE.caseClosed) {
-      logMessage("The case is already closed. Start a new one to investigate again.");
-      return;
+      elScreen.appendChild(node);
     }
 
-    if (STATE.searchedLocationIds.has(locationId)) {
-      logMessage("You've already searched there. The evidence hasn't moved.");
-      return;
+    function renderGraded(){
+      const label = state.category === "comics" ? "Comic Books" : "Sports Cards";
+      setScreen("Graded?", `You chose ${label}. Is it graded?`);
+      elScreen.innerHTML = "";
+
+      const node = htmlToNode(`
+        <div>
+          <div class="actions">
+            <button class="primary" id="gradedYes">Yes, graded</button>
+            <button id="gradedNo">No, raw / ungraded</button>
+          </div>
+
+          <div class="actions">
+            <button id="back">Back</button>
+          </div>
+
+          <div class="hint">
+            If graded, youâ€™ll enter the grading company (PSA/CGC/SGC/BGS/etc.) and the grade (ex: 9, 9.5, 10).
+          </div>
+        </div>
+      `);
+
+      node.querySelector("#gradedYes").addEventListener("click", () => {
+        state.graded = true;
+        state.step = 2;
+        render();
+      });
+
+      node.querySelector("#gradedNo").addEventListener("click", () => {
+        state.graded = false;
+        state.gradeCompany = "";
+        state.gradeValue = "";
+        state.step = 2;
+        render();
+      });
+
+      node.querySelector("#back").addEventListener("click", () => {
+        state.step = 0;
+        render();
+      });
+
+      elScreen.appendChild(node);
     }
 
-    STATE.searchedLocationIds.add(locationId);
-    renderLocations();
-
-    const possibleClues = STATE.clues.filter(c => c.locationId === locationId);
-    if (possibleClues.length === 0) {
-      logMessage("You search carefully but find nothing new.");
-      return;
-    }
-
-    const clue = randomChoice(possibleClues);
-    STATE.foundClueIds.add(clue.id);
-    renderClues();
-
-    logMessage(`<strong>New clue:</strong> ${clue.text}`);
-  }
-
-  function onAccuse() {
-    if (STATE.caseClosed) {
-      logMessage("This case is already closed. Start a new case to make another call.");
-      return;
-    }
-
-    const select = document.getElementById("accuseSelect");
-    const accusedId = select.value;
-    if (!accusedId) {
-      logMessage("Choose who you think did it before locking in your accusation.");
-      return;
-    }
-
-    const accused = STATE.suspects.find(s => s.id === accusedId);
-    const real = STATE.suspects.find(s => s.id === STATE.murdererId);
-
-    STATE.caseClosed = true;
-
-    if (accusedId === STATE.murdererId) {
-      const reward = 100;
-      STATE.stats.coins += reward;
-      STATE.stats.casesSolved += 1;
-      updateStatsUI();
-
-      logMessage(
-        `<span class="log-win">Correct.</span> ${accused.name} is arrested. Your logic tracks with the evidence. (+${reward} coins, +1 case solved)`,
-        "win"
+    function renderDetails(){
+      const isComics = state.category === "comics";
+      setScreen(
+        "Item Details",
+        isComics
+          ? "Enter the comic details (name/series/issue)."
+          : "Enter the card details (player/set/year)."
       );
 
-      const summary = buildCaseSummary(real);
-      logMessage(summary);
-    } else {
-      const penalty = 25;
-      STATE.stats.coins = Math.max(0, STATE.stats.coins - penalty);
-      updateStatsUI();
+      elScreen.innerHTML = "";
 
-      logMessage(
-        `<span class="log-lose">Wrong call.</span> You accused ${accused.name}, but the real killer was ${real.name}. (-${penalty} coins)`,
-        "lose"
-      );
+      const gradedBlock = state.graded ? `
+        <div class="row two">
+          <div>
+            <label>Grading Company</label>
+            <select id="gradeCompany">
+              <option value="">Selectâ€¦</option>
+              <option value="PSA">PSA</option>
+              <option value="BGS">BGS (Beckett)</option>
+              <option value="SGC">SGC</option>
+              <option value="CGC">CGC</option>
+              <option value="CBCS">CBCS</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div>
+            <label>Grade</label>
+            <input id="gradeValue" placeholder="Ex: 9, 9.5, 10, 98" />
+          </div>
+        </div>
+      ` : ``;
 
-      const summary = buildCaseSummary(real);
-      logMessage(summary);
+      const node = htmlToNode(`
+        <div>
+          <div class="row two">
+            <div>
+              <label>${isComics ? "Comic Title" : "Card Title"}</label>
+              <input id="title" placeholder="${isComics ? "Ex: Invincible" : "Ex: LeBron James Topps Chrome"}" />
+            </div>
+            <div>
+              <label>Year (optional)</label>
+              <input id="year" inputmode="numeric" placeholder="Ex: 2003" />
+            </div>
+          </div>
+
+          <div class="row two">
+            <div>
+              <label>${isComics ? "Series / Publisher (optional)" : "Set / Brand (optional)"}</label>
+              <input id="setOrSeries" placeholder="${isComics ? "Ex: Image Comics" : "Ex: Topps Chrome"}" />
+            </div>
+            <div>
+              <label>${isComics ? "Issue # (optional)" : "Player (optional)"}</label>
+              <input id="issueOrPlayer" placeholder="${isComics ? "Ex: #1" : "Ex: LeBron James"}" />
+            </div>
+          </div>
+
+          ${gradedBlock}
+
+          <div class="actions">
+            <button id="back">Back</button>
+            <button class="primary" id="next">Continue</button>
+          </div>
+
+          <div class="hint">
+            The more specific your details are, the better the match.
+          </div>
+        </div>
+      `);
+
+      // Fill existing state
+      node.querySelector("#title").value = state.title;
+      node.querySelector("#year").value = state.year;
+      node.querySelector("#setOrSeries").value = state.setOrSeries;
+      node.querySelector("#issueOrPlayer").value = state.issueOrPlayer;
+
+      if (state.graded){
+        node.querySelector("#gradeCompany").value = state.gradeCompany;
+        node.querySelector("#gradeValue").value = state.gradeValue;
+      }
+
+      node.querySelector("#back").addEventListener("click", () => {
+        state.step = 1;
+        render();
+      });
+
+      node.querySelector("#next").addEventListener("click", () => {
+        // Save
+        state.title = node.querySelector("#title").value.trim();
+        state.year = node.querySelector("#year").value.trim();
+        state.setOrSeries = node.querySelector("#setOrSeries").value.trim();
+        state.issueOrPlayer = node.querySelector("#issueOrPlayer").value.trim();
+
+        if (state.graded){
+          state.gradeCompany = node.querySelector("#gradeCompany").value.trim();
+          state.gradeValue = node.querySelector("#gradeValue").value.trim();
+          if (!state.gradeCompany || !state.gradeValue){
+            showToast("If graded, please enter both grading company and grade.");
+            return;
+          }
+        }
+
+        if (!state.title){
+          showToast("Please enter a title/name to search.");
+          return;
+        }
+
+        state.step = 3;
+        render();
+      });
+
+      elScreen.appendChild(node);
     }
-  }
 
-  function buildCaseSummary(realSuspect) {
-    const relatedClues = STATE.clues.filter(
-      c => c.pointsTo === realSuspect.id && STATE.foundClueIds.has(c.id)
-    );
-    const clueTexts = relatedClues.map(c => c.text);
+    function renderFinalize(){
+      const label = state.category === "comics" ? "Comic Book" : "Sports Card";
+      setScreen("Finalize", `Review your ${label} description and click Finalize.`);
 
-    if (clueTexts.length === 0) {
-      return `<strong>Case summary:</strong> The real pattern was there, but you didn't uncover the right pieces. Next time, focus on motive + specific details (like boots, lipstick, keycards, or keys).`;
-    } else {
-      return `<strong>Case summary:</strong> The key clues pointing to ${realSuspect.name} were: ${clueTexts.join(" | ")}`;
+      elScreen.innerHTML = "";
+
+      const query = buildQueryString();
+
+      const node = htmlToNode(`
+        <div>
+          <div class="resultCard">
+            <div class="pill good">Your search description</div>
+            <div class="title">${safe(query)}</div>
+            <div class="meta">
+              Category: <strong>${safe(state.category)}</strong> â€¢
+              Graded: <strong>${state.graded ? "Yes" : "No"}</strong>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button id="back">Back</button>
+            <button class="primary" id="finalize">Finalize & Find Last Sold</button>
+          </div>
+
+          <div class="hint">
+            This will fetch the most recent sold match (DEMO mode uses a fake dataset).
+          </div>
+        </div>
+      `);
+
+      node.querySelector("#back").addEventListener("click", () => {
+        state.step = 2;
+        render();
+      });
+
+      node.querySelector("#finalize").addEventListener("click", async () => {
+        await runLastSoldSearch(query);
+      });
+
+      elScreen.appendChild(node);
     }
-  }
 
-  function onThemeSpin() {
-    const cost = 50;
-    if (STATE.stats.coins < cost) {
-      logMessage(`You need ${cost} coins to spin the theme wheel. Solve more cases first.`);
-      return;
+    /***************
+     * QUERY + SEARCH
+     ***************/
+    function buildQueryString(){
+      const parts = [];
+
+      // common
+      if (state.year) parts.push(state.year);
+      parts.push(state.title);
+
+      // per category
+      if (state.category === "comics"){
+        if (state.setOrSeries) parts.push(state.setOrSeries);
+        if (state.issueOrPlayer) parts.push(`Issue ${state.issueOrPlayer.replace(/^#/, "#")}`);
+      } else {
+        if (state.issueOrPlayer) parts.push(state.issueOrPlayer); // player
+        if (state.setOrSeries) parts.push(state.setOrSeries);
+      }
+
+      // grading
+      if (state.graded){
+        parts.push(`${state.gradeCompany} ${state.gradeValue}`);
+      } else {
+        parts.push("Raw");
+      }
+
+      return parts.filter(Boolean).join(" â€¢ ");
     }
 
-    STATE.stats.coins -= cost;
+    async function runLastSoldSearch(query){
+      // Loading UI
+      elResultArea.innerHTML = `
+        <div class="pill good">Searchingâ€¦</div>
+        <div class="small">Looking up the latest sold match for:</div>
+        <div class="title">${safe(query)}</div>
+      `;
 
-    const themeNames = Object.keys(THEMES);
-    const current = STATE.stats.themeName;
-    const otherThemes = themeNames.filter(t => t !== current);
-    const newTheme = randomChoice(otherThemes);
+      try{
+        const payload = {
+          query,
+          category: state.category,
+          graded: state.graded,
+          title: state.title,
+          year: state.year,
+          setOrSeries: state.setOrSeries,
+          issueOrPlayer: state.issueOrPlayer,
+          gradeCompany: state.gradeCompany,
+          gradeValue: state.gradeValue
+        };
 
-    applyTheme(newTheme);
-    updateStatsUI();
+        const data = await fetchLastSoldEstimate(payload);
+        if (!data){
+          renderNoMatch(query);
+          return;
+        }
 
-    logMessage(`<strong>Theme wheel:</strong> The world around you shifts into a new style: <em>${newTheme}</em>.`, "win");
-  }
+        renderResult(data, query);
+      } catch (err){
+        renderError(err, query);
+      }
+    }
 
-  // ---------- INIT ----------
-  function init() {
-    applyTheme("Noir");
-    updateStatsUI();
-    createNewCase();
+    function renderResult(data, query){
+      const soldDate = data.soldDate ? new Date(data.soldDate).toLocaleDateString() : "Unknown date";
+      const src = data.source || "Unknown source";
 
-    document.getElementById("newCaseBtn").addEventListener("click", () => {
-      createNewCase();
-    });
+      elResultArea.innerHTML = `
+        <div class="resultTop">
+          <div>
+            <div class="pill good">AI Estimate</div>
+            <div class="title">${safe(data.title || "Untitled")}</div>
+            <div class="meta">
+              Estimated as of <strong>${safe(soldDate)}</strong> â€¢ Source: <strong>${safe(src)}</strong>
+            </div>
+          </div>
+          <div class="price">${money(data.price)}</div>
+        </div>
 
-    document.getElementById("accuseBtn").addEventListener("click", onAccuse);
-    document.getElementById("themeSpinBtn").addEventListener("click", onThemeSpin);
-  }
+        <div class="meta">
+          Your query: <span class="small">${safe(query)}</span>
+        </div>
 
-  init();
-</script>
+        ${data.url ? `<div><a href="${safe(data.url)}" target="_blank" rel="noopener">View listing</a></div>` : ""}
+
+        ${data.notes ? `<div class="small">${safe(data.notes)}</div>` : ""}
+        <div class="small">Estimate generated by the pricing assistant.</div>
+      `;
+    }
+
+    function renderNoMatch(query){
+      elResultArea.innerHTML = `
+        <div class="pill bad">No match found</div>
+        <div class="small">Try being more specific (year, issue/player, set/series, grade/company).</div>
+        <div class="meta">Query: <span class="small">${safe(query)}</span></div>
+      `;
+    }
+
+    function renderError(err, query){
+      elResultArea.innerHTML = `
+        <div class="pill bad">Error</div>
+        <div class="small">${safe(err?.message || String(err))}</div>
+        <div class="meta">Query: <span class="small">${safe(query)}</span></div>
+        <div class="small">
+          Make sure <code>${safe(CONFIG.REAL_API_ENDPOINT)}</code> is reachable and returns JSON.
+        </div>
+      `;
+    }
+
+    /***************
+     * DATA SOURCE
+     ***************/
+    async function fetchLastSoldEstimate(payload){
+      const res = await fetch(CONFIG.REAL_API_ENDPOINT, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok){
+        throw new Error(`API request failed: ${res.status} ${res.statusText}`);
+      }
+      const json = await res.json();
+      return json;
+    }
+    /***************
+     * RESET
+     ***************/
+    function resetAll(){
+      state.step = 0;
+      state.category = null;
+      state.graded = null;
+      state.title = "";
+      state.year = "";
+      state.setOrSeries = "";
+      state.issueOrPlayer = "";
+      state.gradeCompany = "";
+      state.gradeValue = "";
+
+      elResultArea.innerHTML = `
+        <div class="pill bad">No search yet</div>
+        <div class="small">Finalize your details to fetch the last sold match.</div>
+      `;
+      render();
+    }
+
+    // start
+    renderStepChips();
+    render();
+  </script>
 </body>
 </html>
+

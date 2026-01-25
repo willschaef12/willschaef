@@ -1,30 +1,36 @@
-# Simple Dictionary (Azure Static Web App)
+# Card & Comic Value Estimator (Azure Static Web App)
 
-This app gives a very simple, easy-to-understand definition of a word using the OpenAI API. The frontend is a static page and the API key is stored securely in Azure Static Web Apps application settings.
+This Static Web App helps collectors get a quick market-value estimate for comic books and trading cards. The frontend walks a user through a short wizard to capture item details, then the `/api/last-sold` Azure Function asks OpenAI (gpt-4o-mini) for a structured price estimate.
 
 ## How it works
 
-- Frontend: `index.html` — a minimal UI to enter a word and display a definition.
-- API: `api/define` — an Azure Functions HTTP trigger that calls OpenAI with your key from `OPENAI_API_KEY`.
-- CI/CD: GitHub Action deploys to your Azure Static Web App; API folder is wired via `api_location: "api"`.
+- **Frontend (`index.html`)** – A single-page wizard that gathers details (category, grading, issue/player, etc.), composes a query, and POSTs it to `/api/last-sold`.
+- **Azure Function (`api/last-sold`)** – Validates the request, builds a collectibles context prompt, and calls OpenAI’s chat completions API to produce JSON with title, price, currency, soldDate, source, optional notes/url.
+- **CI/CD** – `.github/workflows/azure-static-web-apps-*.yml` deploys both the static front-end and `api` folder to Azure Static Web Apps.
 
 ## Configure in Azure
 
-1. In your Azure Static Web App, open Configuration → Application settings.
-2. Add a new setting named `OPENAI_API_KEY` and set it to your OpenAI API key.
-3. Save and restart the app (or redeploy).
+1. Deploy this repo as an Azure Static Web App.
+2. In the Static Web App → Configuration → Application settings, add `OPENAI_API_KEY` with your OpenAI API key (gpt-4o-mini access).
+3. Save & restart the app (or trigger a redeploy) so the Functions runtime picks up the setting.
 
-## Local testing (optional)
+## Local testing
 
-If you run locally with the Static Web Apps CLI or Azure Functions Core Tools, set an environment variable before starting the API:
+If you run locally with the Static Web Apps CLI or Azure Functions Core Tools, set the key before starting Functions:
 
-- Windows PowerShell: `setx OPENAI_API_KEY "<your_key>"`
-- macOS/Linux: `export OPENAI_API_KEY="<your_key>"`
+- PowerShell: `setx OPENAI_API_KEY "<your_key>"`
+- bash/zsh: `export OPENAI_API_KEY="<your_key>"`
 
-Then fetch: `GET /api/define?word=example`
+Then test the endpoint:
+
+```bash
+curl -X POST http://localhost:7071/api/last-sold ^
+  -H "Content-Type: application/json" ^
+  -d "{ \"query\": \"Invincible #1 CGC 9.8\", \"category\": \"comics\", \"graded\": true }"
+```
 
 ## Notes
 
-- The API uses the `gpt-4o-mini` chat completions endpoint with a very constrained prompt to keep definitions short and simple.
-- The frontend calls the API at `/api/define`, so no CORS is needed.
-- Keep the key only in app settings; never hardcode secrets in the repo.
+- All pricing logic now lives in `api/last-sold`; there are no other Functions in the app.
+- The frontend no longer uses demo/fake data. If the Function errors, the UI surfaces the message coming back from `/api/last-sold`.
+- Keep secrets out of source control—`OPENAI_API_KEY` must only live in Azure settings or your local dev environment variables.
