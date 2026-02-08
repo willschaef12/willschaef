@@ -1,36 +1,57 @@
-# Card & Comic Value Estimator (Azure Static Web App)
+# Overhead Flight Finder (Azure Static Web App)
 
-This Static Web App helps collectors get a quick market-value estimate for comic books and trading cards. The frontend walks a user through a short wizard to capture item details, then the `/api/last-sold` Azure Function asks OpenAI (gpt-4o-mini) for a structured price estimate.
+This repo now contains a new website focused on live overhead-flight lookup.
 
-## How it works
+- Frontend: `index.html`, `styles.css`, `app.js`
+- API: `api/overhead-flights` (Azure Function)
+- Pipeline: `.github/workflows/azure-static-web-apps-thankful-desert-0b66c4910.yml` (kept as requested)
 
-- **Frontend (`index.html`)** – A single-page wizard that gathers details (category, grading, issue/player, etc.), composes a query, and POSTs it to `/api/last-sold`.
-- **Azure Function (`api/last-sold`)** – Validates the request, builds a collectibles context prompt, and calls OpenAI’s chat completions API to produce JSON with title, price, currency, soldDate, source, optional notes/url.
-- **CI/CD** – `.github/workflows/azure-static-web-apps-*.yml` deploys both the static front-end and `api` folder to Azure Static Web Apps.
+The app takes coordinates, radius, and altitude filters, then calls `/api/overhead-flights` to return aircraft that are likely to pass overhead.
 
-## Configure in Azure
+## Flight Data Provider
 
-1. Deploy this repo as an Azure Static Web App.
-2. In the Static Web App → Configuration → Application settings, add `OPENAI_API_KEY` with your OpenAI API key (gpt-4o-mini access).
-3. Save & restart the app (or trigger a redeploy) so the Functions runtime picks up the setting.
+By default, the API uses OpenSky Network (no key required):
 
-## Local testing
+- `FLIGHT_PROVIDER=opensky` (default)
 
-If you run locally with the Static Web Apps CLI or Azure Functions Core Tools, set the key before starting Functions:
+If you want to use a FlightLog-style provider (Airlabs-compatible), configure:
 
-- PowerShell: `setx OPENAI_API_KEY "<your_key>"`
-- bash/zsh: `export OPENAI_API_KEY="<your_key>"`
+- `FLIGHT_PROVIDER=flightlog`
+- `FLIGHTLOG_API_KEY=<your_api_key>`
+- Optional: `FLIGHTLOG_API_URL=https://airlabs.co/api/v9/flights`
 
-Then test the endpoint:
+## Deploy / Configure in Azure
+
+1. Keep using the existing Static Web App GitHub workflow in `.github/workflows`.
+2. In Azure Static Web App -> Configuration -> Application settings, add provider settings if needed.
+3. Redeploy or push a commit.
+
+## Local Run (Recommended)
+
+Do not open `index.html` directly with `file://`, because `/api/...` calls will fail in the browser.
+
+Run the app through HTTP with the SWA CLI:
 
 ```bash
-curl -X POST http://localhost:7071/api/last-sold ^
-  -H "Content-Type: application/json" ^
-  -d "{ \"query\": \"Invincible #1 CGC 9.8\", \"category\": \"comics\", \"graded\": true }"
+npx --yes @azure/static-web-apps-cli start . --api-location api --port 4280
+```
+
+Then open:
+
+- `http://localhost:4280`
+- Use `Use My Location` in the UI (or edit coords). Empty coordinate boxes should not be left blank.
+
+If you see `Unable to find project root. Expecting to find one of host.json, local.settings.json in project root`, make sure `api/host.json` exists and you started SWA from the repo root.
+
+## Local API Test
+
+Example request:
+
+```bash
+curl "http://localhost:7071/api/overhead-flights?lat=34.0522&lon=-118.2437&radiusMiles=25&minAltitudeFt=1500&maxAltitudeFt=45000&maxResults=25"
 ```
 
 ## Notes
 
-- All pricing logic now lives in `api/last-sold`; there are no other Functions in the app.
-- The frontend no longer uses demo/fake data. If the Function errors, the UI surfaces the message coming back from `/api/last-sold`.
-- Keep secrets out of source control—`OPENAI_API_KEY` must only live in Azure settings or your local dev environment variables.
+- Results are scored as `high`, `medium`, or `low` likelihood using distance, heading, altitude, and speed.
+- API responses are non-cached (`Cache-Control: no-store`).

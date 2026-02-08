@@ -1,773 +1,116 @@
-﻿<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Card & Comic Values</title>
-  <style>
-    :root{
-      --bg:#0b0f17;
-      --card:#121a27;
-      --muted:#91a4c7;
-      --text:#eaf0ff;
-      --accent:#5eead4;
-      --accent2:#60a5fa;
-      --danger:#fb7185;
-      --border:rgba(255,255,255,.08);
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
-      background: radial-gradient(900px 600px at 20% 10%, rgba(96,165,250,.18), transparent 60%),
-                  radial-gradient(900px 600px at 80% 0%, rgba(94,234,212,.14), transparent 55%),
-                  var(--bg);
-      color:var(--text);
-      min-height:100vh;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:24px;
-    }
-    .app{
-      width:min(980px, 100%);
-      border:1px solid var(--border);
-      background: linear-gradient(180deg, rgba(255,255,255,.03), transparent 40%), var(--card);
-      border-radius:18px;
-      box-shadow: 0 20px 60px rgba(0,0,0,.45);
-      overflow:hidden;
-    }
-    header{
-      padding:18px 20px;
-      border-bottom:1px solid var(--border);
-      display:flex;
-      gap:12px;
-      align-items:center;
-      justify-content:space-between;
-    }
-    .brand{
-      display:flex;
-      align-items:center;
-      gap:10px;
-      font-weight:800;
-      letter-spacing:.2px;
-    }
-    .dot{
-      width:10px;height:10px;border-radius:50%;
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      box-shadow:0 0 18px rgba(94,234,212,.35);
-    }
-    .sub{
-      color:var(--muted);
-      font-weight:600;
-      font-size:13px;
-    }
-    main{ padding:20px; }
-    .grid{
-      display:grid;
-      grid-template-columns: 1fr;
-      gap:14px;
-    }
-    @media (min-width: 860px){
-      .grid{ grid-template-columns: 1.1fr .9fr; }
-    }
-    .panel{
-      border:1px solid var(--border);
-      border-radius:16px;
-      background: rgba(0,0,0,.14);
-      padding:16px;
-    }
-    .panel h2{
-      margin:0 0 4px;
-      font-size:18px;
-    }
-    .panel p{
-      margin:0 0 14px;
-      color:var(--muted);
-      line-height:1.35;
-      font-size:14px;
-    }
-    .steps{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-      margin: 10px 0 0;
-    }
-    .chip{
-      border:1px solid var(--border);
-      color:var(--muted);
-      padding:6px 10px;
-      border-radius:999px;
-      font-size:12px;
-      font-weight:700;
-    }
-    .chip.on{
-      color:var(--text);
-      border-color: rgba(94,234,212,.35);
-      background: rgba(94,234,212,.08);
-    }
-    .actions{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      margin-top:12px;
-    }
-    button{
-      appearance:none;
-      border:1px solid var(--border);
-      color:var(--text);
-      background: rgba(255,255,255,.04);
-      padding:10px 12px;
-      border-radius:12px;
-      font-weight:800;
-      cursor:pointer;
-      transition: transform .08s ease, border-color .2s ease, background .2s ease;
-    }
-    button:hover{ border-color: rgba(96,165,250,.45); }
-    button:active{ transform: translateY(1px); }
-    button.primary{
-      border-color: rgba(94,234,212,.45);
-      background: linear-gradient(135deg, rgba(94,234,212,.18), rgba(96,165,250,.12));
-    }
-    button.danger{
-      border-color: rgba(251,113,133,.55);
-      background: rgba(251,113,133,.08);
-    }
-    .row{
-      display:grid;
-      grid-template-columns:1fr;
-      gap:10px;
-      margin-top:10px;
-    }
-    @media (min-width: 560px){
-      .row.two{ grid-template-columns: 1fr 1fr; }
-    }
-    label{
-      display:block;
-      font-size:12px;
-      color:var(--muted);
-      font-weight:800;
-      margin: 2px 0 6px;
-    }
-    input, select{
-      width:100%;
-      padding:10px 12px;
-      border-radius:12px;
-      border:1px solid var(--border);
-      background: rgba(0,0,0,.25);
-      color: var(--text);
-      outline:none;
-      font-weight:700;
-    }
-    input:focus, select:focus{
-      border-color: rgba(94,234,212,.45);
-      box-shadow: 0 0 0 3px rgba(94,234,212,.10);
-    }
-    .hint{
-      margin-top:8px;
-      color:var(--muted);
-      font-size:12px;
-      line-height:1.35;
-    }
-    .resultCard{
-      border:1px solid var(--border);
-      border-radius:16px;
-      padding:14px;
-      background: rgba(0,0,0,.18);
-      display:grid;
-      gap:10px;
-    }
-    .resultTop{
-      display:flex;
-      align-items:flex-start;
-      justify-content:space-between;
-      gap:10px;
-    }
-    .title{
-      font-weight:900;
-      font-size:14px;
-      line-height:1.25;
-    }
-    .meta{
-      color:var(--muted);
-      font-size:12px;
-      font-weight:700;
-      line-height:1.35;
-    }
-    .price{
-      font-weight:950;
-      font-size:18px;
-      white-space:nowrap;
-    }
-    .pill{
-      display:inline-flex;
-      align-items:center;
-      gap:6px;
-      padding:6px 10px;
-      border-radius:999px;
-      border:1px solid var(--border);
-      color:var(--muted);
-      font-size:12px;
-      font-weight:800;
-      width:fit-content;
-    }
-    .pill.good{ border-color: rgba(94,234,212,.45); color: var(--text); background: rgba(94,234,212,.08); }
-    .pill.bad{ border-color: rgba(251,113,133,.55); color: var(--text); background: rgba(251,113,133,.08); }
-    a{
-      color: var(--accent2);
-      text-decoration:none;
-      font-weight:900;
-    }
-    a:hover{ text-decoration:underline; }
-    .small{
-      font-size:12px;
-      color:var(--muted);
-      font-weight:700;
-    }
-    .divider{
-      height:1px;
-      background: var(--border);
-      margin:12px 0;
-    }
-    .toast{
-      display:none;
-      margin-top:10px;
-      padding:10px 12px;
-      border-radius:12px;
-      border:1px solid rgba(251,113,133,.55);
-      background: rgba(251,113,133,.08);
-      color: var(--text);
-      font-weight:800;
-      font-size:13px;
-    }
-    .toast.show{ display:block; }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Overhead Flight Finder</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <div class="app" id="app">
-    <header>
-      <div>
-        <div class="brand"><span class="dot"></span> Card & Comic Values</div>
-        <div class="sub">Pick a category â†’ graded? â†’ details â†’ finalize â†’ last sold match</div>
-      </div>
-      <button id="btnReset" class="danger" title="Start over">Reset</button>
+  <div class="sky-glow sky-glow-a" aria-hidden="true"></div>
+  <div class="sky-glow sky-glow-b" aria-hidden="true"></div>
+
+  <main class="app-shell">
+    <header class="hero reveal">
+      <p class="eyebrow">Live Air Traffic</p>
+      <h1>Find flights that could pass overhead</h1>
+      <p class="hero-copy">
+        Pulls nearby aircraft in real time and ranks flights that are most likely to pass above your location.
+      </p>
     </header>
 
-    <main>
-      <div class="grid">
-        <section class="panel">
-          <h2 id="screenTitle">Main Menu</h2>
-          <p id="screenDesc">Select what you want to price-check.</p>
+    <section class="panel reveal delay-1">
+      <h2>Lookup Settings</h2>
+      <form id="lookup-form" class="controls" novalidate>
+        <div class="grid two-up">
+          <label class="field">
+            <span>Latitude</span>
+            <input id="lat" name="lat" type="number" step="0.0001" min="-90" max="90" placeholder="34.0522" value="34.0522" required />
+          </label>
+          <label class="field">
+            <span>Longitude</span>
+            <input id="lon" name="lon" type="number" step="0.0001" min="-180" max="180" placeholder="-118.2437" value="-118.2437" required />
+          </label>
+        </div>
 
-          <div class="steps" id="steps"></div>
+        <div class="radius-wrap">
+          <label for="radius">Search Radius <strong id="radius-value">25 mi</strong></label>
+          <input id="radius" name="radius" type="range" min="5" max="120" step="1" value="25" />
+        </div>
 
-          <div id="screen"></div>
+        <div class="grid three-up">
+          <label class="field">
+            <span>Min Altitude (ft)</span>
+            <input id="min-altitude" name="minAltitudeFt" type="number" min="0" max="60000" step="100" value="1500" />
+          </label>
+          <label class="field">
+            <span>Max Altitude (ft)</span>
+            <input id="max-altitude" name="maxAltitudeFt" type="number" min="1000" max="65000" step="100" value="45000" />
+          </label>
+          <label class="field">
+            <span>Max Flights</span>
+            <input id="max-results" name="maxResults" type="number" min="5" max="100" step="1" value="25" />
+          </label>
+        </div>
 
-          <div class="toast" id="toast"></div>
+        <div class="actions">
+          <button id="locate-btn" class="ghost" type="button">Use My Location</button>
+          <button id="lookup-btn" class="primary" type="submit">Check Overhead Flights</button>
+        </div>
 
-          <div class="hint" id="hint">
-            Demo mode is ON by default. Youâ€™ll see fake â€œlast soldâ€ results until you connect a real data source.
-          </div>
-        </section>
+        <p class="footnote">
+          Tip: defaults are Los Angeles. Use My Location for nearby flights, then tighten radius for better precision.
+        </p>
+      </form>
+    </section>
 
-        <aside class="panel">
-          <h2>Last Sold Result</h2>
-          <p>This is where the last sold item matching your description appears.</p>
-
-          <div id="resultArea" class="resultCard">
-            <div class="pill bad">No search yet</div>
-            <div class="small">Finalize your details to fetch the last sold match.</div>
-          </div>
-
-          <div class="divider"></div>
-
-          <div class="small">
-            <strong>How to make it real:</strong><br/>
-            Browsers canâ€™t reliably pull â€œsold listingsâ€ directly from most marketplaces due to CORS + anti-scrape rules.
-            The front-end is wired to call <code>/api/last-sold</code> if you turn demo mode off.
-          </div>
-        </aside>
+    <section class="panel reveal delay-2">
+      <div class="panel-top">
+        <h2>Possible Overhead Flights</h2>
+        <p id="last-updated" class="timestamp">No lookup yet.</p>
       </div>
-    </main>
-  </div>
 
-  <script>
-    /***************
-     * CONFIG
-     ***************/
-    const CONFIG = {
-      // Backend endpoint that returns an AI-generated estimate.
-      REAL_API_ENDPOINT: "/api/last-sold"
-    };
+      <p id="message" class="message">Enter coordinates and run a lookup.</p>
+      <ul id="flight-list" class="flight-list" aria-live="polite"></ul>
+    </section>
+  </main>
 
-    /***************
-     * STATE
-     ***************/
-    const state = {
-      step: 0,
-      category: null,        // "comics" | "cards"
-      graded: null,          // true | false
-      title: "",             // user item name
-      year: "",              // optional year
-      setOrSeries: "",       // cards: set; comics: series/publisher
-      issueOrPlayer: "",     // comics: issue; cards: player
-      gradeCompany: "",
-      gradeValue: ""
-    };
-
-    const STEPS = [
-      "Main Menu",
-      "Graded?",
-      "Item Details",
-      "Finalize"
-    ];
-
-    /***************
-     * ELEMENTS
-     ***************/
-    const elScreen = document.getElementById("screen");
-    const elTitle = document.getElementById("screenTitle");
-    const elDesc = document.getElementById("screenDesc");
-    const elSteps = document.getElementById("steps");
-    const elResultArea = document.getElementById("resultArea");
-    const elReset = document.getElementById("btnReset");
-    const elToast = document.getElementById("toast");
-
-    elReset.addEventListener("click", resetAll);
-
-    /***************
-     * UI HELPERS
-     ***************/
-    function showToast(msg){
-      elToast.textContent = msg;
-      elToast.classList.add("show");
-      setTimeout(()=> elToast.classList.remove("show"), 2600);
-    }
-
-    function renderStepChips(){
-      elSteps.innerHTML = "";
-      STEPS.forEach((name, i) => {
-        const chip = document.createElement("div");
-        chip.className = "chip" + (i === state.step ? " on" : "");
-        chip.textContent = `${i+1}. ${name}`;
-        elSteps.appendChild(chip);
-      });
-    }
-
-    function setScreen(title, desc){
-      elTitle.textContent = title;
-      elDesc.textContent = desc;
-      renderStepChips();
-    }
-
-    function htmlToNode(html){
-      const t = document.createElement("template");
-      t.innerHTML = html.trim();
-      return t.content.firstChild;
-    }
-
-    function money(n){
-      if (typeof n !== "number" || Number.isNaN(n)) return "â€”";
-      return n.toLocaleString(undefined, { style:"currency", currency:"USD" });
-    }
-
-    function safe(s){
-      return String(s || "").replace(/[<>&"]/g, c => ({
-        "<":"&lt;", ">":"&gt;", "&":"&amp;", '"':"&quot;"
-      }[c]));
-    }
-
-    /***************
-     * SCREENS
-     ***************/
-    function render(){
-      if (state.step === 0) renderMenu();
-      if (state.step === 1) renderGraded();
-      if (state.step === 2) renderDetails();
-      if (state.step === 3) renderFinalize();
-    }
-
-    function renderMenu(){
-      setScreen("Main Menu", "Select what you want to price-check.");
-      elScreen.innerHTML = "";
-
-      const node = htmlToNode(`
+  <template id="flight-template">
+    <li class="flight-card">
+      <div class="flight-head">
         <div>
-          <div class="actions">
-            <button class="primary" id="pickComics">Comic Books</button>
-            <button class="primary" id="pickCards">Sports Cards</button>
-          </div>
-
-          <div class="hint">
-            Tip: Use the details screen to type the item name (ex: â€œInvincible #1â€ or â€œLeBron James Topps Chromeâ€).
-          </div>
+          <h3 data-flight="name"></h3>
+          <p data-flight="route" class="route"></p>
         </div>
-      `);
+        <span data-flight="likelihood" class="likelihood"></span>
+      </div>
 
-      node.querySelector("#pickComics").addEventListener("click", () => {
-        state.category = "comics";
-        state.step = 1;
-        render();
-      });
-
-      node.querySelector("#pickCards").addEventListener("click", () => {
-        state.category = "cards";
-        state.step = 1;
-        render();
-      });
-
-      elScreen.appendChild(node);
-    }
-
-    function renderGraded(){
-      const label = state.category === "comics" ? "Comic Books" : "Sports Cards";
-      setScreen("Graded?", `You chose ${label}. Is it graded?`);
-      elScreen.innerHTML = "";
-
-      const node = htmlToNode(`
+      <div class="stats">
         <div>
-          <div class="actions">
-            <button class="primary" id="gradedYes">Yes, graded</button>
-            <button id="gradedNo">No, raw / ungraded</button>
-          </div>
-
-          <div class="actions">
-            <button id="back">Back</button>
-          </div>
-
-          <div class="hint">
-            If graded, youâ€™ll enter the grading company (PSA/CGC/SGC/BGS/etc.) and the grade (ex: 9, 9.5, 10).
-          </div>
+          <span>Distance</span>
+          <strong data-flight="distance"></strong>
         </div>
-      `);
-
-      node.querySelector("#gradedYes").addEventListener("click", () => {
-        state.graded = true;
-        state.step = 2;
-        render();
-      });
-
-      node.querySelector("#gradedNo").addEventListener("click", () => {
-        state.graded = false;
-        state.gradeCompany = "";
-        state.gradeValue = "";
-        state.step = 2;
-        render();
-      });
-
-      node.querySelector("#back").addEventListener("click", () => {
-        state.step = 0;
-        render();
-      });
-
-      elScreen.appendChild(node);
-    }
-
-    function renderDetails(){
-      const isComics = state.category === "comics";
-      setScreen(
-        "Item Details",
-        isComics
-          ? "Enter the comic details (name/series/issue)."
-          : "Enter the card details (player/set/year)."
-      );
-
-      elScreen.innerHTML = "";
-
-      const gradedBlock = state.graded ? `
-        <div class="row two">
-          <div>
-            <label>Grading Company</label>
-            <select id="gradeCompany">
-              <option value="">Selectâ€¦</option>
-              <option value="PSA">PSA</option>
-              <option value="BGS">BGS (Beckett)</option>
-              <option value="SGC">SGC</option>
-              <option value="CGC">CGC</option>
-              <option value="CBCS">CBCS</option>
-              <option value="Other">Other</option>
-            </select>
-          </div>
-          <div>
-            <label>Grade</label>
-            <input id="gradeValue" placeholder="Ex: 9, 9.5, 10, 98" />
-          </div>
-        </div>
-      ` : ``;
-
-      const node = htmlToNode(`
         <div>
-          <div class="row two">
-            <div>
-              <label>${isComics ? "Comic Title" : "Card Title"}</label>
-              <input id="title" placeholder="${isComics ? "Ex: Invincible" : "Ex: LeBron James Topps Chrome"}" />
-            </div>
-            <div>
-              <label>Year (optional)</label>
-              <input id="year" inputmode="numeric" placeholder="Ex: 2003" />
-            </div>
-          </div>
-
-          <div class="row two">
-            <div>
-              <label>${isComics ? "Series / Publisher (optional)" : "Set / Brand (optional)"}</label>
-              <input id="setOrSeries" placeholder="${isComics ? "Ex: Image Comics" : "Ex: Topps Chrome"}" />
-            </div>
-            <div>
-              <label>${isComics ? "Issue # (optional)" : "Player (optional)"}</label>
-              <input id="issueOrPlayer" placeholder="${isComics ? "Ex: #1" : "Ex: LeBron James"}" />
-            </div>
-          </div>
-
-          ${gradedBlock}
-
-          <div class="actions">
-            <button id="back">Back</button>
-            <button class="primary" id="next">Continue</button>
-          </div>
-
-          <div class="hint">
-            The more specific your details are, the better the match.
-          </div>
+          <span>Altitude</span>
+          <strong data-flight="altitude"></strong>
         </div>
-      `);
-
-      // Fill existing state
-      node.querySelector("#title").value = state.title;
-      node.querySelector("#year").value = state.year;
-      node.querySelector("#setOrSeries").value = state.setOrSeries;
-      node.querySelector("#issueOrPlayer").value = state.issueOrPlayer;
-
-      if (state.graded){
-        node.querySelector("#gradeCompany").value = state.gradeCompany;
-        node.querySelector("#gradeValue").value = state.gradeValue;
-      }
-
-      node.querySelector("#back").addEventListener("click", () => {
-        state.step = 1;
-        render();
-      });
-
-      node.querySelector("#next").addEventListener("click", () => {
-        // Save
-        state.title = node.querySelector("#title").value.trim();
-        state.year = node.querySelector("#year").value.trim();
-        state.setOrSeries = node.querySelector("#setOrSeries").value.trim();
-        state.issueOrPlayer = node.querySelector("#issueOrPlayer").value.trim();
-
-        if (state.graded){
-          state.gradeCompany = node.querySelector("#gradeCompany").value.trim();
-          state.gradeValue = node.querySelector("#gradeValue").value.trim();
-          if (!state.gradeCompany || !state.gradeValue){
-            showToast("If graded, please enter both grading company and grade.");
-            return;
-          }
-        }
-
-        if (!state.title){
-          showToast("Please enter a title/name to search.");
-          return;
-        }
-
-        state.step = 3;
-        render();
-      });
-
-      elScreen.appendChild(node);
-    }
-
-    function renderFinalize(){
-      const label = state.category === "comics" ? "Comic Book" : "Sports Card";
-      setScreen("Finalize", `Review your ${label} description and click Finalize.`);
-
-      elScreen.innerHTML = "";
-
-      const query = buildQueryString();
-
-      const node = htmlToNode(`
         <div>
-          <div class="resultCard">
-            <div class="pill good">Your search description</div>
-            <div class="title">${safe(query)}</div>
-            <div class="meta">
-              Category: <strong>${safe(state.category)}</strong> â€¢
-              Graded: <strong>${state.graded ? "Yes" : "No"}</strong>
-            </div>
-          </div>
-
-          <div class="actions">
-            <button id="back">Back</button>
-            <button class="primary" id="finalize">Finalize & Find Last Sold</button>
-          </div>
-
-          <div class="hint">
-            This will fetch the most recent sold match (DEMO mode uses a fake dataset).
-          </div>
+          <span>Speed</span>
+          <strong data-flight="speed"></strong>
         </div>
-      `);
-
-      node.querySelector("#back").addEventListener("click", () => {
-        state.step = 2;
-        render();
-      });
-
-      node.querySelector("#finalize").addEventListener("click", async () => {
-        await runLastSoldSearch(query);
-      });
-
-      elScreen.appendChild(node);
-    }
-
-    /***************
-     * QUERY + SEARCH
-     ***************/
-    function buildQueryString(){
-      const parts = [];
-
-      // common
-      if (state.year) parts.push(state.year);
-      parts.push(state.title);
-
-      // per category
-      if (state.category === "comics"){
-        if (state.setOrSeries) parts.push(state.setOrSeries);
-        if (state.issueOrPlayer) parts.push(`Issue ${state.issueOrPlayer.replace(/^#/, "#")}`);
-      } else {
-        if (state.issueOrPlayer) parts.push(state.issueOrPlayer); // player
-        if (state.setOrSeries) parts.push(state.setOrSeries);
-      }
-
-      // grading
-      if (state.graded){
-        parts.push(`${state.gradeCompany} ${state.gradeValue}`);
-      } else {
-        parts.push("Raw");
-      }
-
-      return parts.filter(Boolean).join(" â€¢ ");
-    }
-
-    async function runLastSoldSearch(query){
-      // Loading UI
-      elResultArea.innerHTML = `
-        <div class="pill good">Searchingâ€¦</div>
-        <div class="small">Looking up the latest sold match for:</div>
-        <div class="title">${safe(query)}</div>
-      `;
-
-      try{
-        const payload = {
-          query,
-          category: state.category,
-          graded: state.graded,
-          title: state.title,
-          year: state.year,
-          setOrSeries: state.setOrSeries,
-          issueOrPlayer: state.issueOrPlayer,
-          gradeCompany: state.gradeCompany,
-          gradeValue: state.gradeValue
-        };
-
-        const data = await fetchLastSoldEstimate(payload);
-        if (!data){
-          renderNoMatch(query);
-          return;
-        }
-
-        renderResult(data, query);
-      } catch (err){
-        renderError(err, query);
-      }
-    }
-
-    function renderResult(data, query){
-      const soldDate = data.soldDate ? new Date(data.soldDate).toLocaleDateString() : "Unknown date";
-      const src = data.source || "Unknown source";
-
-      elResultArea.innerHTML = `
-        <div class="resultTop">
-          <div>
-            <div class="pill good">AI Estimate</div>
-            <div class="title">${safe(data.title || "Untitled")}</div>
-            <div class="meta">
-              Estimated as of <strong>${safe(soldDate)}</strong> â€¢ Source: <strong>${safe(src)}</strong>
-            </div>
-          </div>
-          <div class="price">${money(data.price)}</div>
+        <div>
+          <span>Heading</span>
+          <strong data-flight="heading"></strong>
         </div>
+      </div>
 
-        <div class="meta">
-          Your query: <span class="small">${safe(query)}</span>
-        </div>
+      <p data-flight="meta" class="meta"></p>
+    </li>
+  </template>
 
-        ${data.url ? `<div><a href="${safe(data.url)}" target="_blank" rel="noopener">View listing</a></div>` : ""}
-
-        ${data.notes ? `<div class="small">${safe(data.notes)}</div>` : ""}
-        <div class="small">Estimate generated by the pricing assistant.</div>
-      `;
-    }
-
-    function renderNoMatch(query){
-      elResultArea.innerHTML = `
-        <div class="pill bad">No match found</div>
-        <div class="small">Try being more specific (year, issue/player, set/series, grade/company).</div>
-        <div class="meta">Query: <span class="small">${safe(query)}</span></div>
-      `;
-    }
-
-    function renderError(err, query){
-      elResultArea.innerHTML = `
-        <div class="pill bad">Error</div>
-        <div class="small">${safe(err?.message || String(err))}</div>
-        <div class="meta">Query: <span class="small">${safe(query)}</span></div>
-        <div class="small">
-          Make sure <code>${safe(CONFIG.REAL_API_ENDPOINT)}</code> is reachable and returns JSON.
-        </div>
-      `;
-    }
-
-    /***************
-     * DATA SOURCE
-     ***************/
-    async function fetchLastSoldEstimate(payload){
-      const res = await fetch(CONFIG.REAL_API_ENDPOINT, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(payload)
-      });
-      if (!res.ok){
-        throw new Error(`API request failed: ${res.status} ${res.statusText}`);
-      }
-      const json = await res.json();
-      return json;
-    }
-    /***************
-     * RESET
-     ***************/
-    function resetAll(){
-      state.step = 0;
-      state.category = null;
-      state.graded = null;
-      state.title = "";
-      state.year = "";
-      state.setOrSeries = "";
-      state.issueOrPlayer = "";
-      state.gradeCompany = "";
-      state.gradeValue = "";
-
-      elResultArea.innerHTML = `
-        <div class="pill bad">No search yet</div>
-        <div class="small">Finalize your details to fetch the last sold match.</div>
-      `;
-      render();
-    }
-
-    // start
-    renderStepChips();
-    render();
-  </script>
+  <script src="app.js" defer></script>
 </body>
 </html>
-
