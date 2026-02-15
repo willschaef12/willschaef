@@ -385,8 +385,8 @@
         </div>
 
         <p class="footnote">
-          Note: Some public flight APIs block browser requests (CORS). If you get a “blocked by CORS” error,
-          run this through a tiny proxy (Cloudflare Worker / local server). The UI still works either way.
+          This UI calls the local `/api/overhead-flights` endpoint to avoid browser CORS issues.
+          Run with SWA CLI so the API is available on the same origin.
         </p>
       </form>
     </section>
@@ -457,15 +457,10 @@
 
   <script>
     // =============================
-    // LIVE DATA SETTINGS
+    // DATA SETTINGS
     // =============================
-    // This is the public adsb.lol API base. Some environments may block browser fetch (CORS).
-    // If that happens, set API_BASE to your proxy URL that forwards requests and adds CORS headers.
-    const API_BASE = "https://api.adsb.lol";
-
-    // Endpoint style we use (ADSBExchange-compatible "v2 point"):
-    //   GET {API_BASE}/v2/point/{lat}/{lon}/{radius_nm}
-    // If your API uses a different path, change buildUrl() below.
+    // Use same-origin API to avoid browser CORS issues.
+    const LOCAL_API_PATH = "/api/overhead-flights";
 
     // =============================
     // DOM
@@ -492,6 +487,10 @@
     const rctx = radarCanvas.getContext("2d");
 
     const tpl = $("#flight-template");
+    const isFileProtocol = window.location.protocol === "file:";
+    const runHint =
+      "This page is running as file://. Start a local HTTP server first: " +
+      "npx --yes @azure/static-web-apps-cli start . --api-location api --port 4280";
 
     requestAnimationFrame(() => {
       document.querySelectorAll(".reveal").forEach(el => el.classList.add("on"));
@@ -565,93 +564,66 @@
     }
 
     // =============================
-    // API FETCH (LIVE)
+    // API FETCH (SAME ORIGIN)
     // =============================
-    function buildUrl(lat, lon, radiusNm){
-      // If your API uses a different path, adjust here.
-      return `${API_BASE}/v2/point/${lat}/${lon}/${radiusNm}`;
-    }
-
-    // Normalize different "ADSBexchange-style" shapes:
-    // Some return { ac: [...] }, some { aircraft: [...] }.
-    function extractAircraftArray(json){
-      if (!json || typeof json !== "object") return [];
-      if (Array.isArray(json.ac)) return json.ac;
-      if (Array.isArray(json.aircraft)) return json.aircraft;
-      if (Array.isArray(json.planes)) return json.planes;
-      return [];
-    }
-
-    // Normalize common fields from various feeds into what we use.
     function normalizeAircraft(raw){
-      // Common-ish keys:
-      // callsign: "flight" or "call" or "callsign"
-      // lat/lon: "lat","lon"
-      // altitude: "alt_baro" or "alt_geom" or "altitude" or "alt"
-      // speed: "gs" (knots ground speed) or "tas" (true airspeed)
-      // heading: "track" or "heading"
-      // type: "t" (icao type), "type", "icao_type", etc.
-      const callsign = (raw.flight || raw.call || raw.callsign || raw.r || "").toString().trim();
-      const hex = (raw.hex || raw.icao || raw.icao24 || "").toString().trim();
+      const callsign = (raw.callsign || "").toString().trim();
+      const hex = (raw.icao24 || raw.hex || "").toString().trim();
 
-      const lat = Number(raw.lat);
-      const lon = Number(raw.lon);
+      const lat = Number(raw.latitude ?? raw.lat);
+      const lon = Number(raw.longitude ?? raw.lon);
 
-      const altFt =
-        Number.isFinite(Number(raw.alt_baro)) ? Number(raw.alt_baro) :
-        Number.isFinite(Number(raw.alt_geom)) ? Number(raw.alt_geom) :
-        Number.isFinite(Number(raw.altitude)) ? Number(raw.altitude) :
-        Number.isFinite(Number(raw.alt)) ? Number(raw.alt) :
-        null;
+      const altFt = Number.isFinite(Number(raw.altitudeFt))
+        ? Number(raw.altitudeFt)
+        : null;
 
-      const speedKt =
-        Number.isFinite(Number(raw.gs)) ? Number(raw.gs) :
-        Number.isFinite(Number(raw.tas)) ? Number(raw.tas) :
-        Number.isFinite(Number(raw.spd)) ? Number(raw.spd) :
-        null;
+      const speedKt = Number.isFinite(Number(raw.speedKnots))
+        ? Number(raw.speedKnots)
+        : null;
 
-      const headingDeg =
-        Number.isFinite(Number(raw.track)) ? Number(raw.track) :
-        Number.isFinite(Number(raw.heading)) ? Number(raw.heading) :
-        Number.isFinite(Number(raw.hdg)) ? Number(raw.hdg) :
-        null;
+      const headingDeg = Number.isFinite(Number(raw.headingDegrees))
+        ? Number(raw.headingDegrees)
+        : null;
 
-      const typeCode =
-        (raw.t || raw.type || raw.icao_type || raw.icaotype || raw.aircraft_type || "").toString().trim();
-
-      const desc =
-        (raw.desc || raw.description || raw.manufacturer || "").toString().trim();
-
-      // some feeds include route-ish info; usually missing in pure ADS-B
-      const origin = (raw.from || raw.origin || raw.orig || "").toString().trim();
-      const dest = (raw.to || raw.destination || raw.dest || "").toString().trim();
+      const origin = (raw.departureIcao || raw.origin || "").toString().trim();
+      const dest = (raw.arrivalIcao || raw.destination || "").toString().trim();
 
       return {
         callsign: callsign || (hex ? `HEX ${hex.toUpperCase()}` : "Unknown"),
         hex,
-        lat, lon,
+        lat,
+        lon,
         altitudeFt: altFt,
         speedKt,
         headingDeg,
-        typeCode: typeCode || "",
-        typeDesc: desc || "",
+        typeCode: "",
+        typeDesc: "",
         origin,
         dest,
         _raw: raw
       };
     }
 
-    async function fetchLiveAircraft(lat, lon, radiusNm){
-      const url = buildUrl(lat, lon, radiusNm);
+    async function fetchLiveAircraft({ lat, lon, radiusNm, minAltFt, maxAltFt, maxResults }){
+      // API expects miles; UI uses nautical miles.
+      const radiusMiles = clamp(radiusNm * 1.15078, 5, 120);
+      const params = new URLSearchParams({
+        lat: String(lat),
+        lon: String(lon),
+        radiusMiles: String(radiusMiles),
+        minAltitudeFt: String(minAltFt),
+        maxAltitudeFt: String(maxAltFt),
+        maxResults: String(maxResults)
+      });
 
-      // Basic fetch; no special headers (public)
-      const res = await fetch(url, { method: "GET" });
-      if (!res.ok){
-        throw new Error(`API error ${res.status}`);
-      }
+      const res = await fetch(`${LOCAL_API_PATH}?${params.toString()}`, { method: "GET" });
       const json = await res.json();
-      const arr = extractAircraftArray(json);
-      return arr.map(normalizeAircraft).filter(a => Number.isFinite(a.lat) && Number.isFinite(a.lon));
+      if (!res.ok){
+        throw new Error(json?.error || `API error ${res.status}`);
+      }
+
+      const flights = Array.isArray(json.flights) ? json.flights : [];
+      return flights.map(normalizeAircraft).filter(a => Number.isFinite(a.lat) && Number.isFinite(a.lon));
     }
 
     // =============================
@@ -934,6 +906,11 @@
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
 
+      if (isFileProtocol){
+        setMessage(runHint);
+        return;
+      }
+
       const userLat = Number(latEl.value);
       const userLon = Number(lonEl.value);
       const radiusNm = Number(radiusEl.value);
@@ -955,7 +932,14 @@
       radarRangeEl.textContent = `Range: ${radiusNm} nm`;
 
       try{
-        const aircraft = await fetchLiveAircraft(userLat, userLon, radiusNm);
+        const aircraft = await fetchLiveAircraft({
+          lat: userLat,
+          lon: userLon,
+          radiusNm,
+          minAltFt,
+          maxAltFt,
+          maxResults
+        });
 
         renderFlights({
           userLat, userLon, radiusNm,
@@ -966,10 +950,9 @@
       }catch(err){
         console.error(err);
 
-        // Most common issue in pure front-end apps: CORS
         setMessage(
-          "Could not fetch live flights. If you see a CORS error in the console, " +
-          "you’ll need a tiny proxy (Cloudflare Worker / local server) to call the API from the browser."
+          "Could not fetch live flights from /api/overhead-flights. " +
+          "Make sure SWA CLI is running with --api-location api."
         );
 
         clearList();
@@ -987,6 +970,10 @@
     radarState.radiusNm = Number(radiusEl.value);
     radarRangeEl.textContent = `Range: ${radiusEl.value} nm`;
     drawRadar();
+
+    if (isFileProtocol){
+      setMessage(runHint);
+    }
   </script>
 </body>
 </html>
