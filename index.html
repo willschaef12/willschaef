@@ -1,14 +1,337 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Overhead Flight Finder</title>
+
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css" />
+
+  <style>
+    :root{
+      --bg0:#050a10;
+      --bg1:#0b1521;
+      --panel:rgba(255,255,255,0.06);
+      --border:rgba(255,255,255,0.12);
+      --text:rgba(245,250,255,0.92);
+      --muted:rgba(245,250,255,0.68);
+      --muted2:rgba(245,250,255,0.52);
+      --good:#44ffbc;
+      --shadow: 0 18px 50px rgba(0,0,0,0.45);
+      --radius: 18px;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:"Space Grotesk", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(1200px 700px at 20% 10%, rgba(68,255,188,0.14), transparent 55%),
+        radial-gradient(1000px 650px at 80% 20%, rgba(120,155,255,0.12), transparent 60%),
+        radial-gradient(900px 600px at 60% 90%, rgba(255,210,120,0.08), transparent 60%),
+        linear-gradient(180deg, var(--bg1), var(--bg0));
+      overflow-x:hidden;
+    }
+
+    .sky-glow{
+      position:fixed; inset:-20%;
+      filter: blur(60px);
+      opacity:.55;
+      pointer-events:none;
+      z-index:-1;
+      animation: drift 16s ease-in-out infinite alternate;
+    }
+    .sky-glow-a{ background: radial-gradient(circle at 25% 30%, rgba(68,255,188,.22), transparent 55%); }
+    .sky-glow-b{
+      background: radial-gradient(circle at 70% 40%, rgba(130,160,255,.18), transparent 60%);
+      animation-duration: 22s;
+    }
+    @keyframes drift{
+      from{transform: translate3d(-1.5%, -1.2%, 0) scale(1.02)}
+      to{transform: translate3d(1.5%, 1.2%, 0) scale(1.06)}
+    }
+
+    .app-shell{
+      width:min(1100px, 92vw);
+      margin: 48px auto 60px;
+      display:flex;
+      flex-direction:column;
+      gap:18px;
+    }
+
+    .hero{ padding: 22px 18px 6px; }
+    .eyebrow{
+      margin:0 0 10px;
+      font-family:"IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      font-size:.78rem;
+      color: rgba(68,255,188,0.82);
+    }
+    h1{
+      margin:0 0 10px;
+      font-size: clamp(1.8rem, 2.9vw, 2.5rem);
+      line-height:1.1;
+      letter-spacing:-0.02em;
+    }
+    .hero-copy{
+      margin:0;
+      max-width: 70ch;
+      color: var(--muted);
+      line-height:1.55;
+      font-size:1.02rem;
+    }
+
+    .panel{
+      background: linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.04));
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 18px;
+      backdrop-filter: blur(12px);
+    }
+    .panel h2{ margin:0 0 14px; font-size:1.05rem; letter-spacing:0.01em; }
+    .panel-top{
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:8px;
+    }
+    .timestamp{
+      margin:0;
+      font-family:"IBM Plex Mono", monospace;
+      font-size:.82rem;
+      color: var(--muted2);
+      white-space:nowrap;
+    }
+
+    .controls{ display:flex; flex-direction:column; gap:14px; }
+
+    .grid{ display:grid; gap:12px; }
+    .two-up{ grid-template-columns: repeat(2, minmax(0,1fr)); }
+    .three-up{ grid-template-columns: repeat(3, minmax(0,1fr)); }
+
+    .field{ display:flex; flex-direction:column; gap:8px; }
+    .field span{ color: var(--muted); font-size:0.92rem; }
+
+    input[type="number"], input[type="text"]{
+      width:100%;
+      padding: 12px 12px;
+      border-radius: 12px;
+      border:1px solid rgba(255,255,255,0.14);
+      background: rgba(0,0,0,0.35);
+      color: var(--text);
+      outline:none;
+      transition: border-color .15s ease, box-shadow .15s ease;
+    }
+    input[type="number"]:focus, input[type="text"]:focus{
+      border-color: rgba(68,255,188,0.55);
+      box-shadow: 0 0 0 4px rgba(68,255,188,0.12);
+    }
+
+    .radius-wrap{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      padding: 12px 12px;
+      border-radius: 14px;
+      border:1px solid rgba(255,255,255,0.12);
+      background: rgba(0,0,0,0.22);
+    }
+    .radius-wrap label{
+      color: var(--muted);
+      display:flex;
+      gap:10px;
+      align-items:baseline;
+      justify-content:space-between;
+      font-size:0.92rem;
+    }
+    #radius-value{
+      color: rgba(68,255,188,0.9);
+      font-family:"IBM Plex Mono", monospace;
+      font-weight:500;
+    }
+
+    .actions{ display:flex; gap:10px; flex-wrap:wrap; }
+    button{
+      border:1px solid rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.06);
+      color: var(--text);
+      border-radius: 999px;
+      padding: 11px 14px;
+      font-weight:600;
+      cursor:pointer;
+      transition: transform .08s ease, border-color .15s ease, background .15s ease;
+    }
+    button:active{ transform: translateY(1px); }
+    .primary{
+      border-color: rgba(68,255,188,0.34);
+      background: linear-gradient(180deg, rgba(68,255,188,0.22), rgba(68,255,188,0.08));
+    }
+    .primary:hover{ border-color: rgba(68,255,188,0.60); }
+    .ghost:hover{ border-color: rgba(255,255,255,0.26); background: rgba(255,255,255,0.09); }
+
+    .footnote{ margin:0; color: var(--muted2); font-size:0.92rem; line-height:1.4; }
+    .message{ margin: 10px 0 0; color: var(--muted); line-height:1.45; }
+
+    .results-grid{
+      display:grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 16px;
+      margin-top: 12px;
+      align-items: start;
+    }
+
+    .flight-list{
+      list-style:none;
+      padding: 0;
+      margin: 12px 0 0;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    .flight-card{
+      border:1px solid rgba(255,255,255,0.12);
+      background: rgba(0,0,0,0.28);
+      border-radius: 16px;
+      padding: 14px;
+      display:flex;
+      flex-direction:column;
+      gap: 10px;
+      cursor: pointer;
+      transition: border-color .12s ease, background .12s ease, transform .12s ease;
+    }
+    .flight-card:hover{
+      transform: translateY(-1px);
+      border-color: rgba(68,255,188,0.30);
+      background: rgba(0,0,0,0.30);
+    }
+    .flight-card.selected{
+      border-color: rgba(68,255,188,0.55);
+      box-shadow: 0 0 0 4px rgba(68,255,188,0.10);
+    }
+
+    .flight-head{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+    }
+    .flight-head h3{ margin:0; font-size: 1.05rem; letter-spacing:-0.01em; }
+
+    .subline{
+      margin:6px 0 0;
+      color: var(--muted);
+      font-size:0.95rem;
+      line-height:1.3;
+    }
+    .mono{
+      font-family:"IBM Plex Mono", monospace;
+      font-size:0.82rem;
+      letter-spacing:0.02em;
+      color: rgba(245,250,255,0.78);
+    }
+
+    .likelihood{
+      font-family:"IBM Plex Mono", monospace;
+      font-size:0.78rem;
+      padding: 7px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.14);
+      color: rgba(245,250,255,0.9);
+      background: rgba(255,255,255,0.06);
+      white-space:nowrap;
+    }
+
+    .stats{
+      display:grid;
+      grid-template-columns: repeat(4, minmax(0,1fr));
+      gap:10px;
+    }
+    .stats span{ display:block; font-size:0.78rem; color: var(--muted2); margin-bottom:6px; }
+    .stats strong{
+      font-family:"IBM Plex Mono", monospace;
+      font-size:0.9rem;
+      font-weight:600;
+      color: rgba(245,250,255,0.92);
+    }
+
+    .meta{
+      margin: 0;
+      color: var(--muted2);
+      font-size:0.92rem;
+      line-height:1.35;
+    }
+
+    /* Radar panel */
+    .radar-panel{
+      position: sticky;
+      top: 16px;
+      border:1px solid rgba(255,255,255,0.12);
+      background: rgba(0,0,0,0.22);
+      border-radius: 16px;
+      padding: 12px;
+      overflow:hidden;
+    }
+    .radar-top{
+      display:flex;
+      align-items:baseline;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom: 10px;
+    }
+    .radar-top h3{
+      margin:0;
+      font-size: 0.95rem;
+      letter-spacing:0.01em;
+      color: rgba(245,250,255,0.9);
+    }
+    #radar{
+      width:100%;
+      height:auto;
+      display:block;
+      border-radius: 16px;
+      background:
+        radial-gradient(circle at 50% 50%,
+          rgba(68,255,188,0.10) 0%,
+          rgba(68,255,188,0.06) 40%,
+          rgba(12, 25, 35, 0.78) 78%,
+          rgba(5,10,16, 0.95) 100%);
+      box-shadow: 0 0 0 1px rgba(68,255,188,0.22) inset;
+    }
+    .radar-legend{
+      display:flex;
+      justify-content:space-between;
+      margin-top: 10px;
+      gap:10px;
+      color: var(--muted2);
+      font-family:"IBM Plex Mono", monospace;
+      font-size: 0.78rem;
+    }
+
+    .reveal{ opacity:0; transform: translateY(10px); }
+    .reveal.on{ opacity:1; transform:none; transition: opacity .55s ease, transform .55s ease; }
+    .delay-1.on{ transition-delay: .08s; }
+    .delay-2.on{ transition-delay: .16s; }
+
+    @media (max-width: 980px){
+      .results-grid{ grid-template-columns: 1fr; }
+      .radar-panel{ position: static; }
+    }
+    @media (max-width: 820px){
+      .three-up{ grid-template-columns: 1fr; }
+      .two-up{ grid-template-columns: 1fr; }
+      .stats{ grid-template-columns: repeat(2, minmax(0,1fr)); }
+    }
+  </style>
 </head>
+
 <body>
   <div class="sky-glow sky-glow-a" aria-hidden="true"></div>
   <div class="sky-glow sky-glow-b" aria-hidden="true"></div>
@@ -37,8 +360,8 @@
         </div>
 
         <div class="radius-wrap">
-          <label for="radius">Search Radius <strong id="radius-value">25 mi</strong></label>
-          <input id="radius" name="radius" type="range" min="5" max="120" step="1" value="25" />
+          <label for="radius">Search Radius <strong id="radius-value">25 nm</strong></label>
+          <input id="radius" name="radius" type="range" min="5" max="250" step="1" value="25" />
         </div>
 
         <div class="grid three-up">
@@ -62,7 +385,8 @@
         </div>
 
         <p class="footnote">
-          Tip: defaults are Los Angeles. Use My Location for nearby flights, then tighten radius for better precision.
+          Note: Some public flight APIs block browser requests (CORS). If you get a “blocked by CORS” error,
+          run this through a tiny proxy (Cloudflare Worker / local server). The UI still works either way.
         </p>
       </form>
     </section>
@@ -73,17 +397,37 @@
         <p id="last-updated" class="timestamp">No lookup yet.</p>
       </div>
 
-      <p id="message" class="message">Enter coordinates and run a lookup.</p>
-      <ul id="flight-list" class="flight-list" aria-live="polite"></ul>
+      <div class="results-grid">
+        <div>
+          <p id="message" class="message">Enter coordinates and run a lookup.</p>
+          <ul id="flight-list" class="flight-list" aria-live="polite"></ul>
+        </div>
+
+        <aside class="radar-panel" aria-label="Radar">
+          <div class="radar-top">
+            <h3>Radar</h3>
+            <p id="radar-sub" class="timestamp">No data yet.</p>
+          </div>
+          <canvas id="radar" width="520" height="520"></canvas>
+          <div class="radar-legend">
+            <span>Up = North</span>
+            <span id="radar-range">Range: —</span>
+          </div>
+          <p class="footnote" style="margin-top:10px;">
+            Dots are aircraft positions relative to your point. Click a flight to highlight it.
+          </p>
+        </aside>
+      </div>
     </section>
   </main>
 
   <template id="flight-template">
-    <li class="flight-card">
+    <li class="flight-card" tabindex="0" role="button" aria-label="Select flight">
       <div class="flight-head">
         <div>
           <h3 data-flight="name"></h3>
-          <p data-flight="route" class="route"></p>
+          <p data-flight="type" class="subline mono"></p>
+          <p data-flight="route" class="subline"></p>
         </div>
         <span data-flight="likelihood" class="likelihood"></span>
       </div>
@@ -111,6 +455,538 @@
     </li>
   </template>
 
-  <script src="app.js" defer></script>
+  <script>
+    // =============================
+    // LIVE DATA SETTINGS
+    // =============================
+    // This is the public adsb.lol API base. Some environments may block browser fetch (CORS).
+    // If that happens, set API_BASE to your proxy URL that forwards requests and adds CORS headers.
+    const API_BASE = "https://api.adsb.lol";
+
+    // Endpoint style we use (ADSBExchange-compatible "v2 point"):
+    //   GET {API_BASE}/v2/point/{lat}/{lon}/{radius_nm}
+    // If your API uses a different path, change buildUrl() below.
+
+    // =============================
+    // DOM
+    // =============================
+    const $ = (s) => document.querySelector(s);
+
+    const form = $("#lookup-form");
+    const latEl = $("#lat");
+    const lonEl = $("#lon");
+    const radiusEl = $("#radius");
+    const radiusValueEl = $("#radius-value");
+    const minAltEl = $("#min-altitude");
+    const maxAltEl = $("#max-altitude");
+    const maxResultsEl = $("#max-results");
+    const locateBtn = $("#locate-btn");
+
+    const listEl = $("#flight-list");
+    const msgEl = $("#message");
+    const updatedEl = $("#last-updated");
+
+    const radarCanvas = $("#radar");
+    const radarSub = $("#radar-sub");
+    const radarRangeEl = $("#radar-range");
+    const rctx = radarCanvas.getContext("2d");
+
+    const tpl = $("#flight-template");
+
+    requestAnimationFrame(() => {
+      document.querySelectorAll(".reveal").forEach(el => el.classList.add("on"));
+    });
+
+    radiusValueEl.textContent = `${radiusEl.value} nm`;
+    radiusEl.addEventListener("input", () => {
+      radiusValueEl.textContent = `${radiusEl.value} nm`;
+    });
+
+    // =============================
+    // MATH HELPERS
+    // =============================
+    const toRad = d => d * Math.PI / 180;
+    const toDeg = r => r * 180 / Math.PI;
+    const clamp = (v, mn, mx) => Math.max(mn, Math.min(mx, v));
+
+    // Haversine distance in nautical miles
+    function distanceNm(lat1, lon1, lat2, lon2){
+      const R_km = 6371.0088;
+      const km_to_nm = 0.539956803;
+      const φ1 = toRad(lat1), φ2 = toRad(lat2);
+      const Δφ = toRad(lat2 - lat1);
+      const Δλ = toRad(lon2 - lon1);
+
+      const a = Math.sin(Δφ/2)**2 + Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)**2;
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      return (R_km * c) * km_to_nm;
+    }
+
+    // Bearing from point A (user) to point B (aircraft), degrees 0..360, 0=N
+    function bearingDeg(lat1, lon1, lat2, lon2){
+      const φ1 = toRad(lat1), φ2 = toRad(lat2);
+      const Δλ = toRad(lon2 - lon1);
+      const y = Math.sin(Δλ) * Math.cos(φ2);
+      const x = Math.cos(φ1)*Math.sin(φ2) - Math.sin(φ1)*Math.cos(φ2)*Math.cos(Δλ);
+      const θ = Math.atan2(y, x);
+      return (toDeg(θ) + 360) % 360;
+    }
+
+    function fmtNm(nm){ return `${nm.toFixed(nm < 10 ? 1 : 0)} nm`; }
+    function fmtFt(ft){ return ft ? `${Math.round(ft).toLocaleString()} ft` : "—"; }
+    function fmtKt(kt){ return kt ? `${Math.round(kt)} kt` : "—"; }
+    function fmtDeg(d){ return (d === null || d === undefined || Number.isNaN(d)) ? "—" : `${Math.round(d)}°`; }
+
+    function setUpdatedNow(){
+      updatedEl.textContent = `Updated ${new Date().toLocaleString()}`;
+    }
+
+    // =============================
+    // SCORING (simple & tweakable)
+    // =============================
+    function computeLikelihood({ distanceNm, altitudeFt, radiusNm, headingDeg, bearingToUserDeg }){
+      const distScore = 1 - clamp(distanceNm / Math.max(1, radiusNm), 0, 1);
+      const altScore = clamp((altitudeFt - 1500) / 35000, 0, 1);
+
+      // "Overhead-ish": if the plane is heading toward your bearing, score higher.
+      // NOTE: bearingToUserDeg is the bearing FROM user TO aircraft.
+      // To see if aircraft is heading toward the user, compare aircraft heading with reverse bearing.
+      const bearingFromAircraftToUser = (bearingToUserDeg + 180) % 360;
+      const angleDiff = Math.abs((((headingDeg - bearingFromAircraftToUser) % 360) + 540) % 360 - 180);
+      const headingScore = 1 - clamp(angleDiff / 180, 0, 1);
+
+      return clamp(distScore*0.55 + headingScore*0.30 + altScore*0.15, 0, 1);
+    }
+
+    function likelihoodLabel(x){
+      if (x >= 0.78) return "High";
+      if (x >= 0.52) return "Medium";
+      return "Low";
+    }
+
+    // =============================
+    // API FETCH (LIVE)
+    // =============================
+    function buildUrl(lat, lon, radiusNm){
+      // If your API uses a different path, adjust here.
+      return `${API_BASE}/v2/point/${lat}/${lon}/${radiusNm}`;
+    }
+
+    // Normalize different "ADSBexchange-style" shapes:
+    // Some return { ac: [...] }, some { aircraft: [...] }.
+    function extractAircraftArray(json){
+      if (!json || typeof json !== "object") return [];
+      if (Array.isArray(json.ac)) return json.ac;
+      if (Array.isArray(json.aircraft)) return json.aircraft;
+      if (Array.isArray(json.planes)) return json.planes;
+      return [];
+    }
+
+    // Normalize common fields from various feeds into what we use.
+    function normalizeAircraft(raw){
+      // Common-ish keys:
+      // callsign: "flight" or "call" or "callsign"
+      // lat/lon: "lat","lon"
+      // altitude: "alt_baro" or "alt_geom" or "altitude" or "alt"
+      // speed: "gs" (knots ground speed) or "tas" (true airspeed)
+      // heading: "track" or "heading"
+      // type: "t" (icao type), "type", "icao_type", etc.
+      const callsign = (raw.flight || raw.call || raw.callsign || raw.r || "").toString().trim();
+      const hex = (raw.hex || raw.icao || raw.icao24 || "").toString().trim();
+
+      const lat = Number(raw.lat);
+      const lon = Number(raw.lon);
+
+      const altFt =
+        Number.isFinite(Number(raw.alt_baro)) ? Number(raw.alt_baro) :
+        Number.isFinite(Number(raw.alt_geom)) ? Number(raw.alt_geom) :
+        Number.isFinite(Number(raw.altitude)) ? Number(raw.altitude) :
+        Number.isFinite(Number(raw.alt)) ? Number(raw.alt) :
+        null;
+
+      const speedKt =
+        Number.isFinite(Number(raw.gs)) ? Number(raw.gs) :
+        Number.isFinite(Number(raw.tas)) ? Number(raw.tas) :
+        Number.isFinite(Number(raw.spd)) ? Number(raw.spd) :
+        null;
+
+      const headingDeg =
+        Number.isFinite(Number(raw.track)) ? Number(raw.track) :
+        Number.isFinite(Number(raw.heading)) ? Number(raw.heading) :
+        Number.isFinite(Number(raw.hdg)) ? Number(raw.hdg) :
+        null;
+
+      const typeCode =
+        (raw.t || raw.type || raw.icao_type || raw.icaotype || raw.aircraft_type || "").toString().trim();
+
+      const desc =
+        (raw.desc || raw.description || raw.manufacturer || "").toString().trim();
+
+      // some feeds include route-ish info; usually missing in pure ADS-B
+      const origin = (raw.from || raw.origin || raw.orig || "").toString().trim();
+      const dest = (raw.to || raw.destination || raw.dest || "").toString().trim();
+
+      return {
+        callsign: callsign || (hex ? `HEX ${hex.toUpperCase()}` : "Unknown"),
+        hex,
+        lat, lon,
+        altitudeFt: altFt,
+        speedKt,
+        headingDeg,
+        typeCode: typeCode || "",
+        typeDesc: desc || "",
+        origin,
+        dest,
+        _raw: raw
+      };
+    }
+
+    async function fetchLiveAircraft(lat, lon, radiusNm){
+      const url = buildUrl(lat, lon, radiusNm);
+
+      // Basic fetch; no special headers (public)
+      const res = await fetch(url, { method: "GET" });
+      if (!res.ok){
+        throw new Error(`API error ${res.status}`);
+      }
+      const json = await res.json();
+      const arr = extractAircraftArray(json);
+      return arr.map(normalizeAircraft).filter(a => Number.isFinite(a.lat) && Number.isFinite(a.lon));
+    }
+
+    // =============================
+    // RADAR DRAW (ALL FLIGHTS)
+    // =============================
+    let radarAnimId = null;
+    let radarState = {
+      userLat: 0,
+      userLon: 0,
+      radiusNm: 25,
+      aircraft: [],
+      selectedHex: ""
+    };
+
+    function drawRadar(){
+      const { userLat, userLon, radiusNm, aircraft, selectedHex } = radarState;
+
+      const w = radarCanvas.width;
+      const h = radarCanvas.height;
+      const cx = w/2, cy = h/2;
+      const R = Math.min(w,h) * 0.44;
+
+      // clear (we rely on CSS bg)
+      rctx.clearRect(0,0,w,h);
+
+      // glow
+      const glow = rctx.createRadialGradient(cx, cy, 0, cx, cy, R*1.2);
+      glow.addColorStop(0, "rgba(68,255,188,0.14)");
+      glow.addColorStop(0.75, "rgba(68,255,188,0.06)");
+      glow.addColorStop(1, "rgba(0,0,0,0)");
+      rctx.fillStyle = glow;
+      rctx.beginPath();
+      rctx.arc(cx, cy, R*1.2, 0, Math.PI*2);
+      rctx.fill();
+
+      // rings
+      rctx.strokeStyle = "rgba(68,255,188,0.16)";
+      rctx.lineWidth = 1;
+      [0.25, 0.5, 0.75, 1].forEach(k=>{
+        rctx.beginPath();
+        rctx.arc(cx, cy, R*k, 0, Math.PI*2);
+        rctx.stroke();
+      });
+
+      // crosshair
+      rctx.strokeStyle = "rgba(68,255,188,0.14)";
+      rctx.beginPath(); rctx.moveTo(cx - R, cy); rctx.lineTo(cx + R, cy); rctx.stroke();
+      rctx.beginPath(); rctx.moveTo(cx, cy - R); rctx.lineTo(cx, cy + R); rctx.stroke();
+
+      // N/E/S/W ticks (tiny)
+      rctx.strokeStyle = "rgba(214,255,238,0.28)";
+      rctx.lineWidth = 2;
+      const tick = 10;
+      rctx.beginPath(); rctx.moveTo(cx, cy - R); rctx.lineTo(cx, cy - R + tick); rctx.stroke(); // N
+      rctx.beginPath(); rctx.moveTo(cx + R, cy); rctx.lineTo(cx + R - tick, cy); rctx.stroke(); // E
+      rctx.beginPath(); rctx.moveTo(cx, cy + R); rctx.lineTo(cx, cy + R - tick); rctx.stroke(); // S
+      rctx.beginPath(); rctx.moveTo(cx - R, cy); rctx.lineTo(cx - R + tick, cy); rctx.stroke(); // W
+
+      // sweep
+      const now = performance.now() / 1000;
+      const sweepAng = (now * 1.05) % (Math.PI * 2);
+      const sx = cx + R * Math.cos(sweepAng);
+      const sy = cy + R * Math.sin(sweepAng);
+
+      rctx.strokeStyle = "rgba(68,255,188,0.18)";
+      rctx.lineWidth = 2;
+      rctx.beginPath();
+      rctx.moveTo(cx, cy);
+      rctx.lineTo(sx, sy);
+      rctx.stroke();
+
+      rctx.fillStyle = "rgba(68,255,188,0.08)";
+      rctx.beginPath();
+      rctx.moveTo(cx, cy);
+      rctx.arc(cx, cy, R, sweepAng - 0.28, sweepAng, false);
+      rctx.closePath();
+      rctx.fill();
+
+      // dots
+      for (const a of aircraft){
+        const dNm = distanceNm(userLat, userLon, a.lat, a.lon);
+        if (!Number.isFinite(dNm)) continue;
+
+        const t = clamp(dNm / Math.max(1, radiusNm), 0, 1);
+        const r = t * R;
+
+        const brg = bearingDeg(userLat, userLon, a.lat, a.lon);
+        const ang = (brg - 90) * Math.PI / 180; // 0 deg up
+
+        const px = cx + r * Math.cos(ang);
+        const py = cy + r * Math.sin(ang);
+
+        const isSelected = selectedHex && a.hex && a.hex.toLowerCase() === selectedHex.toLowerCase();
+
+        // dot glow
+        rctx.fillStyle = isSelected ? "rgba(255,255,255,0.18)" : "rgba(68,255,188,0.10)";
+        rctx.beginPath(); rctx.arc(px, py, isSelected ? 10 : 7, 0, Math.PI*2); rctx.fill();
+
+        // dot core
+        rctx.fillStyle = isSelected ? "rgba(255,255,255,0.90)" : "rgba(214,255,238,0.72)";
+        rctx.beginPath(); rctx.arc(px, py, isSelected ? 3.6 : 2.6, 0, Math.PI*2); rctx.fill();
+
+        // tiny heading tick for selected
+        if (isSelected && Number.isFinite(a.headingDeg)){
+          const hAng = (a.headingDeg - 90) * Math.PI / 180;
+          const ax = px + 16 * Math.cos(hAng);
+          const ay = py + 16 * Math.sin(hAng);
+          rctx.strokeStyle = "rgba(255,255,255,0.75)";
+          rctx.lineWidth = 2;
+          rctx.beginPath(); rctx.moveTo(px, py); rctx.lineTo(ax, ay); rctx.stroke();
+        }
+      }
+
+      // center dot (you)
+      rctx.fillStyle = "rgba(214,255,238,0.60)";
+      rctx.beginPath(); rctx.arc(cx, cy, 3, 0, Math.PI*2); rctx.fill();
+      rctx.fillStyle = "rgba(68,255,188,0.20)";
+      rctx.beginPath(); rctx.arc(cx, cy, 9, 0, Math.PI*2); rctx.fill();
+    }
+
+    function startRadarLoop(){
+      if (radarAnimId) return;
+      const tick = () => {
+        drawRadar();
+        radarAnimId = requestAnimationFrame(tick);
+      };
+      radarAnimId = requestAnimationFrame(tick);
+    }
+    function stopRadarLoop(){
+      if (radarAnimId){
+        cancelAnimationFrame(radarAnimId);
+        radarAnimId = null;
+      }
+    }
+
+    // =============================
+    // UI RENDER
+    // =============================
+    function clearList(){ listEl.innerHTML = ""; }
+    function setMessage(t){ msgEl.textContent = t; }
+
+    function renderFlights({ userLat, userLon, radiusNm, minAltFt, maxAltFt, maxResults, aircraft }){
+      clearList();
+
+      // compute derived fields, filter, sort by likelihood then distance
+      const enriched = aircraft.map(a => {
+        const d = distanceNm(userLat, userLon, a.lat, a.lon);
+        const brg = bearingDeg(userLat, userLon, a.lat, a.lon);
+        const alt = Number.isFinite(a.altitudeFt) ? a.altitudeFt : 0;
+        const hdg = Number.isFinite(a.headingDeg) ? a.headingDeg : 0;
+
+        const like = computeLikelihood({
+          distanceNm: d,
+          altitudeFt: alt,
+          radiusNm,
+          headingDeg: hdg,
+          bearingToUserDeg: brg
+        });
+
+        return { ...a, _distanceNm: d, _bearing: brg, _likelihood: like };
+      });
+
+      const filtered = enriched
+        .filter(a => Number.isFinite(a._distanceNm) && a._distanceNm <= radiusNm)
+        .filter(a => {
+          const alt = Number.isFinite(a.altitudeFt) ? a.altitudeFt : 0;
+          return alt >= minAltFt && alt <= maxAltFt;
+        })
+        .sort((a,b) => (b._likelihood - a._likelihood) || (a._distanceNm - b._distanceNm))
+        .slice(0, maxResults);
+
+      if (!filtered.length){
+        setMessage("No flights matched your filters. Try increasing radius or widening altitude range.");
+        radarState.aircraft = [];
+        radarState.selectedHex = "";
+        radarSub.textContent = "No data";
+        radarRangeEl.textContent = `Range: ${radiusNm} nm`;
+        stopRadarLoop();
+        drawRadar();
+        return;
+      }
+
+      setMessage("");
+      radarRangeEl.textContent = `Range: ${radiusNm} nm`;
+      radarSub.textContent = `${filtered.length} aircraft shown`;
+      radarState.aircraft = filtered;
+      radarState.selectedHex = radarState.selectedHex || (filtered[0].hex || "");
+      startRadarLoop();
+
+      const frag = document.createDocumentFragment();
+
+      filtered.forEach(a => {
+        const li = tpl.content.firstElementChild.cloneNode(true);
+
+        const title = a.callsign || "Unknown";
+        li.querySelector('[data-flight="name"]').textContent = title;
+
+        const typeLine = (a.typeCode || a.typeDesc)
+          ? `Type: ${a.typeCode || "—"}${a.typeDesc ? ` • ${a.typeDesc}` : ""}`
+          : `Type: Unknown`;
+        li.querySelector('[data-flight="type"]').textContent = typeLine;
+
+        const routeLine =
+          (a.origin && a.dest) ? `${a.origin} → ${a.dest}` :
+          (a.origin ? `From ${a.origin}` :
+          (a.dest ? `To ${a.dest}` : "Route unavailable"));
+        li.querySelector('[data-flight="route"]').textContent = routeLine;
+
+        li.querySelector('[data-flight="likelihood"]').textContent =
+          `${likelihoodLabel(a._likelihood)} • ${Math.round(a._likelihood * 100)}%`;
+
+        li.querySelector('[data-flight="distance"]').textContent = fmtNm(a._distanceNm);
+        li.querySelector('[data-flight="altitude"]').textContent = fmtFt(a.altitudeFt);
+        li.querySelector('[data-flight="speed"]').textContent = fmtKt(a.speedKt);
+        li.querySelector('[data-flight="heading"]').textContent = fmtDeg(a.headingDeg);
+
+        const metaBits = [];
+        metaBits.push(`Bearing: ${Math.round(a._bearing)}°`);
+        if (a.hex) metaBits.push(`HEX: ${a.hex.toUpperCase()}`);
+        li.querySelector('[data-flight="meta"]').textContent = metaBits.join(" • ");
+
+        // selection behavior
+        const isSelected = radarState.selectedHex && a.hex &&
+          a.hex.toLowerCase() === radarState.selectedHex.toLowerCase();
+        if (isSelected) li.classList.add("selected");
+
+        function selectThis(){
+          if (!a.hex) return;
+          radarState.selectedHex = a.hex;
+          // update list selected class
+          document.querySelectorAll(".flight-card.selected").forEach(el => el.classList.remove("selected"));
+          li.classList.add("selected");
+        }
+
+        li.addEventListener("click", selectThis);
+        li.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" || e.key === " "){
+            e.preventDefault();
+            selectThis();
+          }
+        });
+
+        frag.appendChild(li);
+      });
+
+      listEl.appendChild(frag);
+      drawRadar();
+    }
+
+    // =============================
+    // LOCATION
+    // =============================
+    function getBrowserLocation(){
+      return new Promise((resolve, reject) => {
+        if (!navigator.geolocation) return reject(new Error("Geolocation not supported"));
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 12000,
+          maximumAge: 10000
+        });
+      });
+    }
+
+    locateBtn.addEventListener("click", async () => {
+      setMessage("Getting your location…");
+      try{
+        const pos = await getBrowserLocation();
+        latEl.value = pos.coords.latitude.toFixed(4);
+        lonEl.value = pos.coords.longitude.toFixed(4);
+        setMessage("Location filled in. Hit “Check Overhead Flights”.");
+      }catch(err){
+        console.warn(err);
+        setMessage("Could not get location. Allow location access or type coordinates manually.");
+      }
+    });
+
+    // =============================
+    // SUBMIT
+    // =============================
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const userLat = Number(latEl.value);
+      const userLon = Number(lonEl.value);
+      const radiusNm = Number(radiusEl.value);
+      const minAltFt = Number(minAltEl.value || 0);
+      const maxAltFt = Number(maxAltEl.value || 65000);
+      const maxResults = Number(maxResultsEl.value || 25);
+
+      if (!Number.isFinite(userLat) || !Number.isFinite(userLon)){
+        setMessage("Please enter a valid latitude and longitude.");
+        return;
+      }
+
+      setMessage("Looking up live aircraft…");
+      setUpdatedNow();
+
+      radarState.userLat = userLat;
+      radarState.userLon = userLon;
+      radarState.radiusNm = radiusNm;
+      radarRangeEl.textContent = `Range: ${radiusNm} nm`;
+
+      try{
+        const aircraft = await fetchLiveAircraft(userLat, userLon, radiusNm);
+
+        renderFlights({
+          userLat, userLon, radiusNm,
+          minAltFt, maxAltFt, maxResults,
+          aircraft
+        });
+
+      }catch(err){
+        console.error(err);
+
+        // Most common issue in pure front-end apps: CORS
+        setMessage(
+          "Could not fetch live flights. If you see a CORS error in the console, " +
+          "you’ll need a tiny proxy (Cloudflare Worker / local server) to call the API from the browser."
+        );
+
+        clearList();
+        radarState.aircraft = [];
+        radarState.selectedHex = "";
+        radarSub.textContent = "No data";
+        stopRadarLoop();
+        drawRadar();
+      }
+    });
+
+    // initial radar draw
+    radarState.userLat = Number(latEl.value);
+    radarState.userLon = Number(lonEl.value);
+    radarState.radiusNm = Number(radiusEl.value);
+    radarRangeEl.textContent = `Range: ${radiusEl.value} nm`;
+    drawRadar();
+  </script>
 </body>
 </html>
