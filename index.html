@@ -19,6 +19,10 @@
       --muted:rgba(245,250,255,0.68);
       --muted2:rgba(245,250,255,0.52);
       --good:#44ffbc;
+      --dot-airliner:#7dd3fc;
+      --dot-mid:#ffd166;
+      --dot-low:#ff8f6b;
+      --dot-heli:#c084fc;
       --shadow: 0 18px 50px rgba(0,0,0,0.45);
       --radius: 18px;
     }
@@ -314,6 +318,32 @@
       font-family:"IBM Plex Mono", monospace;
       font-size: 0.78rem;
     }
+    .altitude-key{
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap:8px 10px;
+      margin-top: 10px;
+      color: var(--muted2);
+      font-family:"IBM Plex Mono", monospace;
+      font-size: 0.74rem;
+    }
+    .altitude-key span{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      white-space:nowrap;
+    }
+    .key-dot{
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.24);
+      flex: 0 0 auto;
+    }
+    .key-airliner{ background: var(--dot-airliner); }
+    .key-mid{ background: var(--dot-mid); }
+    .key-low{ background: var(--dot-low); }
+    .key-heli{ background: var(--dot-heli); }
 
     .reveal{ opacity:0; transform: translateY(10px); }
     .reveal.on{ opacity:1; transform:none; transition: opacity .55s ease, transform .55s ease; }
@@ -328,6 +358,7 @@
       .three-up{ grid-template-columns: 1fr; }
       .two-up{ grid-template-columns: 1fr; }
       .stats{ grid-template-columns: repeat(2, minmax(0,1fr)); }
+      .altitude-key{ grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -413,6 +444,12 @@
             <span>Up = North</span>
             <span id="radar-range">Range: —</span>
           </div>
+          <div class="altitude-key" aria-label="Radar dot color key">
+            <span><i class="key-dot key-airliner" aria-hidden="true"></i>30,000+ ft</span>
+            <span><i class="key-dot key-mid" aria-hidden="true"></i>10,000-30,000 ft</span>
+            <span><i class="key-dot key-low" aria-hidden="true"></i>Under 10,000 ft</span>
+            <span><i class="key-dot key-heli" aria-hidden="true"></i>Likely helicopter</span>
+          </div>
           <p class="footnote" style="margin-top:10px;">
             Dots are aircraft positions relative to your point. Click a flight to highlight it.
           </p>
@@ -485,6 +522,12 @@
     const radarSub = $("#radar-sub");
     const radarRangeEl = $("#radar-range");
     const rctx = radarCanvas.getContext("2d");
+    const RADAR_DOT_COLORS = {
+      airliner: { core: "rgba(125,211,252,0.95)", glow: "rgba(125,211,252,0.22)" },
+      mid: { core: "rgba(255,209,102,0.95)", glow: "rgba(255,209,102,0.22)" },
+      low: { core: "rgba(255,143,107,0.95)", glow: "rgba(255,143,107,0.22)" },
+      helicopter: { core: "rgba(192,132,252,0.96)", glow: "rgba(192,132,252,0.24)" }
+    };
 
     const tpl = $("#flight-template");
     const isFileProtocol = window.location.protocol === "file:";
@@ -529,6 +572,27 @@
       const x = Math.cos(φ1)*Math.sin(φ2) - Math.sin(φ1)*Math.cos(φ2)*Math.cos(Δλ);
       const θ = Math.atan2(y, x);
       return (toDeg(θ) + 360) % 360;
+    }
+
+    // Helicopter detection is heuristic when explicit type metadata is missing.
+    function isLikelyHelicopter(a){
+      const typeText = `${a.typeCode || ""} ${a.typeDesc || ""}`.toLowerCase();
+      if (typeText.includes("heli") || typeText.includes("helicopter") || typeText.includes("rotor")){
+        return true;
+      }
+      const speedKt = Number(a.speedKt);
+      const altFt = Number(a.altitudeFt);
+      return Number.isFinite(speedKt) && speedKt > 0 && speedKt <= 170 &&
+        (!Number.isFinite(altFt) || altFt <= 15000);
+    }
+
+    function radarDotBand(a){
+      if (isLikelyHelicopter(a)) return "helicopter";
+      const altFt = Number(a.altitudeFt);
+      if (!Number.isFinite(altFt)) return "mid";
+      if (altFt >= 30000) return "airliner";
+      if (altFt >= 10000) return "mid";
+      return "low";
     }
 
     function fmtNm(nm){ return `${nm.toFixed(nm < 10 ? 1 : 0)} nm`; }
@@ -717,13 +781,15 @@
         const py = cy + r * Math.sin(ang);
 
         const isSelected = selectedHex && a.hex && a.hex.toLowerCase() === selectedHex.toLowerCase();
+        const dotBand = radarDotBand(a);
+        const dotColors = RADAR_DOT_COLORS[dotBand] || RADAR_DOT_COLORS.mid;
 
         // dot glow
-        rctx.fillStyle = isSelected ? "rgba(255,255,255,0.18)" : "rgba(68,255,188,0.10)";
+        rctx.fillStyle = isSelected ? "rgba(255,255,255,0.18)" : dotColors.glow;
         rctx.beginPath(); rctx.arc(px, py, isSelected ? 10 : 7, 0, Math.PI*2); rctx.fill();
 
         // dot core
-        rctx.fillStyle = isSelected ? "rgba(255,255,255,0.90)" : "rgba(214,255,238,0.72)";
+        rctx.fillStyle = isSelected ? "rgba(255,255,255,0.90)" : dotColors.core;
         rctx.beginPath(); rctx.arc(px, py, isSelected ? 3.6 : 2.6, 0, Math.PI*2); rctx.fill();
 
         // tiny heading tick for selected
