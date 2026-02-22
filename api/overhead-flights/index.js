@@ -55,10 +55,6 @@ module.exports = async function (context, req) {
         originCountry: flight.originCountry,
         departureIcao: flight.departureIcao,
         arrivalIcao: flight.arrivalIcao,
-        typeCode: flight.typeCode,
-        typeDescription: flight.typeDesc,
-        inferredType: flight.inferredType,
-        sizeClass: flight.sizeClass,
         latitude: roundOrNull(flight.latitude, 5),
         longitude: roundOrNull(flight.longitude, 5),
         distanceMiles: roundOrNull(flight.distanceMiles, 2),
@@ -129,9 +125,7 @@ async function fetchOpenSkyFlights(box) {
       headingDegrees: parseNumber(state[10]),
       geoAltitudeFt: toFeet(state[13]),
       departureIcao: null,
-      arrivalIcao: null,
-      typeCode: null,
-      typeDesc: null
+      arrivalIcao: null
     }))
     .filter((flight) => Number.isFinite(flight.latitude) && Number.isFinite(flight.longitude));
 }
@@ -178,19 +172,7 @@ async function fetchFlightlogFlights(box) {
       headingDegrees: parseNumber(flight.dir),
       geoAltitudeFt: parseNumber(flight.alt),
       departureIcao: cleanText(flight.dep_icao),
-      arrivalIcao: cleanText(flight.arr_icao),
-      typeCode: cleanText(
-        flight.aircraft_icao ||
-        flight.aircraft_code ||
-        flight.aircraft_type ||
-        flight.icao_type
-      ),
-      typeDesc: cleanText(
-        flight.model ||
-        flight.aircraft ||
-        flight.aircraft_name ||
-        flight.manufacturer
-      )
+      arrivalIcao: cleanText(flight.arr_icao)
     }))
     .filter((flight) => Number.isFinite(flight.latitude) && Number.isFinite(flight.longitude));
 }
@@ -208,12 +190,6 @@ function enrichFlight(flight, user) {
   const altitudeFt = Number.isFinite(flight.geoAltitudeFt) ? flight.geoAltitudeFt : flight.baroAltitudeFt;
   const speedKnots = Number.isFinite(flight.speedKnots) ? flight.speedKnots : null;
   const speedMph = Number.isFinite(speedKnots) ? speedKnots * 1.15078 : null;
-  const inferred = inferPlaneCharacteristics({
-    typeCode: flight.typeCode,
-    typeDesc: flight.typeDesc,
-    speedKnots,
-    altitudeFt
-  });
 
   const estimatedOverheadMinutes = (approachingUser && Number.isFinite(speedMph) && speedMph > 60)
     ? (distanceMiles / speedMph) * 60
@@ -233,10 +209,6 @@ function enrichFlight(flight, user) {
     headingDegrees,
     altitudeFt,
     speedKnots,
-    typeCode: flight.typeCode || null,
-    typeDesc: flight.typeDesc || null,
-    inferredType: inferred.inferredType,
-    sizeClass: inferred.sizeClass,
     approachingUser,
     estimatedOverheadMinutes,
     overheadScore,
@@ -245,95 +217,6 @@ function enrichFlight(flight, user) {
       ? Math.max(0, user.nowSeconds - flight.lastContact)
       : null
   };
-}
-
-function inferPlaneCharacteristics(input) {
-  const typeCode = cleanText(input.typeCode);
-  const typeDesc = cleanText(input.typeDesc);
-  const speedKnots = parseNumber(input.speedKnots);
-  const altitudeFt = parseNumber(input.altitudeFt);
-  const typeText = `${typeCode || ""} ${typeDesc || ""}`.toLowerCase();
-
-  const helicopterByText =
-    typeText.includes("helicopter") ||
-    typeText.includes("heli") ||
-    typeText.includes("rotor");
-
-  const lowAndSlow =
-    Number.isFinite(speedKnots) &&
-    speedKnots > 0 &&
-    speedKnots <= 170 &&
-    (!Number.isFinite(altitudeFt) || altitudeFt <= 15000);
-
-  if (helicopterByText || lowAndSlow) {
-    return {
-      inferredType: buildTypeLabel(typeCode, typeDesc, "Helicopter"),
-      sizeClass: "helicopter"
-    };
-  }
-
-  const heavyByText = /(a3(30|40|50|80)|b7(47|67|77|87)|md11|c17|c5|an124|il76|heavy)/.test(typeText);
-  if (heavyByText) {
-    return {
-      inferredType: buildTypeLabel(typeCode, typeDesc, "Large Jet / Heavy"),
-      sizeClass: "large"
-    };
-  }
-
-  if (Number.isFinite(speedKnots)) {
-    if (speedKnots >= 430) {
-      return {
-        inferredType: buildTypeLabel(typeCode, typeDesc, "Jet Airliner"),
-        sizeClass: "large"
-      };
-    }
-
-    if (speedKnots >= 280) {
-      return {
-        inferredType: buildTypeLabel(typeCode, typeDesc, "Regional / Narrow-body Jet"),
-        sizeClass: "medium"
-      };
-    }
-
-    if (speedKnots >= 170) {
-      return {
-        inferredType: buildTypeLabel(typeCode, typeDesc, "Turboprop / Light Jet"),
-        sizeClass: "small"
-      };
-    }
-
-    if (speedKnots > 0) {
-      return {
-        inferredType: buildTypeLabel(typeCode, typeDesc, "General Aviation"),
-        sizeClass: "small"
-      };
-    }
-  }
-
-  if (Number.isFinite(altitudeFt) && altitudeFt >= 30000) {
-    return {
-      inferredType: buildTypeLabel(typeCode, typeDesc, "High-Altitude Jet"),
-      sizeClass: "large"
-    };
-  }
-
-  return {
-    inferredType: buildTypeLabel(typeCode, typeDesc, "Unknown Aircraft"),
-    sizeClass: "medium"
-  };
-}
-
-function buildTypeLabel(typeCode, typeDesc, fallback) {
-  if (typeCode && typeDesc) {
-    return `${typeCode} (${typeDesc})`;
-  }
-  if (typeDesc) {
-    return typeDesc;
-  }
-  if (typeCode) {
-    return typeCode;
-  }
-  return fallback;
 }
 
 function scoreFlight(input) {
