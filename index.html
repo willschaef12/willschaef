@@ -19,6 +19,7 @@
       --muted:rgba(245,250,255,0.68);
       --muted2:rgba(245,250,255,0.52);
       --good:#44ffbc;
+      --bad:#ff6b6b;
       --dot-airliner:#7dd3fc;
       --dot-mid:#ffd166;
       --dot-low:#ff8f6b;
@@ -60,7 +61,7 @@
     }
 
     .app-shell{
-      width:min(1100px, 92vw);
+      width:min(1150px, 92vw);
       margin: 48px auto 60px;
       display:flex;
       flex-direction:column;
@@ -84,7 +85,7 @@
     }
     .hero-copy{
       margin:0;
-      max-width: 70ch;
+      max-width: 78ch;
       color: var(--muted);
       line-height:1.55;
       font-size:1.02rem;
@@ -105,6 +106,7 @@
       justify-content:space-between;
       gap:12px;
       margin-bottom:8px;
+      flex-wrap:wrap;
     }
     .timestamp{
       margin:0;
@@ -115,15 +117,15 @@
     }
 
     .controls{ display:flex; flex-direction:column; gap:14px; }
-
     .grid{ display:grid; gap:12px; }
     .two-up{ grid-template-columns: repeat(2, minmax(0,1fr)); }
     .three-up{ grid-template-columns: repeat(3, minmax(0,1fr)); }
+    .four-up{ grid-template-columns: repeat(4, minmax(0,1fr)); }
 
     .field{ display:flex; flex-direction:column; gap:8px; }
     .field span{ color: var(--muted); font-size:0.92rem; }
 
-    input[type="number"], input[type="text"]{
+    input[type="number"], input[type="text"], select{
       width:100%;
       padding: 12px 12px;
       border-radius: 12px;
@@ -133,7 +135,7 @@
       outline:none;
       transition: border-color .15s ease, box-shadow .15s ease;
     }
-    input[type="number"]:focus, input[type="text"]:focus{
+    input[type="number"]:focus, input[type="text"]:focus, select:focus{
       border-color: rgba(68,255,188,0.55);
       box-shadow: 0 0 0 4px rgba(68,255,188,0.12);
     }
@@ -161,7 +163,7 @@
       font-weight:500;
     }
 
-    .actions{ display:flex; gap:10px; flex-wrap:wrap; }
+    .actions{ display:flex; gap:10px; flex-wrap:wrap; align-items:center;}
     button{
       border:1px solid rgba(255,255,255,0.14);
       background: rgba(255,255,255,0.06);
@@ -171,6 +173,7 @@
       font-weight:600;
       cursor:pointer;
       transition: transform .08s ease, border-color .15s ease, background .15s ease;
+      white-space:nowrap;
     }
     button:active{ transform: translateY(1px); }
     .primary{
@@ -178,14 +181,35 @@
       background: linear-gradient(180deg, rgba(68,255,188,0.22), rgba(68,255,188,0.08));
     }
     .primary:hover{ border-color: rgba(68,255,188,0.60); }
+    .danger{
+      border-color: rgba(255,107,107,0.40);
+      background: linear-gradient(180deg, rgba(255,107,107,0.18), rgba(255,107,107,0.06));
+    }
     .ghost:hover{ border-color: rgba(255,255,255,0.26); background: rgba(255,255,255,0.09); }
+
+    .pill-row{ display:flex; gap:10px; flex-wrap:wrap; }
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 10px 12px;
+      border-radius: 999px;
+      border:1px solid rgba(255,255,255,0.12);
+      background: rgba(0,0,0,0.22);
+      color: var(--muted);
+      font-size: .92rem;
+      cursor:pointer;
+      user-select:none;
+    }
+    .pill input{ accent-color: var(--good); }
+    .pill strong{ color: var(--text); }
 
     .footnote{ margin:0; color: var(--muted2); font-size:0.92rem; line-height:1.4; }
     .message{ margin: 10px 0 0; color: var(--muted); line-height:1.45; }
 
     .results-grid{
       display:grid;
-      grid-template-columns: 1.15fr 0.85fr;
+      grid-template-columns: 1.1fr 0.9fr;
       gap: 16px;
       margin-top: 12px;
       align-items: start;
@@ -226,6 +250,7 @@
       align-items:flex-start;
       justify-content:space-between;
       gap:12px;
+      flex-wrap:wrap;
     }
     .flight-head h3{ margin:0; font-size: 1.05rem; letter-spacing:-0.01em; }
 
@@ -273,7 +298,7 @@
       line-height:1.35;
     }
 
-    /* Radar panel */
+    /* Side panels */
     .radar-panel{
       position: sticky;
       top: 16px;
@@ -282,13 +307,16 @@
       border-radius: 16px;
       padding: 12px;
       overflow:hidden;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
     }
     .radar-top{
       display:flex;
       align-items:baseline;
       justify-content:space-between;
       gap:10px;
-      margin-bottom: 10px;
+      flex-wrap:wrap;
     }
     .radar-top h3{
       margin:0;
@@ -312,17 +340,17 @@
     .radar-legend{
       display:flex;
       justify-content:space-between;
-      margin-top: 10px;
       gap:10px;
       color: var(--muted2);
       font-family:"IBM Plex Mono", monospace;
       font-size: 0.78rem;
+      flex-wrap:wrap;
     }
     .altitude-key{
       display:grid;
       grid-template-columns: repeat(2, minmax(0,1fr));
       gap:8px 10px;
-      margin-top: 10px;
+      margin-top: 2px;
       color: var(--muted2);
       font-family:"IBM Plex Mono", monospace;
       font-size: 0.74rem;
@@ -345,6 +373,99 @@
     .key-low{ background: var(--dot-low); }
     .key-heli{ background: var(--dot-heli); }
 
+    .follow-panel{
+      border:1px solid rgba(255,255,255,0.12);
+      background: rgba(0,0,0,0.22);
+      border-radius: 16px;
+      padding: 12px;
+    }
+    .follow-panel h4{
+      margin:0 0 8px;
+      font-size: .95rem;
+      letter-spacing:.01em;
+      color: rgba(245,250,255,0.9);
+    }
+    .kv{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+    }
+    .kv .box{
+      border:1px solid rgba(255,255,255,0.10);
+      background: rgba(0,0,0,0.20);
+      border-radius: 14px;
+      padding: 10px;
+    }
+    .kv .box span{
+      display:block;
+      font-size:.78rem;
+      color: var(--muted2);
+      margin-bottom: 6px;
+    }
+    .kv .box strong{
+      font-family:"IBM Plex Mono", monospace;
+      font-size:.9rem;
+      color: rgba(245,250,255,0.92);
+    }
+    .linkrow{ display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; }
+
+    .alerts{
+      border:1px solid rgba(255,255,255,0.12);
+      background: rgba(0,0,0,0.22);
+      border-radius: 16px;
+      padding: 12px;
+    }
+    .alerts h4{ margin:0 0 8px; font-size:.95rem; }
+    .alert-feed{
+      list-style:none;
+      margin:0;
+      padding:0;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      max-height: 200px;
+      overflow:auto;
+    }
+    .alert-item{
+      border:1px solid rgba(255,255,255,0.10);
+      background: rgba(0,0,0,0.20);
+      border-radius: 14px;
+      padding: 10px;
+    }
+    .alert-item .t{
+      font-family:"IBM Plex Mono", monospace;
+      font-size:.78rem;
+      color: var(--muted2);
+      margin-bottom: 4px;
+    }
+    .alert-item .b{
+      font-size:.92rem;
+      color: var(--text);
+      line-height:1.25;
+    }
+
+    .replay{
+      border:1px solid rgba(255,255,255,0.12);
+      background: rgba(0,0,0,0.22);
+      border-radius: 16px;
+      padding: 12px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .replay .row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+      color: var(--muted2);
+      font-family:"IBM Plex Mono", monospace;
+      font-size:.78rem;
+    }
+
+    input[type="range"]{ width:100%; }
+
     .reveal{ opacity:0; transform: translateY(10px); }
     .reveal.on{ opacity:1; transform:none; transition: opacity .55s ease, transform .55s ease; }
     .delay-1.on{ transition-delay: .08s; }
@@ -354,11 +475,15 @@
       .results-grid{ grid-template-columns: 1fr; }
       .radar-panel{ position: static; }
     }
+    @media (max-width: 900px){
+      .four-up{ grid-template-columns: 1fr; }
+    }
     @media (max-width: 820px){
       .three-up{ grid-template-columns: 1fr; }
       .two-up{ grid-template-columns: 1fr; }
       .stats{ grid-template-columns: repeat(2, minmax(0,1fr)); }
       .altitude-key{ grid-template-columns: 1fr; }
+      .kv{ grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -372,13 +497,35 @@
       <p class="eyebrow">Live Air Traffic</p>
       <h1>Find flights that could pass overhead</h1>
       <p class="hero-copy">
-        Pulls nearby aircraft in real time and ranks flights that are most likely to pass above your location.
+        Pulls nearby aircraft in real time, predicts short track paths, keeps history trails, and triggers alerts for your watchlist.
       </p>
     </header>
 
+    <!-- SETTINGS -->
     <section class="panel reveal delay-1">
       <h2>Lookup Settings</h2>
       <form id="lookup-form" class="controls" novalidate>
+        <div class="grid four-up">
+          <label class="field">
+            <span>Preset</span>
+            <select id="preset-select">
+              <option value="">(none)</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Save preset name</span>
+            <input id="preset-name" type="text" placeholder="Home / KCLE / etc." />
+          </label>
+          <div class="actions" style="align-self:end;">
+            <button id="save-preset-btn" class="ghost" type="button">Save Preset</button>
+            <button id="delete-preset-btn" class="danger" type="button">Delete</button>
+          </div>
+          <label class="field">
+            <span>Airport search (plug-in later)</span>
+            <input id="airport-search" type="text" placeholder="KCLE / Cleveland (placeholder)" />
+          </label>
+        </div>
+
         <div class="grid two-up">
           <label class="field">
             <span>Latitude</span>
@@ -410,18 +557,120 @@
           </label>
         </div>
 
+        <div class="pill-row" aria-label="Filters">
+          <label class="pill"><input id="f-interesting" type="checkbox" /> <strong>Only interesting</strong></label>
+          <label class="pill"><input id="f-hide-airliners" type="checkbox" /> Hide common airliners</label>
+          <label class="pill"><input id="f-heli-only" type="checkbox" /> Helicopter only</label>
+          <label class="pill"><input id="f-show-trails" type="checkbox" checked /> Show trails</label>
+          <label class="pill"><input id="f-show-predict" type="checkbox" checked /> Show prediction</label>
+        </div>
+
+        <div class="grid three-up">
+          <label class="field">
+            <span>Contains callsign</span>
+            <input id="filter-callsign" type="text" placeholder="RCH / QID / SAM / etc." />
+          </label>
+          <label class="field">
+            <span>Contains type</span>
+            <input id="filter-type" type="text" placeholder="C17 / KC135 / A380 / etc." />
+          </label>
+          <label class="field">
+            <span>Min Likelihood (%)</span>
+            <input id="filter-minlike" type="number" min="0" max="100" step="1" value="0" />
+          </label>
+        </div>
+
         <div class="actions">
           <button id="locate-btn" class="ghost" type="button">Use My Location</button>
+          <button id="notify-btn" class="ghost" type="button">Enable Notifications</button>
           <button id="lookup-btn" class="primary" type="submit">Check Overhead Flights</button>
         </div>
 
         <p class="footnote">
-          This UI calls the local `/api/overhead-flights` endpoint to avoid browser CORS issues.
-          Run with SWA CLI so the API is available on the same origin.
+          This UI calls the local <span class="mono">/api/overhead-flights</span> endpoint to avoid browser CORS issues.
+          Auto-refresh runs every 7s. History trails store ~7 minutes.
         </p>
       </form>
     </section>
 
+    <!-- WATCHLIST -->
+    <section class="panel reveal delay-2">
+      <div class="panel-top">
+        <h2>Watchlist & Alerts</h2>
+        <p class="timestamp">Rules evaluate on each refresh.</p>
+      </div>
+
+      <div class="grid two-up">
+        <div class="grid" style="gap:10px;">
+          <div class="grid three-up">
+            <label class="field">
+              <span>Rule: callsign contains</span>
+              <input id="rule-callsign" type="text" placeholder="RCH / QID / SAM / etc." />
+            </label>
+            <label class="field">
+              <span>Rule: type contains</span>
+              <input id="rule-type" type="text" placeholder="KC / C17 / H60 / etc." />
+            </label>
+            <label class="field">
+              <span>Min likelihood (%)</span>
+              <input id="rule-minlike" type="number" min="0" max="100" step="1" value="75" />
+            </label>
+          </div>
+
+          <div class="grid three-up">
+            <label class="field">
+              <span>Within (nm)</span>
+              <input id="rule-within" type="number" min="1" max="250" step="1" value="50" />
+            </label>
+            <label class="field">
+              <span>Max altitude (ft)</span>
+              <input id="rule-maxalt" type="number" min="0" max="65000" step="100" value="65000" />
+            </label>
+            <label class="field">
+              <span>Cooldown (sec)</span>
+              <input id="rule-cooldown" type="number" min="5" max="3600" step="1" value="120" />
+            </label>
+          </div>
+
+          <div class="actions">
+            <button id="add-rule-btn" class="primary" type="button">Add Rule</button>
+            <button id="clear-rules-btn" class="danger" type="button">Clear Rules</button>
+          </div>
+
+          <p class="footnote">
+            Tip: for “military-ish”, use callsign contains <span class="mono">RCH</span>, <span class="mono">QID</span>, <span class="mono">SAM</span>, <span class="mono">ASH</span>, <span class="mono">MOOSE</span> etc.
+          </p>
+
+          <div class="field">
+            <span>Current Rules</span>
+            <div id="rules-list" class="grid" style="gap:10px;"></div>
+          </div>
+        </div>
+
+        <div class="grid" style="gap:10px;">
+          <div class="alerts">
+            <h4>Alert Feed</h4>
+            <ul id="alert-feed" class="alert-feed" aria-live="polite"></ul>
+            <div class="actions" style="margin-top:10px;">
+              <button id="clear-alerts-btn" class="ghost" type="button">Clear Feed</button>
+            </div>
+          </div>
+
+          <div class="replay">
+            <div class="row">
+              <span>Replay (history)</span>
+              <span id="replay-label">Live</span>
+            </div>
+            <input id="replay-slider" type="range" min="0" max="0" value="0" />
+            <p class="footnote">
+              Drag left to see previous snapshots (trails and list update). Drag to the end for live mode.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RESULTS -->
     <section class="panel reveal delay-2">
       <div class="panel-top">
         <h2>Possible Overhead Flights</h2>
@@ -444,14 +693,31 @@
             <span>Up = North</span>
             <span id="radar-range">Range: —</span>
           </div>
+
           <div class="altitude-key" aria-label="Radar dot color key">
             <span><i class="key-dot key-airliner" aria-hidden="true"></i>30,000+ ft</span>
             <span><i class="key-dot key-mid" aria-hidden="true"></i>10,000-30,000 ft</span>
             <span><i class="key-dot key-low" aria-hidden="true"></i>Under 10,000 ft</span>
             <span><i class="key-dot key-heli" aria-hidden="true"></i>Likely helicopter</span>
           </div>
+
+          <div class="follow-panel" aria-label="Follow">
+            <h4>Following</h4>
+            <p id="follow-title" class="meta">Nothing selected yet.</p>
+            <div class="kv" style="margin-top:10px;">
+              <div class="box"><span>ETA (closest)</span><strong id="follow-eta">—</strong></div>
+              <div class="box"><span>Trend</span><strong id="follow-trend">—</strong></div>
+              <div class="box"><span>Δ Altitude</span><strong id="follow-dalt">—</strong></div>
+              <div class="box"><span>Δ Distance</span><strong id="follow-ddist">—</strong></div>
+            </div>
+            <div class="linkrow">
+              <button id="open-aircraft-map" class="ghost" type="button">Aircraft on Maps</button>
+              <button id="open-my-map" class="ghost" type="button">My Location on Maps</button>
+            </div>
+          </div>
+
           <p class="footnote" style="margin-top:10px;">
-            Dots are aircraft positions relative to your point. Click a flight to highlight it.
+            Click a flight to highlight it. Trails show recent history; a faint line shows short track prediction.
           </p>
         </aside>
       </div>
@@ -496,8 +762,18 @@
     // =============================
     // DATA SETTINGS
     // =============================
-    // Use same-origin API to avoid browser CORS issues.
     const LOCAL_API_PATH = "/api/overhead-flights";
+    const AUTO_REFRESH_MS = 7000;
+
+    // History / replay
+    const HISTORY_MAX_SNAPSHOTS = 60;     // ~7 minutes at 7s refresh
+    const HISTORY_POINT_LIMIT = 70;       // per-aircraft points kept in trails
+    const PREDICT_SECONDS = 180;          // 3 minutes prediction line
+
+    // LocalStorage keys
+    const LS_PRESETS = "offf_presets_v1";
+    const LS_RULES = "offf_rules_v1";
+    const LS_ALERTS = "offf_alertfeed_v1";
 
     // =============================
     // DOM
@@ -513,20 +789,72 @@
     const maxAltEl = $("#max-altitude");
     const maxResultsEl = $("#max-results");
     const locateBtn = $("#locate-btn");
+    const notifyBtn = $("#notify-btn");
+
+    const presetSelect = $("#preset-select");
+    const presetNameEl = $("#preset-name");
+    const savePresetBtn = $("#save-preset-btn");
+    const deletePresetBtn = $("#delete-preset-btn");
+    const airportSearchEl = $("#airport-search"); // placeholder
+
+    // Filters
+    const fInterestingEl = $("#f-interesting");
+    const fHideAirlinersEl = $("#f-hide-airliners");
+    const fHeliOnlyEl = $("#f-heli-only");
+    const fShowTrailsEl = $("#f-show-trails");
+    const fShowPredictEl = $("#f-show-predict");
+    const filterCallsignEl = $("#filter-callsign");
+    const filterTypeEl = $("#filter-type");
+    const filterMinLikeEl = $("#filter-minlike");
+
+    // Watchlist
+    const ruleCallsignEl = $("#rule-callsign");
+    const ruleTypeEl = $("#rule-type");
+    const ruleMinLikeEl = $("#rule-minlike");
+    const ruleWithinEl = $("#rule-within");
+    const ruleMaxAltEl = $("#rule-maxalt");
+    const ruleCooldownEl = $("#rule-cooldown");
+    const addRuleBtn = $("#add-rule-btn");
+    const clearRulesBtn = $("#clear-rules-btn");
+    const rulesListEl = $("#rules-list");
+
+    // Alerts / replay
+    const alertFeedEl = $("#alert-feed");
+    const clearAlertsBtn = $("#clear-alerts-btn");
+    const replaySliderEl = $("#replay-slider");
+    const replayLabelEl = $("#replay-label");
 
     const listEl = $("#flight-list");
     const msgEl = $("#message");
     const updatedEl = $("#last-updated");
 
+    // Radar
     const radarCanvas = $("#radar");
     const radarSub = $("#radar-sub");
     const radarRangeEl = $("#radar-range");
     const rctx = radarCanvas.getContext("2d");
+
+    // Follow
+    const followTitleEl = $("#follow-title");
+    const followEtaEl = $("#follow-eta");
+    const followTrendEl = $("#follow-trend");
+    const followDAltEl = $("#follow-dalt");
+    const followDDistEl = $("#follow-ddist");
+    const openAircraftMapBtn = $("#open-aircraft-map");
+    const openMyMapBtn = $("#open-my-map");
+
     const RADAR_DOT_COLORS = {
       airliner: { core: "rgba(125,211,252,0.95)", glow: "rgba(125,211,252,0.22)" },
       mid: { core: "rgba(255,209,102,0.95)", glow: "rgba(255,209,102,0.22)" },
       low: { core: "rgba(255,143,107,0.95)", glow: "rgba(255,143,107,0.22)" },
       helicopter: { core: "rgba(192,132,252,0.96)", glow: "rgba(192,132,252,0.24)" }
+    };
+    const RADAR_DOT_SIZES = {
+      helicopter: { core: 2.4, glow: 6.4 },
+      small: { core: 2.8, glow: 7.0 },
+      medium: { core: 3.2, glow: 8.0 },
+      large: { core: 4.1, glow: 9.5 },
+      unknown: { core: 3.0, glow: 7.6 }
     };
 
     const tpl = $("#flight-template");
@@ -535,13 +863,14 @@
       "This page is running as file://. Start a local HTTP server first: " +
       "npx --yes @azure/static-web-apps-cli start . --api-location api --port 4280";
 
+    let liveRefreshTimerId = null;
+    let liveCountdownTimerId = null;
+    let nextRefreshAtMs = null;
+    let lastUpdatedAtMs = null;
+    let lookupInFlight = false;
+
     requestAnimationFrame(() => {
       document.querySelectorAll(".reveal").forEach(el => el.classList.add("on"));
-    });
-
-    radiusValueEl.textContent = `${radiusEl.value} nm`;
-    radiusEl.addEventListener("input", () => {
-      radiusValueEl.textContent = `${radiusEl.value} nm`;
     });
 
     // =============================
@@ -558,7 +887,6 @@
       const φ1 = toRad(lat1), φ2 = toRad(lat2);
       const Δφ = toRad(lat2 - lat1);
       const Δλ = toRad(lon2 - lon1);
-
       const a = Math.sin(Δφ/2)**2 + Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)**2;
       const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
       return (R_km * c) * km_to_nm;
@@ -574,12 +902,28 @@
       return (toDeg(θ) + 360) % 360;
     }
 
-    // Helicopter detection is heuristic when explicit type metadata is missing.
+    // Move lat/lon forward along heading by distance (nm) - simple great-circle step
+    function moveLatLon(lat, lon, headingDeg, distNm){
+      const R_nm = 3440.065; // Earth radius in nautical miles
+      const δ = distNm / R_nm;
+      const θ = toRad(headingDeg);
+      const φ1 = toRad(lat);
+      const λ1 = toRad(lon);
+
+      const sinφ2 = Math.sin(φ1)*Math.cos(δ) + Math.cos(φ1)*Math.sin(δ)*Math.cos(θ);
+      const φ2 = Math.asin(clamp(sinφ2, -1, 1));
+      const y = Math.sin(θ)*Math.sin(δ)*Math.cos(φ1);
+      const x = Math.cos(δ) - Math.sin(φ1)*Math.sin(φ2);
+      const λ2 = λ1 + Math.atan2(y, x);
+
+      return { lat: toDeg(φ2), lon: ((toDeg(λ2) + 540) % 360) - 180 };
+    }
+
+    // Helicopter detection heuristic
     function isLikelyHelicopter(a){
+      if ((a.sizeClass || "").toLowerCase() === "helicopter") return true;
       const typeText = `${a.typeCode || ""} ${a.typeDesc || ""}`.toLowerCase();
-      if (typeText.includes("heli") || typeText.includes("helicopter") || typeText.includes("rotor")){
-        return true;
-      }
+      if (typeText.includes("heli") || typeText.includes("helicopter") || typeText.includes("rotor")) return true;
       const speedKt = Number(a.speedKt);
       const altFt = Number(a.altitudeFt);
       return Number.isFinite(speedKt) && speedKt > 0 && speedKt <= 170 &&
@@ -595,30 +939,207 @@
       return "low";
     }
 
+    function radarDotSizeProfile(a){
+      const sizeClass = (a.sizeClass || "").toLowerCase();
+      if (sizeClass === "helicopter") return RADAR_DOT_SIZES.helicopter;
+      if (sizeClass === "small") return RADAR_DOT_SIZES.small;
+      if (sizeClass === "medium") return RADAR_DOT_SIZES.medium;
+      if (sizeClass === "large") return RADAR_DOT_SIZES.large;
+      const speedKt = Number(a.speedKt);
+      if (Number.isFinite(speedKt)){
+        if (speedKt >= 430) return RADAR_DOT_SIZES.large;
+        if (speedKt >= 280) return RADAR_DOT_SIZES.medium;
+        if (speedKt > 0 && speedKt < 180) return RADAR_DOT_SIZES.small;
+      }
+      return RADAR_DOT_SIZES.unknown;
+    }
+
     function fmtNm(nm){ return `${nm.toFixed(nm < 10 ? 1 : 0)} nm`; }
     function fmtFt(ft){ return ft ? `${Math.round(ft).toLocaleString()} ft` : "—"; }
     function fmtKt(kt){ return kt ? `${Math.round(kt)} kt` : "—"; }
     function fmtDeg(d){ return (d === null || d === undefined || Number.isNaN(d)) ? "—" : `${Math.round(d)}°`; }
 
-    function setUpdatedNow(){
-      updatedEl.textContent = `Updated ${new Date().toLocaleString()}`;
+    function formatTime(ms){
+      return new Date(ms).toLocaleTimeString([], { hour:"2-digit", minute:"2-digit", second:"2-digit" });
     }
 
     // =============================
-    // SCORING (simple & tweakable)
+    // TIMERS / LABELS
     // =============================
-    function computeLikelihood({ distanceNm, altitudeFt, radiusNm, headingDeg, bearingToUserDeg }){
+    function updateLastUpdatedLabel(){
+      const baseText = Number.isFinite(lastUpdatedAtMs)
+        ? `Updated ${formatTime(lastUpdatedAtMs)}`
+        : "No lookup yet.";
+
+      if (Number.isFinite(nextRefreshAtMs)){
+        const remainingSec = Math.max(0, Math.ceil((nextRefreshAtMs - Date.now()) / 1000));
+        updatedEl.textContent = `${baseText} • Next refresh in ${remainingSec}s`;
+        return;
+      }
+      updatedEl.textContent = baseText;
+    }
+
+    function clearLiveRefreshTimer(){
+      if (liveRefreshTimerId){
+        clearTimeout(liveRefreshTimerId);
+        liveRefreshTimerId = null;
+      }
+    }
+    function startCountdownTicker(){
+      if (liveCountdownTimerId) return;
+      liveCountdownTimerId = setInterval(updateLastUpdatedLabel, 250);
+    }
+    function stopCountdownTicker(){
+      if (liveCountdownTimerId){
+        clearInterval(liveCountdownTimerId);
+        liveCountdownTimerId = null;
+      }
+    }
+
+    // =============================
+    // STORAGE
+    // =============================
+    function loadJSON(key, fallback){
+      try{
+        const raw = localStorage.getItem(key);
+        if (!raw) return fallback;
+        return JSON.parse(raw);
+      }catch{ return fallback; }
+    }
+    function saveJSON(key, value){
+      try{ localStorage.setItem(key, JSON.stringify(value)); }catch{}
+    }
+
+    // Presets: { id, name, lat, lon, radiusNm, minAltFt, maxAltFt, maxResults }
+    let presets = loadJSON(LS_PRESETS, []);
+    function refreshPresetDropdown(){
+      presetSelect.innerHTML = `<option value="">(none)</option>` + presets
+        .map(p => `<option value="${p.id}">${escapeHtml(p.name)}</option>`)
+        .join("");
+    }
+    function escapeHtml(s){
+      return String(s ?? "").replace(/[&<>"']/g, m => ({
+        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+      }[m]));
+    }
+
+    // Rules: { id, callsign, type, minLike, withinNm, maxAltFt, cooldownSec, lastFiredByHex: {} }
+    let rules = loadJSON(LS_RULES, []);
+    // Alert feed: [{t, msg}]
+    let alertFeed = loadJSON(LS_ALERTS, []);
+
+    function pushAlert(msg){
+      const item = { t: Date.now(), msg };
+      alertFeed.unshift(item);
+      alertFeed = alertFeed.slice(0, 50);
+      saveJSON(LS_ALERTS, alertFeed);
+      renderAlertFeed();
+    }
+    function renderAlertFeed(){
+      alertFeedEl.innerHTML = "";
+      if (!alertFeed.length){
+        alertFeedEl.innerHTML = `<li class="alert-item"><div class="t">—</div><div class="b">No alerts yet.</div></li>`;
+        return;
+      }
+      const frag = document.createDocumentFragment();
+      for (const a of alertFeed){
+        const li = document.createElement("li");
+        li.className = "alert-item";
+        li.innerHTML = `<div class="t">${escapeHtml(formatTime(a.t))}</div><div class="b">${escapeHtml(a.msg)}</div>`;
+        frag.appendChild(li);
+      }
+      alertFeedEl.appendChild(frag);
+    }
+
+    function renderRules(){
+      rulesListEl.innerHTML = "";
+      if (!rules.length){
+        rulesListEl.innerHTML = `<div class="footnote">No rules yet.</div>`;
+        return;
+      }
+      const frag = document.createDocumentFragment();
+      for (const r of rules){
+        const box = document.createElement("div");
+        box.className = "flight-card";
+        box.style.cursor = "default";
+        box.innerHTML = `
+          <div class="flight-head">
+            <div>
+              <h3>${escapeHtml(r.name || "Rule")}</h3>
+              <p class="subline mono">
+                callsign:"${escapeHtml(r.callsign || "*")}" • type:"${escapeHtml(r.type || "*")}"
+              </p>
+              <p class="subline">
+                minLike ${r.minLike}% • within ${r.withinNm} nm • maxAlt ${r.maxAltFt.toLocaleString()} ft • cooldown ${r.cooldownSec}s
+              </p>
+            </div>
+            <span class="likelihood" style="cursor:pointer;" data-del="${r.id}">Delete</span>
+          </div>
+        `;
+        box.querySelector('[data-del]').addEventListener("click", () => {
+          rules = rules.filter(x => x.id !== r.id);
+          saveJSON(LS_RULES, rules);
+          renderRules();
+        });
+        frag.appendChild(box);
+      }
+      rulesListEl.appendChild(frag);
+    }
+
+    // =============================
+    // REPLAY HISTORY MODEL
+    // =============================
+    // snapshots: [{ t, userLat, userLon, radiusNm, aircraft:[normalized...] }]
+    let snapshots = [];
+    // trailsByHex: hex -> [{t, lat, lon, altFt, spdKt, hdgDeg}]
+    let trailsByHex = new Map();
+
+    // Replay mode: slider index points to snapshots array
+    function setReplaySlider(){
+      replaySliderEl.min = 0;
+      replaySliderEl.max = Math.max(0, snapshots.length - 1);
+      replaySliderEl.value = replaySliderEl.max;
+      replayLabelEl.textContent = "Live";
+    }
+
+    replaySliderEl.addEventListener("input", () => {
+      const idx = Number(replaySliderEl.value);
+      const isLive = idx === Number(replaySliderEl.max);
+      replayLabelEl.textContent = isLive ? "Live" : `Snapshot ${idx+1}/${snapshots.length} (${formatTime(snapshots[idx]?.t || Date.now())})`;
+      // re-render using selected snapshot
+      const s = snapshots[idx];
+      if (s){
+        radarState.userLat = s.userLat;
+        radarState.userLon = s.userLon;
+        radarState.radiusNm = s.radiusNm;
+        renderFlights({
+          userLat: s.userLat, userLon: s.userLon, radiusNm: s.radiusNm,
+          minAltFt: Number(minAltEl.value||0),
+          maxAltFt: Number(maxAltEl.value||65000),
+          maxResults: Number(maxResultsEl.value||25),
+          aircraft: s.aircraft,
+          snapshotTimeMs: s.t
+        });
+      }
+    });
+
+    // =============================
+    // SCORING (smarter but still simple)
+    // =============================
+    function computeLikelihood({ distanceNm, altitudeFt, radiusNm, headingDeg, bearingToUserDeg, closingScore }){
       const distScore = 1 - clamp(distanceNm / Math.max(1, radiusNm), 0, 1);
       const altScore = clamp((altitudeFt - 1500) / 35000, 0, 1);
 
-      // "Overhead-ish": if the plane is heading toward your bearing, score higher.
-      // NOTE: bearingToUserDeg is the bearing FROM user TO aircraft.
-      // To see if aircraft is heading toward the user, compare aircraft heading with reverse bearing.
       const bearingFromAircraftToUser = (bearingToUserDeg + 180) % 360;
       const angleDiff = Math.abs((((headingDeg - bearingFromAircraftToUser) % 360) + 540) % 360 - 180);
       const headingScore = 1 - clamp(angleDiff / 180, 0, 1);
 
-      return clamp(distScore*0.55 + headingScore*0.30 + altScore*0.15, 0, 1);
+      // closingScore: 0..1 where 1 means rapidly getting closer
+      const close = clamp(closingScore ?? 0.5, 0, 1);
+
+      // Weighted mix
+      const base = distScore*0.45 + headingScore*0.30 + altScore*0.10 + close*0.15;
+      return clamp(base, 0, 1);
     }
 
     function likelihoodLabel(x){
@@ -637,20 +1158,17 @@
       const lat = Number(raw.latitude ?? raw.lat);
       const lon = Number(raw.longitude ?? raw.lon);
 
-      const altFt = Number.isFinite(Number(raw.altitudeFt))
-        ? Number(raw.altitudeFt)
-        : null;
-
-      const speedKt = Number.isFinite(Number(raw.speedKnots))
-        ? Number(raw.speedKnots)
-        : null;
-
-      const headingDeg = Number.isFinite(Number(raw.headingDegrees))
-        ? Number(raw.headingDegrees)
-        : null;
+      const altFt = Number.isFinite(Number(raw.altitudeFt)) ? Number(raw.altitudeFt) : null;
+      const speedKt = Number.isFinite(Number(raw.speedKnots)) ? Number(raw.speedKnots) : null;
+      const headingDeg = Number.isFinite(Number(raw.headingDegrees)) ? Number(raw.headingDegrees) : null;
 
       const origin = (raw.departureIcao || raw.origin || "").toString().trim();
       const dest = (raw.arrivalIcao || raw.destination || "").toString().trim();
+      const typeCode = (raw.typeCode || raw.aircraftTypeCode || "").toString().trim();
+      const inferredType = (raw.inferredType || "").toString().trim();
+      let typeDesc = (raw.typeDescription || raw.aircraftType || "").toString().trim();
+      if (!typeDesc && inferredType && inferredType.toLowerCase() !== typeCode.toLowerCase()) typeDesc = inferredType;
+      const sizeClass = (raw.sizeClass || raw.size || "").toString().trim().toLowerCase();
 
       return {
         callsign: callsign || (hex ? `HEX ${hex.toUpperCase()}` : "Unknown"),
@@ -660,8 +1178,9 @@
         altitudeFt: altFt,
         speedKt,
         headingDeg,
-        typeCode: "",
-        typeDesc: "",
+        typeCode,
+        typeDesc,
+        sizeClass,
         origin,
         dest,
         _raw: raw
@@ -669,7 +1188,6 @@
     }
 
     async function fetchLiveAircraft({ lat, lon, radiusNm, minAltFt, maxAltFt, maxResults }){
-      // API expects miles; UI uses nautical miles.
       const radiusMiles = clamp(radiusNm * 1.15078, 5, 120);
       const params = new URLSearchParams({
         lat: String(lat),
@@ -691,7 +1209,35 @@
     }
 
     // =============================
-    // RADAR DRAW (ALL FLIGHTS)
+    // "Interesting" heuristics
+    // =============================
+    const interestingCallsignHints = ["RCH","QID","SAM","ASH","MOOSE","REACH","DUKE","NIGHT","PAT","KING","FURY","VENUS"];
+    const commonAirliners = ["A319","A320","A321","B737","B738","B739","E175","E170","CRJ9","CRJ7","B752","B753","A20N","B38M"];
+
+    function isInteresting(a){
+      const cs = (a.callsign || "").toUpperCase();
+      const tc = (a.typeCode || "").toUpperCase();
+      const td = (a.typeDesc || "").toUpperCase();
+
+      if (interestingCallsignHints.some(x => cs.includes(x))) return true;
+      if (tc.includes("C17") || tc.includes("C5") || tc.includes("KC") || tc.includes("K35") || tc.includes("B52") || tc.includes("B1") || tc.includes("B2")) return true;
+      if (td.includes("TANKER") || td.includes("TRANSPORT") || td.includes("MIL")) return true;
+      if (tc.includes("A388") || td.includes("A380")) return true;
+      if (tc.includes("AN12") || tc.includes("AN22") || tc.includes("AN124")) return true;
+
+      // heli can be interesting too
+      if (isLikelyHelicopter(a)) return true;
+
+      return false;
+    }
+
+    function isCommonAirliner(a){
+      const tc = (a.typeCode || "").toUpperCase();
+      return commonAirliners.some(x => tc.includes(x));
+    }
+
+    // =============================
+    // RADAR STATE / DRAW
     // =============================
     let radarAnimId = null;
     let radarState = {
@@ -699,18 +1245,20 @@
       userLon: 0,
       radiusNm: 25,
       aircraft: [],
-      selectedHex: ""
+      selectedHex: "",
+      snapshotTimeMs: null
     };
 
     function drawRadar(){
       const { userLat, userLon, radiusNm, aircraft, selectedHex } = radarState;
+      const showTrails = !!fShowTrailsEl.checked;
+      const showPredict = !!fShowPredictEl.checked;
 
       const w = radarCanvas.width;
       const h = radarCanvas.height;
       const cx = w/2, cy = h/2;
       const R = Math.min(w,h) * 0.44;
 
-      // clear (we rely on CSS bg)
       rctx.clearRect(0,0,w,h);
 
       // glow
@@ -737,15 +1285,6 @@
       rctx.beginPath(); rctx.moveTo(cx - R, cy); rctx.lineTo(cx + R, cy); rctx.stroke();
       rctx.beginPath(); rctx.moveTo(cx, cy - R); rctx.lineTo(cx, cy + R); rctx.stroke();
 
-      // N/E/S/W ticks (tiny)
-      rctx.strokeStyle = "rgba(214,255,238,0.28)";
-      rctx.lineWidth = 2;
-      const tick = 10;
-      rctx.beginPath(); rctx.moveTo(cx, cy - R); rctx.lineTo(cx, cy - R + tick); rctx.stroke(); // N
-      rctx.beginPath(); rctx.moveTo(cx + R, cy); rctx.lineTo(cx + R - tick, cy); rctx.stroke(); // E
-      rctx.beginPath(); rctx.moveTo(cx, cy + R); rctx.lineTo(cx, cy + R - tick); rctx.stroke(); // S
-      rctx.beginPath(); rctx.moveTo(cx - R, cy); rctx.lineTo(cx - R + tick, cy); rctx.stroke(); // W
-
       // sweep
       const now = performance.now() / 1000;
       const sweepAng = (now * 1.05) % (Math.PI * 2);
@@ -754,10 +1293,7 @@
 
       rctx.strokeStyle = "rgba(68,255,188,0.18)";
       rctx.lineWidth = 2;
-      rctx.beginPath();
-      rctx.moveTo(cx, cy);
-      rctx.lineTo(sx, sy);
-      rctx.stroke();
+      rctx.beginPath(); rctx.moveTo(cx, cy); rctx.lineTo(sx, sy); rctx.stroke();
 
       rctx.fillStyle = "rgba(68,255,188,0.08)";
       rctx.beginPath();
@@ -765,6 +1301,72 @@
       rctx.arc(cx, cy, R, sweepAng - 0.28, sweepAng, false);
       rctx.closePath();
       rctx.fill();
+
+      // trails
+      if (showTrails){
+        for (const a of aircraft){
+          if (!a.hex) continue;
+          const trail = trailsByHex.get(a.hex.toLowerCase());
+          if (!trail || trail.length < 2) continue;
+
+          // draw last ~12 points faint line
+          const pts = trail.slice(-14);
+          rctx.strokeStyle = "rgba(255,255,255,0.12)";
+          rctx.lineWidth = 2;
+          rctx.beginPath();
+          let started = false;
+          for (const p of pts){
+            const dNm = distanceNm(userLat, userLon, p.lat, p.lon);
+            if (!Number.isFinite(dNm)) continue;
+            const t = clamp(dNm / Math.max(1, radiusNm), 0, 1);
+            const r = t * R;
+            const brg = bearingDeg(userLat, userLon, p.lat, p.lon);
+            const ang = (brg - 90) * Math.PI / 180;
+            const px = cx + r * Math.cos(ang);
+            const py = cy + r * Math.sin(ang);
+            if (!started){ rctx.moveTo(px, py); started = true; }
+            else rctx.lineTo(px, py);
+          }
+          rctx.stroke();
+        }
+      }
+
+      // prediction lines
+      if (showPredict){
+        for (const a of aircraft){
+          if (!Number.isFinite(a.headingDeg) || !Number.isFinite(a.speedKt)) continue;
+
+          const isSelected = selectedHex && a.hex && a.hex.toLowerCase() === selectedHex.toLowerCase();
+          const alpha = isSelected ? 0.30 : 0.14;
+
+          // predict future point
+          const distNmFuture = (a.speedKt * (PREDICT_SECONDS / 3600));
+          const future = moveLatLon(a.lat, a.lon, a.headingDeg, distNmFuture);
+
+          // draw from current to future
+          const dNow = distanceNm(userLat, userLon, a.lat, a.lon);
+          const dFut = distanceNm(userLat, userLon, future.lat, future.lon);
+          if (!Number.isFinite(dNow) || !Number.isFinite(dFut)) continue;
+
+          const brgNow = bearingDeg(userLat, userLon, a.lat, a.lon);
+          const brgFut = bearingDeg(userLat, userLon, future.lat, future.lon);
+
+          const rNow = clamp(dNow / Math.max(1, radiusNm), 0, 1) * R;
+          const rFut = clamp(dFut / Math.max(1, radiusNm), 0, 1) * R;
+
+          const angNow = (brgNow - 90) * Math.PI / 180;
+          const angFut = (brgFut - 90) * Math.PI / 180;
+
+          const x1 = cx + rNow * Math.cos(angNow);
+          const y1 = cy + rNow * Math.sin(angNow);
+          const x2 = cx + rFut * Math.cos(angFut);
+          const y2 = cy + rFut * Math.sin(angFut);
+
+          rctx.strokeStyle = `rgba(214,255,238,${alpha})`;
+          rctx.lineWidth = isSelected ? 3 : 2;
+          rctx.beginPath(); rctx.moveTo(x1, y1); rctx.lineTo(x2, y2); rctx.stroke();
+        }
+      }
 
       // dots
       for (const a of aircraft){
@@ -775,7 +1377,7 @@
         const r = t * R;
 
         const brg = bearingDeg(userLat, userLon, a.lat, a.lon);
-        const ang = (brg - 90) * Math.PI / 180; // 0 deg up
+        const ang = (brg - 90) * Math.PI / 180;
 
         const px = cx + r * Math.cos(ang);
         const py = cy + r * Math.sin(ang);
@@ -783,16 +1385,16 @@
         const isSelected = selectedHex && a.hex && a.hex.toLowerCase() === selectedHex.toLowerCase();
         const dotBand = radarDotBand(a);
         const dotColors = RADAR_DOT_COLORS[dotBand] || RADAR_DOT_COLORS.mid;
+        const dotSize = radarDotSizeProfile(a);
+        const glowRadius = isSelected ? dotSize.glow + 1.8 : dotSize.glow;
+        const coreRadius = isSelected ? dotSize.core + 1.3 : dotSize.core;
 
-        // dot glow
         rctx.fillStyle = isSelected ? "rgba(255,255,255,0.18)" : dotColors.glow;
-        rctx.beginPath(); rctx.arc(px, py, isSelected ? 10 : 7, 0, Math.PI*2); rctx.fill();
+        rctx.beginPath(); rctx.arc(px, py, glowRadius, 0, Math.PI*2); rctx.fill();
 
-        // dot core
         rctx.fillStyle = isSelected ? "rgba(255,255,255,0.90)" : dotColors.core;
-        rctx.beginPath(); rctx.arc(px, py, isSelected ? 3.6 : 2.6, 0, Math.PI*2); rctx.fill();
+        rctx.beginPath(); rctx.arc(px, py, coreRadius, 0, Math.PI*2); rctx.fill();
 
-        // tiny heading tick for selected
         if (isSelected && Number.isFinite(a.headingDeg)){
           const hAng = (a.headingDeg - 90) * Math.PI / 180;
           const ax = px + 16 * Math.cos(hAng);
@@ -831,26 +1433,93 @@
     function clearList(){ listEl.innerHTML = ""; }
     function setMessage(t){ msgEl.textContent = t; }
 
-    function renderFlights({ userLat, userLon, radiusNm, minAltFt, maxAltFt, maxResults, aircraft }){
+    function closingScoreFor(a, userLat, userLon){
+      if (!a.hex) return 0.5;
+      const trail = trailsByHex.get(a.hex.toLowerCase());
+      if (!trail || trail.length < 2) return 0.5;
+
+      const p2 = trail[trail.length - 1];
+      const p1 = trail[trail.length - 2];
+      const dt = (p2.t - p1.t) / 1000;
+      if (!Number.isFinite(dt) || dt <= 0) return 0.5;
+
+      const d1 = distanceNm(userLat, userLon, p1.lat, p1.lon);
+      const d2 = distanceNm(userLat, userLon, p2.lat, p2.lon);
+      if (!Number.isFinite(d1) || !Number.isFinite(d2)) return 0.5;
+
+      const dd = d1 - d2; // positive means getting closer
+      const rate = dd / dt; // nm/s
+      // map roughly: -0.02..+0.02 nm/s to 0..1
+      return clamp(0.5 + (rate / 0.02) * 0.5, 0, 1);
+    }
+
+    function estimateClosestApproach(a, userLat, userLon){
+      // dead-reckoning: sample forward, find minimum distance
+      if (!Number.isFinite(a.headingDeg) || !Number.isFinite(a.speedKt) || a.speedKt <= 0){
+        return { etaSec: null, minDistNm: null, movingToward: null };
+      }
+      const stepSec = 15;
+      let best = { t: 0, d: distanceNm(userLat, userLon, a.lat, a.lon) };
+      for (let t = 0; t <= PREDICT_SECONDS; t += stepSec){
+        const distNmF = a.speedKt * (t / 3600);
+        const p = moveLatLon(a.lat, a.lon, a.headingDeg, distNmF);
+        const d = distanceNm(userLat, userLon, p.lat, p.lon);
+        if (Number.isFinite(d) && d < best.d) best = { t, d };
+      }
+      const dNow = distanceNm(userLat, userLon, a.lat, a.lon);
+      const movingToward = Number.isFinite(dNow) && Number.isFinite(best.d) ? (best.d < dNow - 0.1) : null;
+      return { etaSec: best.t, minDistNm: best.d, movingToward };
+    }
+
+    function shouldIncludeByFilters(a){
+      const csNeedle = (filterCallsignEl.value || "").trim().toUpperCase();
+      const typeNeedle = (filterTypeEl.value || "").trim().toUpperCase();
+      const minLikePct = clamp(Number(filterMinLikeEl.value || 0), 0, 100);
+
+      if (fHeliOnlyEl.checked && !isLikelyHelicopter(a)) return false;
+      if (fInterestingEl.checked && !isInteresting(a)) return false;
+      if (fHideAirlinersEl.checked && isCommonAirliner(a)) return false;
+
+      if (csNeedle){
+        const cs = (a.callsign || "").toUpperCase();
+        if (!cs.includes(csNeedle)) return false;
+      }
+      if (typeNeedle){
+        const tc = (a.typeCode || "").toUpperCase();
+        const td = (a.typeDesc || "").toUpperCase();
+        if (!tc.includes(typeNeedle) && !td.includes(typeNeedle)) return false;
+      }
+
+      // minLike handled after computing like in renderFlights (we need likelihood)
+      return true;
+    }
+
+    function renderFlights({ userLat, userLon, radiusNm, minAltFt, maxAltFt, maxResults, aircraft, snapshotTimeMs = null }){
       clearList();
 
-      // compute derived fields, filter, sort by likelihood then distance
-      const enriched = aircraft.map(a => {
-        const d = distanceNm(userLat, userLon, a.lat, a.lon);
-        const brg = bearingDeg(userLat, userLon, a.lat, a.lon);
-        const alt = Number.isFinite(a.altitudeFt) ? a.altitudeFt : 0;
-        const hdg = Number.isFinite(a.headingDeg) ? a.headingDeg : 0;
+      // compute derived fields, filter, sort
+      const enriched = aircraft
+        .filter(a => shouldIncludeByFilters(a))
+        .map(a => {
+          const d = distanceNm(userLat, userLon, a.lat, a.lon);
+          const brg = bearingDeg(userLat, userLon, a.lat, a.lon);
+          const alt = Number.isFinite(a.altitudeFt) ? a.altitudeFt : 0;
+          const hdg = Number.isFinite(a.headingDeg) ? a.headingDeg : 0;
 
-        const like = computeLikelihood({
-          distanceNm: d,
-          altitudeFt: alt,
-          radiusNm,
-          headingDeg: hdg,
-          bearingToUserDeg: brg
+          const close = closingScoreFor(a, userLat, userLon);
+          const like = computeLikelihood({
+            distanceNm: d,
+            altitudeFt: alt,
+            radiusNm,
+            headingDeg: hdg,
+            bearingToUserDeg: brg,
+            closingScore: close
+          });
+
+          return { ...a, _distanceNm: d, _bearing: brg, _likelihood: like, _close: close };
         });
 
-        return { ...a, _distanceNm: d, _bearing: brg, _likelihood: like };
-      });
+      const minLikePct = clamp(Number(filterMinLikeEl.value || 0), 0, 100) / 100;
 
       const filtered = enriched
         .filter(a => Number.isFinite(a._distanceNm) && a._distanceNm <= radiusNm)
@@ -858,38 +1527,46 @@
           const alt = Number.isFinite(a.altitudeFt) ? a.altitudeFt : 0;
           return alt >= minAltFt && alt <= maxAltFt;
         })
+        .filter(a => a._likelihood >= minLikePct)
         .sort((a,b) => (b._likelihood - a._likelihood) || (a._distanceNm - b._distanceNm))
         .slice(0, maxResults);
+
+      radarRangeEl.textContent = `Range: ${radiusNm} nm`;
 
       if (!filtered.length){
         setMessage("No flights matched your filters. Try increasing radius or widening altitude range.");
         radarState.aircraft = [];
         radarState.selectedHex = "";
         radarSub.textContent = "No data";
-        radarRangeEl.textContent = `Range: ${radiusNm} nm`;
-        stopRadarLoop();
+        startRadarLoop();
         drawRadar();
+        updateFollowPanel(null, userLat, userLon);
         return;
       }
 
       setMessage("");
-      radarRangeEl.textContent = `Range: ${radiusNm} nm`;
       radarSub.textContent = `${filtered.length} aircraft shown`;
       radarState.aircraft = filtered;
-      radarState.selectedHex = radarState.selectedHex || (filtered[0].hex || "");
+      radarState.snapshotTimeMs = snapshotTimeMs;
+
+      // Ensure selected exists
+      const stillThere = radarState.selectedHex && filtered.some(x => x.hex && x.hex.toLowerCase() === radarState.selectedHex.toLowerCase());
+      if (!stillThere){
+        radarState.selectedHex = filtered[0].hex || "";
+      }
       startRadarLoop();
 
       const frag = document.createDocumentFragment();
 
       filtered.forEach(a => {
         const li = tpl.content.firstElementChild.cloneNode(true);
-
         const title = a.callsign || "Unknown";
         li.querySelector('[data-flight="name"]').textContent = title;
 
-        const typeLine = (a.typeCode || a.typeDesc)
-          ? `Type: ${a.typeCode || "—"}${a.typeDesc ? ` • ${a.typeDesc}` : ""}`
-          : `Type: Unknown`;
+        let typeLine = "Type: Unknown";
+        if (a.typeCode && a.typeDesc) typeLine = `Type: ${a.typeCode} • ${a.typeDesc}`;
+        else if (a.typeDesc) typeLine = `Type: ${a.typeDesc}`;
+        else if (a.typeCode) typeLine = `Type: ${a.typeCode}`;
         li.querySelector('[data-flight="type"]').textContent = typeLine;
 
         const routeLine =
@@ -898,8 +1575,12 @@
           (a.dest ? `To ${a.dest}` : "Route unavailable"));
         li.querySelector('[data-flight="route"]').textContent = routeLine;
 
+        // ETA / closest approach
+        const ca = estimateClosestApproach(a, userLat, userLon);
+        const etaText = (ca.etaSec === null) ? "ETA —" : `ETA ${Math.round(ca.etaSec/60)}m • min ${fmtNm(ca.minDistNm)}`;
+
         li.querySelector('[data-flight="likelihood"]').textContent =
-          `${likelihoodLabel(a._likelihood)} • ${Math.round(a._likelihood * 100)}%`;
+          `${likelihoodLabel(a._likelihood)} • ${Math.round(a._likelihood * 100)}% • ${etaText}`;
 
         li.querySelector('[data-flight="distance"]').textContent = fmtNm(a._distanceNm);
         li.querySelector('[data-flight="altitude"]').textContent = fmtFt(a.altitudeFt);
@@ -909,9 +1590,10 @@
         const metaBits = [];
         metaBits.push(`Bearing: ${Math.round(a._bearing)}°`);
         if (a.hex) metaBits.push(`HEX: ${a.hex.toUpperCase()}`);
+        if (a.sizeClass) metaBits.push(`Size: ${a.sizeClass}`);
+        metaBits.push(`Closing: ${Math.round(a._close*100)}%`);
         li.querySelector('[data-flight="meta"]').textContent = metaBits.join(" • ");
 
-        // selection behavior
         const isSelected = radarState.selectedHex && a.hex &&
           a.hex.toLowerCase() === radarState.selectedHex.toLowerCase();
         if (isSelected) li.classList.add("selected");
@@ -919,9 +1601,9 @@
         function selectThis(){
           if (!a.hex) return;
           radarState.selectedHex = a.hex;
-          // update list selected class
           document.querySelectorAll(".flight-card.selected").forEach(el => el.classList.remove("selected"));
           li.classList.add("selected");
+          updateFollowPanel(a, userLat, userLon);
         }
 
         li.addEventListener("click", selectThis);
@@ -937,6 +1619,259 @@
 
       listEl.appendChild(frag);
       drawRadar();
+
+      // Update follow panel for selected aircraft
+      const selected = filtered.find(x => x.hex && radarState.selectedHex && x.hex.toLowerCase() === radarState.selectedHex.toLowerCase());
+      updateFollowPanel(selected || null, userLat, userLon);
+    }
+
+    function updateFollowPanel(a, userLat, userLon){
+      if (!a){
+        followTitleEl.textContent = "Nothing selected yet.";
+        followEtaEl.textContent = "—";
+        followTrendEl.textContent = "—";
+        followDAltEl.textContent = "—";
+        followDDistEl.textContent = "—";
+        return;
+      }
+
+      const ca = estimateClosestApproach(a, userLat, userLon);
+      if (ca.etaSec === null) followEtaEl.textContent = "—";
+      else followEtaEl.textContent = `${Math.round(ca.etaSec/60)} min (min ${fmtNm(ca.minDistNm)})`;
+
+      followTrendEl.textContent =
+        (ca.movingToward === null) ? "—" : (ca.movingToward ? "Approaching" : "Not approaching");
+
+      // Trend from trail
+      let dAlt = null, dDist = null;
+      if (a.hex){
+        const trail = trailsByHex.get(a.hex.toLowerCase());
+        if (trail && trail.length >= 2){
+          const p2 = trail[trail.length - 1];
+          const p1 = trail[trail.length - 2];
+          const alt2 = Number(p2.altFt), alt1 = Number(p1.altFt);
+          if (Number.isFinite(alt1) && Number.isFinite(alt2)) dAlt = alt2 - alt1;
+
+          const dist1 = distanceNm(userLat, userLon, p1.lat, p1.lon);
+          const dist2 = distanceNm(userLat, userLon, p2.lat, p2.lon);
+          if (Number.isFinite(dist1) && Number.isFinite(dist2)) dDist = dist2 - dist1;
+        }
+      }
+
+      followDAltEl.textContent = (dAlt === null) ? "—" : `${dAlt >= 0 ? "+" : ""}${Math.round(dAlt)} ft`;
+      followDDistEl.textContent = (dDist === null) ? "—" : `${dDist >= 0 ? "+" : ""}${dDist.toFixed(2)} nm`;
+
+      const title = `${a.callsign || "Unknown"} • ${a.typeCode || a.typeDesc || "Unknown type"}`;
+      followTitleEl.textContent = title;
+    }
+
+    function readLookupInputs(){
+      const userLat = Number(latEl.value);
+      const userLon = Number(lonEl.value);
+      const radiusNm = Number(radiusEl.value);
+      const minAltFt = Number(minAltEl.value || 0);
+      const maxAltFt = Number(maxAltEl.value || 65000);
+      const maxResults = Number(maxResultsEl.value || 25);
+
+      if (!Number.isFinite(userLat) || !Number.isFinite(userLon)){
+        return { error: "Please enter a valid latitude and longitude." };
+      }
+      return { userLat, userLon, radiusNm, minAltFt, maxAltFt, maxResults };
+    }
+
+    function scheduleNextLiveRefresh(){
+      clearLiveRefreshTimer();
+
+      if (isFileProtocol){
+        nextRefreshAtMs = null;
+        updateLastUpdatedLabel();
+        return;
+      }
+
+      const delayMs = AUTO_REFRESH_MS;
+      nextRefreshAtMs = Date.now() + delayMs;
+      startCountdownTicker();
+      updateLastUpdatedLabel();
+
+      liveRefreshTimerId = setTimeout(() => {
+        liveRefreshTimerId = null;
+        runLookup({ isAuto: true });
+      }, delayMs);
+    }
+
+    function addSnapshot({ userLat, userLon, radiusNm, aircraft }){
+      const snap = { t: Date.now(), userLat, userLon, radiusNm, aircraft };
+      snapshots.push(snap);
+      if (snapshots.length > HISTORY_MAX_SNAPSHOTS) snapshots.shift();
+
+      // update trails
+      for (const a of aircraft){
+        if (!a.hex) continue;
+        const key = a.hex.toLowerCase();
+        const arr = trailsByHex.get(key) || [];
+        arr.push({
+          t: snap.t,
+          lat: a.lat,
+          lon: a.lon,
+          altFt: Number(a.altitudeFt),
+          spdKt: Number(a.speedKt),
+          hdgDeg: Number(a.headingDeg)
+        });
+        // keep last N points
+        while (arr.length > HISTORY_POINT_LIMIT) arr.shift();
+        trailsByHex.set(key, arr);
+      }
+
+      // purge trails for hexes not seen in a while
+      const cutoff = Date.now() - (HISTORY_MAX_SNAPSHOTS * AUTO_REFRESH_MS * 2);
+      for (const [hex, arr] of trailsByHex.entries()){
+        if (!arr.length || arr[arr.length - 1].t < cutoff) trailsByHex.delete(hex);
+      }
+
+      setReplaySlider();
+    }
+
+    // =============================
+    // WATCHLIST EVAL
+    // =============================
+    function matchesRule(rule, a, userLat, userLon){
+      const csNeedle = (rule.callsign || "").trim().toUpperCase();
+      const typeNeedle = (rule.type || "").trim().toUpperCase();
+
+      if (csNeedle){
+        const cs = (a.callsign || "").toUpperCase();
+        if (!cs.includes(csNeedle)) return false;
+      }
+      if (typeNeedle){
+        const tc = (a.typeCode || "").toUpperCase();
+        const td = (a.typeDesc || "").toUpperCase();
+        if (!tc.includes(typeNeedle) && !td.includes(typeNeedle)) return false;
+      }
+
+      const d = distanceNm(userLat, userLon, a.lat, a.lon);
+      if (!Number.isFinite(d) || d > rule.withinNm) return false;
+
+      const alt = Number.isFinite(a.altitudeFt) ? a.altitudeFt : 0;
+      if (alt > rule.maxAltFt) return false;
+
+      if ((a._likelihood ?? 0) * 100 < rule.minLike) return false;
+
+      return true;
+    }
+
+    function shouldFireCooldown(rule, a){
+      if (!a.hex) return true;
+      const byHex = rule.lastFiredByHex || {};
+      const last = byHex[a.hex.toLowerCase()];
+      if (!last) return true;
+      return (Date.now() - last) / 1000 >= rule.cooldownSec;
+    }
+
+    async function tryNotify(title, body){
+      if (!("Notification" in window)) return;
+      if (Notification.permission !== "granted") return;
+      try{
+        new Notification(title, { body });
+      }catch{}
+    }
+
+    function evaluateRules(filteredAircraft, userLat, userLon){
+      if (!rules.length) return;
+      for (const rule of rules){
+        for (const a of filteredAircraft){
+          if (!a.hex) continue;
+          if (!matchesRule(rule, a, userLat, userLon)) continue;
+          if (!shouldFireCooldown(rule, a)) continue;
+
+          // mark fired
+          rule.lastFiredByHex = rule.lastFiredByHex || {};
+          rule.lastFiredByHex[a.hex.toLowerCase()] = Date.now();
+
+          const msg =
+            `${a.callsign} • ${a.typeCode || a.typeDesc || "Unknown"} • ${fmtNm(a._distanceNm)} • ` +
+            `${Math.round((a._likelihood||0)*100)}% • ${fmtFt(a.altitudeFt)}`;
+
+          pushAlert(`Rule "${rule.name || "Rule"}": ${msg}`);
+          tryNotify("Overhead Flight Alert", msg);
+        }
+      }
+      saveJSON(LS_RULES, rules);
+    }
+
+    // =============================
+    // LOOKUP
+    // =============================
+    async function runLookup({ isAuto = false } = {}){
+      if (isFileProtocol){
+        setMessage(runHint);
+        return;
+      }
+      if (lookupInFlight) return;
+
+      const input = readLookupInputs();
+      if (input.error){
+        setMessage(input.error);
+        if (isAuto) scheduleNextLiveRefresh();
+        return;
+      }
+
+      if (!isAuto) setMessage("Looking up live aircraft...");
+
+      const { userLat, userLon, radiusNm, minAltFt, maxAltFt, maxResults } = input;
+
+      radarState.userLat = userLat;
+      radarState.userLon = userLon;
+      radarState.radiusNm = radiusNm;
+
+      lookupInFlight = true;
+
+      try{
+        const aircraft = await fetchLiveAircraft({
+          lat: userLat,
+          lon: userLon,
+          radiusNm,
+          minAltFt,
+          maxAltFt,
+          maxResults
+        });
+
+        // Add snapshot BEFORE render so closing can compute next time
+        addSnapshot({ userLat, userLon, radiusNm, aircraft });
+
+        // Render current snapshot (live)
+        const liveSnap = snapshots[snapshots.length - 1];
+        replaySliderEl.value = replaySliderEl.max;
+        replayLabelEl.textContent = "Live";
+
+        renderFlights({
+          userLat, userLon, radiusNm,
+          minAltFt, maxAltFt, maxResults,
+          aircraft: liveSnap.aircraft,
+          snapshotTimeMs: liveSnap.t
+        });
+
+        // After render, evaluate rules on the currently displayed aircraft (radarState.aircraft is filtered/sorted)
+        evaluateRules(radarState.aircraft, userLat, userLon);
+
+        lastUpdatedAtMs = Date.now();
+        updateLastUpdatedLabel();
+
+      }catch(err){
+        console.error(err);
+        setMessage(
+          "Could not fetch live flights from /api/overhead-flights. " +
+          "Make sure SWA CLI is running with --api-location api."
+        );
+        clearList();
+        radarState.aircraft = [];
+        radarState.selectedHex = "";
+        radarSub.textContent = "No data";
+        startRadarLoop();
+        drawRadar();
+      } finally {
+        lookupInFlight = false;
+        scheduleNextLiveRefresh();
+      }
     }
 
     // =============================
@@ -966,79 +1901,194 @@
       }
     });
 
-    // =============================
-    // SUBMIT
-    // =============================
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-
-      if (isFileProtocol){
-        setMessage(runHint);
+    // Notifications
+    notifyBtn.addEventListener("click", async () => {
+      if (!("Notification" in window)){
+        setMessage("Notifications aren’t supported in this browser.");
         return;
       }
-
-      const userLat = Number(latEl.value);
-      const userLon = Number(lonEl.value);
-      const radiusNm = Number(radiusEl.value);
-      const minAltFt = Number(minAltEl.value || 0);
-      const maxAltFt = Number(maxAltEl.value || 65000);
-      const maxResults = Number(maxResultsEl.value || 25);
-
-      if (!Number.isFinite(userLat) || !Number.isFinite(userLon)){
-        setMessage("Please enter a valid latitude and longitude.");
-        return;
-      }
-
-      setMessage("Looking up live aircraft…");
-      setUpdatedNow();
-
-      radarState.userLat = userLat;
-      radarState.userLon = userLon;
-      radarState.radiusNm = radiusNm;
-      radarRangeEl.textContent = `Range: ${radiusNm} nm`;
-
-      try{
-        const aircraft = await fetchLiveAircraft({
-          lat: userLat,
-          lon: userLon,
-          radiusNm,
-          minAltFt,
-          maxAltFt,
-          maxResults
-        });
-
-        renderFlights({
-          userLat, userLon, radiusNm,
-          minAltFt, maxAltFt, maxResults,
-          aircraft
-        });
-
-      }catch(err){
-        console.error(err);
-
-        setMessage(
-          "Could not fetch live flights from /api/overhead-flights. " +
-          "Make sure SWA CLI is running with --api-location api."
-        );
-
-        clearList();
-        radarState.aircraft = [];
-        radarState.selectedHex = "";
-        radarSub.textContent = "No data";
-        stopRadarLoop();
-        drawRadar();
-      }
+      const perm = await Notification.requestPermission();
+      if (perm === "granted") setMessage("Notifications enabled.");
+      else setMessage("Notifications not enabled (permission denied).");
     });
 
-    // initial radar draw
+    // =============================
+    // PRESETS
+    // =============================
+    function applyPreset(p){
+      latEl.value = Number(p.lat).toFixed(4);
+      lonEl.value = Number(p.lon).toFixed(4);
+      radiusEl.value = String(p.radiusNm ?? radiusEl.value);
+      radiusValueEl.textContent = `${radiusEl.value} nm`;
+      minAltEl.value = String(p.minAltFt ?? minAltEl.value);
+      maxAltEl.value = String(p.maxAltFt ?? maxAltEl.value);
+      maxResultsEl.value = String(p.maxResults ?? maxResultsEl.value);
+      setMessage(`Preset loaded: ${p.name}`);
+    }
+
+    presetSelect.addEventListener("change", () => {
+      const id = presetSelect.value;
+      if (!id) return;
+      const p = presets.find(x => x.id === id);
+      if (p) applyPreset(p);
+    });
+
+    savePresetBtn.addEventListener("click", () => {
+      const name = (presetNameEl.value || "").trim();
+      if (!name){
+        setMessage("Type a preset name first.");
+        return;
+      }
+      const input = readLookupInputs();
+      if (input.error){
+        setMessage(input.error);
+        return;
+      }
+      const p = {
+        id: crypto?.randomUUID ? crypto.randomUUID() : String(Date.now()),
+        name,
+        lat: input.userLat,
+        lon: input.userLon,
+        radiusNm: input.radiusNm,
+        minAltFt: input.minAltFt,
+        maxAltFt: input.maxAltFt,
+        maxResults: input.maxResults
+      };
+      presets.unshift(p);
+      presets = presets.slice(0, 25);
+      saveJSON(LS_PRESETS, presets);
+      refreshPresetDropdown();
+      presetSelect.value = p.id;
+      setMessage(`Saved preset: ${name}`);
+      presetNameEl.value = "";
+    });
+
+    deletePresetBtn.addEventListener("click", () => {
+      const id = presetSelect.value;
+      if (!id){
+        setMessage("Select a preset to delete.");
+        return;
+      }
+      presets = presets.filter(x => x.id !== id);
+      saveJSON(LS_PRESETS, presets);
+      refreshPresetDropdown();
+      presetSelect.value = "";
+      setMessage("Preset deleted.");
+    });
+
+    // Airport search placeholder (UI only)
+    airportSearchEl.addEventListener("keydown", (e) => {
+      if (e.key !== "Enter") return;
+      e.preventDefault();
+      setMessage("Airport search is a placeholder. Add a geocoding/airport DB later to turn KCLE → coordinates.");
+    });
+
+    // =============================
+    // WATCHLIST RULES
+    // =============================
+    addRuleBtn.addEventListener("click", () => {
+      const callsign = (ruleCallsignEl.value || "").trim();
+      const type = (ruleTypeEl.value || "").trim();
+      const minLike = clamp(Number(ruleMinLikeEl.value || 0), 0, 100);
+      const withinNm = clamp(Number(ruleWithinEl.value || 50), 1, 250);
+      const maxAltFt = clamp(Number(ruleMaxAltEl.value || 65000), 0, 65000);
+      const cooldownSec = clamp(Number(ruleCooldownEl.value || 120), 5, 3600);
+
+      const nameParts = [];
+      if (callsign) nameParts.push(`CS:${callsign}`);
+      if (type) nameParts.push(`TYPE:${type}`);
+      const name = nameParts.length ? nameParts.join(" • ") : "Any";
+
+      const r = {
+        id: crypto?.randomUUID ? crypto.randomUUID() : String(Date.now()),
+        name,
+        callsign,
+        type,
+        minLike,
+        withinNm,
+        maxAltFt,
+        cooldownSec,
+        lastFiredByHex: {}
+      };
+
+      rules.unshift(r);
+      rules = rules.slice(0, 20);
+      saveJSON(LS_RULES, rules);
+      renderRules();
+
+      ruleCallsignEl.value = "";
+      ruleTypeEl.value = "";
+      setMessage("Rule added.");
+    });
+
+    clearRulesBtn.addEventListener("click", () => {
+      rules = [];
+      saveJSON(LS_RULES, rules);
+      renderRules();
+      setMessage("All rules cleared.");
+    });
+
+    clearAlertsBtn.addEventListener("click", () => {
+      alertFeed = [];
+      saveJSON(LS_ALERTS, alertFeed);
+      renderAlertFeed();
+      setMessage("Alert feed cleared.");
+    });
+
+    // =============================
+    // MAP LINKS
+    // =============================
+    openMyMapBtn.addEventListener("click", () => {
+      const input = readLookupInputs();
+      if (input.error){ setMessage(input.error); return; }
+      const url = `https://www.google.com/maps?q=${input.userLat},${input.userLon}`;
+      window.open(url, "_blank", "noopener");
+    });
+
+    openAircraftMapBtn.addEventListener("click", () => {
+      const hex = (radarState.selectedHex || "").toLowerCase();
+      const a = radarState.aircraft.find(x => x.hex && x.hex.toLowerCase() === hex);
+      if (!a){
+        setMessage("Select a flight first.");
+        return;
+      }
+      const url = `https://www.google.com/maps?q=${a.lat},${a.lon}`;
+      window.open(url, "_blank", "noopener");
+    });
+
+    // =============================
+    // FORM / SLIDER
+    // =============================
+    radiusValueEl.textContent = `${radiusEl.value} nm`;
+    radiusEl.addEventListener("input", () => {
+      radiusValueEl.textContent = `${radiusEl.value} nm`;
+    });
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      await runLookup({ isAuto: false });
+    });
+
+    // =============================
+    // INIT
+    // =============================
+    refreshPresetDropdown();
+    renderRules();
+    renderAlertFeed();
+
     radarState.userLat = Number(latEl.value);
     radarState.userLon = Number(lonEl.value);
     radarState.radiusNm = Number(radiusEl.value);
     radarRangeEl.textContent = `Range: ${radiusEl.value} nm`;
     drawRadar();
+    startRadarLoop();
+    updateLastUpdatedLabel();
 
     if (isFileProtocol){
       setMessage(runHint);
+      stopCountdownTicker();
+    } else {
+      runLookup({ isAuto: true });
     }
   </script>
 </body>
