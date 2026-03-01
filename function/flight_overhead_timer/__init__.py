@@ -20,7 +20,7 @@ SEARCH_RADIUS_MILES = 180.0
 VISIBLE_RADIUS_MILES = 25.0
 MIN_ALTITUDE_FT = 1500.0
 MAX_ALTITUDE_FT = 45000.0
-MAX_EMAIL_FLIGHTS = 25
+MAX_EMAIL_FLIGHTS = 3
 
 MAILGUN_FROM_EMAIL = "flighttracker@tomgorbett.com"
 MAILGUN_TO_EMAIL = "willschaef12@gmail.com"
@@ -75,15 +75,16 @@ def find_visible_candidates(source_flights: Iterable[Dict[str, Any]], run_utc: d
         enriched["closest_distance_miles"] = round_or_none(projection["closest_distance_miles"], 2)
         candidates.append(enriched)
 
-    candidates.sort(
-        key=lambda item: (
-            item["eta_minutes"] if is_finite(item["eta_minutes"]) else LOOKAHEAD_MINUTES + 1,
-            -item["overhead_score"],
-            item["distance_miles"],
-        )
-    )
+    # Prioritize flights that are most likely to be visible overhead from the target point.
+    candidates.sort(key=visibility_sort_key)
 
     return candidates[:MAX_EMAIL_FLIGHTS]
+
+
+def visibility_sort_key(item: Dict[str, Any]) -> Tuple[float, float, float]:
+    closest_distance = item["closest_distance_miles"] if is_finite(item["closest_distance_miles"]) else item["distance_miles"]
+    eta_minutes = item["eta_minutes"] if is_finite(item["eta_minutes"]) else LOOKAHEAD_MINUTES + 1
+    return (-item["overhead_score"], closest_distance, eta_minutes)
 
 
 def fetch_source_flights(provider: str, box: Dict[str, float]) -> List[Dict[str, Any]]:

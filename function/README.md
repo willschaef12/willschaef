@@ -16,7 +16,7 @@ On each run, the function:
 1. Pulls live flight states (OpenSky by default, FlightLog/Airlabs optional).
 2. Filters out on-ground flights and out-of-range altitudes.
 3. Projects each aircraft position/heading/speed forward to determine whether it can enter a 25-mile visible radius in the next 15 minutes.
-4. Sends a summary email through Mailgun.
+4. Ranks flights by visibility at the target location and sends only the top 3 in a summary email through Mailgun.
 
 ## Required Setting
 
