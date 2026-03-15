@@ -1,0 +1,111 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+  --skyroom-bg-0: #04080d;
+  --skyroom-bg-1: #0a1018;
+  --skyroom-bg-2: #111b28;
+  --skyroom-accent: #58a6ff;
+  --skyroom-accent-soft: #8ac5ff;
+  --skyroom-panel: rgba(18, 26, 37, 0.92);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(circle at top left, rgba(88, 166, 255, 0.16), transparent 34%),
+    radial-gradient(circle at 80% 14%, rgba(87, 129, 255, 0.11), transparent 28%),
+    radial-gradient(circle at bottom center, rgba(16, 88, 148, 0.18), transparent 42%),
+    linear-gradient(180deg, var(--skyroom-bg-2), var(--skyroom-bg-0));
+  color: #edf4ff;
+  font-family: Aptos, "Segoe UI Variable Display", "Segoe UI", sans-serif;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.28), transparent 82%);
+  opacity: 0.45;
+}
+
+::selection {
+  background: rgba(88, 166, 255, 0.32);
+  color: #f8fbff;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+.skyroom-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 999px;
+  border: 2px solid rgba(248, 251, 255, 0.8);
+  background: linear-gradient(180deg, #8ac5ff, #58a6ff);
+  box-shadow: 0 0 0 6px rgba(88, 166, 255, 0.14);
+}
+
+.skyroom-slider::-moz-range-thumb {
+  width: 1rem;
+  height: 1rem;
+  border-radius: 999px;
+  border: 2px solid rgba(248, 251, 255, 0.8);
+  background: linear-gradient(180deg, #8ac5ff, #58a6ff);
+  box-shadow: 0 0 0 6px rgba(88, 166, 255, 0.14);
+}
+
+.skyroom-slider::-webkit-slider-runnable-track {
+  height: 0.5rem;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(88, 166, 255, 0.55), rgba(255, 255, 255, 0.08));
+}
+
+.skyroom-slider::-moz-range-track {
+  height: 0.5rem;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(88, 166, 255, 0.55), rgba(255, 255, 255, 0.08));
+}
+
+::-webkit-scrollbar {
+  width: 0.8rem;
+  height: 0.8rem;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background: rgba(138, 197, 255, 0.22);
+  background-clip: padding-box;
+}

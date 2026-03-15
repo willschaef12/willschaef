@@ -1,0 +1,9 @@
+node_modules
+.next
+out
+dist
+coverage
+pnpm-lock.yaml
+yarn.lock
+*.tsbuildinfo
+.DS_Store

@@ -1,57 +1,124 @@
-# Overhead Flight Finder (Azure Static Web App)
+# Skyroom
 
-This repo now contains a new website focused on live overhead-flight lookup.
+Skyroom is a Lightroom-inspired starter product for aviation and helicopter photography. It runs as a Next.js app, keeps edits non-destructive in memory, renders preview changes through a browser canvas pipeline, supports undo/redo, before/after compare, presets, and export, and includes a placeholder backend route for future AI enhancement work.
 
-- Frontend: `index.html`, `styles.css`, `app.js`
-- API: `api/overhead-flights` (Azure Function)
-- Pipeline: `.github/workflows/azure-static-web-apps-thankful-desert-0b66c4910.yml` (kept as requested)
+## Stack
 
-The app takes coordinates, radius, and altitude filters, then calls `/api/overhead-flights` to return aircraft that are likely to pass overhead.
+- Next.js App Router
+- React + TypeScript
+- Tailwind CSS
+- Context-based editor state with undo/redo history
+- Canvas-based preview and export rendering
 
-## Flight Data Provider
+## Features
 
-By default, the API uses OpenSky Network (no key required):
+- Dark, Lightroom-style editor shell with left import rail, center preview stage, right control rail, and bottom filmstrip placeholder
+- Real working sliders for exposure, contrast, highlights, shadows, whites, blacks, temperature, tint, vibrance, saturation, clarity, dehaze, sharpness, and noise reduction
+- Crop, rotate, straighten, reset all, undo, redo, before/after, side-by-side compare, zoom, and fit-to-screen
+- Built-in presets: Clear Sky, Golden Hour, Aircraft Pop, Helicopter Detail, Cool Overcast, Spotter Sharp, Soft Neutral
+- Drag-and-drop upload with file validation and clear error states
+- JPG and PNG export with adjustable JPG quality
+- Histogram panel, keyboard shortcuts, local autosave of slider state, history stack, and mask/brush placeholder
+- Placeholder AI Enhance modal and backend route at `/api/ai-enhance`
 
-- `FLIGHT_PROVIDER=opensky` (default)
+## Local Install
 
-If you want to use a FlightLog-style provider (Airlabs-compatible), configure:
-
-- `FLIGHT_PROVIDER=flightlog`
-- `FLIGHTLOG_API_KEY=<your_api_key>`
-- Optional: `FLIGHTLOG_API_URL=https://airlabs.co/api/v9/flights`
-
-## Deploy / Configure in Azure
-
-1. Keep using the existing Static Web App GitHub workflow in `.github/workflows`.
-2. In Azure Static Web App -> Configuration -> Application settings, add provider settings if needed.
-3. Redeploy or push a commit.
-
-## Local Run (Recommended)
-
-Do not open `index.html` directly with `file://`, because `/api/...` calls will fail in the browser.
-
-Run the app through HTTP with the SWA CLI:
+1. Install dependencies:
 
 ```bash
-npx --yes @azure/static-web-apps-cli start . --api-location api --port 4280
+npm install
 ```
 
-Then open:
-
-- `http://localhost:4280`
-- Use `Use My Location` in the UI (or edit coords). Empty coordinate boxes should not be left blank.
-
-If you see `Unable to find project root. Expecting to find one of host.json, local.settings.json in project root`, make sure `api/host.json` exists and you started SWA from the repo root.
-
-## Local API Test
-
-Example request:
+2. Start the development server:
 
 ```bash
-curl "http://localhost:7071/api/overhead-flights?lat=34.0522&lon=-118.2437&radiusMiles=25&minAltitudeFt=1500&maxAltitudeFt=45000&maxResults=25"
+npm run dev
 ```
 
-## Notes
+3. Open `http://localhost:3000`.
 
-- Results are scored as `high`, `medium`, or `low` likelihood using distance, heading, altitude, and speed.
-- API responses are non-cached (`Cache-Control: no-store`).
+4. Import a `.jpg`, `.jpeg`, `.png`, or `.webp` file.
+
+## Useful Scripts
+
+```bash
+npm run dev
+npm run build
+npm run start
+npm run typecheck
+```
+
+## File Structure
+
+```text
+app/
+  api/ai-enhance/route.ts      Placeholder future AI route
+  globals.css                  Tailwind entry + global visual system
+  layout.tsx                   Root layout
+  page.tsx                     App entry
+components/editor/
+  editor-app.tsx               Main client shell and modal/export orchestration
+  editor-provider.tsx          Context state, history stack, autosave, presets
+  filmstrip.tsx                Bottom tray placeholder
+  left-sidebar.tsx             Upload panel and photo metadata
+  preview-stage.tsx            Canvas preview and compare rendering
+  right-sidebar.tsx            Histogram, presets, sliders, crop, geometry
+  top-bar.tsx                  Project actions
+  ui.tsx                       Shared UI primitives
+hooks/
+  use-editor-shortcuts.ts      Keyboard shortcuts
+lib/
+  editor-defaults.ts           Types, defaults, slider definitions
+  editor-presets.ts            Built-in presets
+  file-helpers.ts              Validation, image loading, downloads
+  image-pipeline.ts            Canvas render pipeline
+```
+
+## How Editor State Works
+
+- `EditorProvider` stores the current source image, the active `settings` object, the active preset id, and `past` / `future` stacks for undo and redo.
+- Slider changes update the live `settings` object immediately for smooth preview feedback.
+- History is committed when a slider interaction ends, so the UI stays responsive without losing undo granularity.
+- The original uploaded image is preserved via the object URL in `sourceImage`; only the edit state changes.
+- Slider state is autosaved to local storage in `skyroom.session`, then restored on the next visit.
+
+## Rendering Pipeline
+
+The rendering pipeline lives in [`lib/image-pipeline.ts`](./lib/image-pipeline.ts).
+
+1. Compute the crop rectangle from the non-destructive crop percentages.
+2. Draw the cropped source image into a working canvas, downscaled for preview but full-size for export.
+3. Read `ImageData` from that working canvas.
+4. Apply tonal and color adjustments in code: exposure, contrast, highlight/shadow shaping, whites/blacks, white balance, vibrance, saturation, and dehaze.
+5. Apply local-contrast and cleanup passes: clarity, noise reduction, and sharpness.
+6. Write the processed pixels back to the working canvas.
+7. Apply rotation and straighten on a final output canvas.
+8. Return the rendered canvas plus histogram data for the sidebar.
+
+Preview renders are intentionally downscaled for responsiveness. Export renders bypass that preview limit and rebuild from the original source dimensions.
+
+## Preset Customization
+
+Built-in presets live in [`lib/editor-presets.ts`](./lib/editor-presets.ts).
+
+- Add a new preset object to `SKYROOM_PRESETS`
+- Tune the `patch` values for the sliders you want to control
+- The preset system resets tonal sliders to defaults but preserves crop and geometry
+
+## AI Hook
+
+- Frontend placeholder: the `AI Enhance` button in the top bar opens a modal
+- Backend placeholder: [`app/api/ai-enhance/route.ts`](./app/api/ai-enhance/route.ts)
+- Replace the `POST` handler with your real enhancement provider
+- The best handoff point is after upload and before export, using the current `sourceImage` plus `settings`
+
+## Deployment
+
+The simplest deployment target is Vercel.
+
+1. Push the repo to GitHub.
+2. Import the repo into Vercel.
+3. Use the default Next.js build settings.
+4. Add any future AI provider secrets to the project environment variables.
+
+You can also deploy anywhere that supports a standard Next.js Node runtime.
