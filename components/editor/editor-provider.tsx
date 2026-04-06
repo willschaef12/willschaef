@@ -102,7 +102,8 @@ function reducer(state: EditorState, action: EditorAction): EditorState {
     case "UPDATE_SETTINGS":
       return {
         ...state,
-        settings: mergeSettings(state.settings, action.payload)
+        settings: mergeSettings(state.settings, action.payload),
+        activePreset: null
       };
     case "COMMIT_HISTORY":
       if (settingsEqual(action.payload.before, state.settings)) {

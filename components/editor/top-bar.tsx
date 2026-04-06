@@ -81,7 +81,9 @@ export function TopBar({
             <ToolbarButton disabled={!sourceImage} onClick={onReset} title="R">
               Reset All
             </ToolbarButton>
-            <ToolbarButton onClick={onOpenAi}>AI Enhance</ToolbarButton>
+            <ToolbarButton disabled={!sourceImage} onClick={onOpenAi}>
+              AI Enhance
+            </ToolbarButton>
             <ToolbarButton active={Boolean(sourceImage)} disabled={!sourceImage} onClick={onOpenExport}>
               Export
             </ToolbarButton>
