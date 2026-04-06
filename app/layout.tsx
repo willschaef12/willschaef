@@ -1,16 +1,33 @@
 import type { Metadata } from "next";
+import { Manrope, Space_Grotesk } from "next/font/google";
 
 import "./globals.css";
 
+const bodyFont = Manrope({
+  subsets: ["latin"],
+  variable: "--font-body"
+});
+
+const displayFont = Space_Grotesk({
+  subsets: ["latin"],
+  variable: "--font-display"
+});
+
 export const metadata: Metadata = {
-  title: "Skyroom",
-  description: "A Lightroom-inspired aviation and helicopter photo editor built with Next.js."
+  title: {
+    default: "EditForge",
+    template: "%s | EditForge"
+  },
+  description:
+    "EditForge turns uploaded clips and one soundtrack into a polished exported video with an FFmpeg-backed auto-edit pipeline."
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body className={`${bodyFont.variable} ${displayFont.variable} bg-forge-obsidian font-sans text-white antialiased`}>
+        {children}
+      </body>
     </html>
   );
 }

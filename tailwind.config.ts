@@ -10,21 +10,27 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        skyroom: {
-          background: "#0a1018",
-          panel: "#121a25",
-          border: "rgba(187, 214, 255, 0.12)",
-          accent: "#58a6ff",
-          accentSoft: "#89c6ff",
-          slate: "#9fb0c7"
+        forge: {
+          obsidian: "#050816",
+          surface: "#0f172a",
+          card: "#101826",
+          border: "rgba(148, 163, 184, 0.16)",
+          accent: "#ff6b2c",
+          accentSoft: "#ff9d70",
+          electric: "#36d2ff",
+          mist: "#c9d6f2"
         }
       },
       boxShadow: {
-        chrome: "0 24px 80px rgba(0, 0, 0, 0.45)",
-        panel: "0 14px 42px rgba(3, 8, 17, 0.38)"
+        panel: "0 22px 70px rgba(3, 8, 20, 0.42)",
+        glow: "0 0 0 1px rgba(255,255,255,0.05), 0 30px 90px rgba(255,107,44,0.12)"
       },
       borderRadius: {
-        chrome: "1.5rem"
+        shell: "1.75rem"
+      },
+      fontFamily: {
+        sans: ["var(--font-body)", "sans-serif"],
+        display: ["var(--font-display)", "sans-serif"]
       }
     }
   },

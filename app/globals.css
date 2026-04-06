@@ -4,16 +4,25 @@
 
 :root {
   color-scheme: dark;
-  --skyroom-bg-0: #04080d;
-  --skyroom-bg-1: #0a1018;
-  --skyroom-bg-2: #111b28;
-  --skyroom-accent: #58a6ff;
-  --skyroom-accent-soft: #8ac5ff;
-  --skyroom-panel: rgba(18, 26, 37, 0.92);
+  --forge-bg-0: #040714;
+  --forge-bg-1: #07101f;
+  --forge-bg-2: #0e172a;
+  --forge-surface: rgba(11, 17, 31, 0.72);
+  --forge-surface-strong: rgba(15, 23, 42, 0.92);
+  --forge-border: rgba(148, 163, 184, 0.16);
+  --forge-copy: #edf2ff;
+  --forge-muted: #94a3b8;
+  --forge-accent: #ff6b2c;
+  --forge-accent-soft: #ffad83;
+  --forge-electric: #36d2ff;
 }
 
 * {
   box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 html,
@@ -24,12 +33,12 @@ body {
 body {
   margin: 0;
   background:
-    radial-gradient(circle at top left, rgba(88, 166, 255, 0.16), transparent 34%),
-    radial-gradient(circle at 80% 14%, rgba(87, 129, 255, 0.11), transparent 28%),
-    radial-gradient(circle at bottom center, rgba(16, 88, 148, 0.18), transparent 42%),
-    linear-gradient(180deg, var(--skyroom-bg-2), var(--skyroom-bg-0));
-  color: #edf4ff;
-  font-family: Aptos, "Segoe UI Variable Display", "Segoe UI", sans-serif;
+    radial-gradient(circle at 18% 12%, rgba(54, 210, 255, 0.14), transparent 28%),
+    radial-gradient(circle at 82% 4%, rgba(255, 107, 44, 0.12), transparent 26%),
+    radial-gradient(circle at 50% 95%, rgba(255, 151, 112, 0.1), transparent 34%),
+    linear-gradient(180deg, var(--forge-bg-2), var(--forge-bg-0));
+  color: var(--forge-copy);
+  font-family: var(--font-body), sans-serif;
 }
 
 body::before {
@@ -38,16 +47,16 @@ body::before {
   inset: 0;
   pointer-events: none;
   background-image:
-    linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-  background-size: 48px 48px;
-  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.28), transparent 82%);
-  opacity: 0.45;
+    linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px);
+  background-size: 54px 54px;
+  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.32), transparent 82%);
+  opacity: 0.38;
 }
 
 ::selection {
-  background: rgba(88, 166, 255, 0.32);
-  color: #f8fbff;
+  background: rgba(255, 107, 44, 0.3);
+  color: #fff7f2;
 }
 
 img {
@@ -62,36 +71,9 @@ textarea {
   font: inherit;
 }
 
-.skyroom-slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 1rem;
-  height: 1rem;
-  border-radius: 999px;
-  border: 2px solid rgba(248, 251, 255, 0.8);
-  background: linear-gradient(180deg, #8ac5ff, #58a6ff);
-  box-shadow: 0 0 0 6px rgba(88, 166, 255, 0.14);
-}
-
-.skyroom-slider::-moz-range-thumb {
-  width: 1rem;
-  height: 1rem;
-  border-radius: 999px;
-  border: 2px solid rgba(248, 251, 255, 0.8);
-  background: linear-gradient(180deg, #8ac5ff, #58a6ff);
-  box-shadow: 0 0 0 6px rgba(88, 166, 255, 0.14);
-}
-
-.skyroom-slider::-webkit-slider-runnable-track {
-  height: 0.5rem;
-  border-radius: 999px;
-  background: linear-gradient(90deg, rgba(88, 166, 255, 0.55), rgba(255, 255, 255, 0.08));
-}
-
-.skyroom-slider::-moz-range-track {
-  height: 0.5rem;
-  border-radius: 999px;
-  background: linear-gradient(90deg, rgba(88, 166, 255, 0.55), rgba(255, 255, 255, 0.08));
+a {
+  color: inherit;
+  text-decoration: none;
 }
 
 ::-webkit-scrollbar {
@@ -106,6 +88,60 @@ textarea {
 ::-webkit-scrollbar-thumb {
   border-radius: 999px;
   border: 2px solid transparent;
-  background: rgba(138, 197, 255, 0.22);
+  background: rgba(148, 163, 184, 0.22);
   background-clip: padding-box;
+}
+
+@keyframes float-slow {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -14px, 0);
+  }
+}
+
+@keyframes pulse-border {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.06),
+      0 20px 70px rgba(255, 107, 44, 0.08);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.12),
+      0 24px 90px rgba(54, 210, 255, 0.12);
+  }
+}
+
+@layer utilities {
+  .panel-surface {
+    background: linear-gradient(180deg, rgba(15, 23, 42, 0.94), rgba(8, 13, 26, 0.84));
+    border: 1px solid var(--forge-border);
+    box-shadow: 0 22px 70px rgba(3, 8, 20, 0.42);
+    backdrop-filter: blur(18px);
+  }
+
+  .panel-surface-soft {
+    background: linear-gradient(180deg, rgba(13, 20, 38, 0.88), rgba(8, 12, 24, 0.74));
+    border: 1px solid rgba(148, 163, 184, 0.12);
+    backdrop-filter: blur(18px);
+  }
+
+  .text-gradient {
+    background: linear-gradient(120deg, #fff3eb, #ffb28d 45%, #69e3ff 95%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .hero-glow {
+    animation: pulse-border 6s ease-in-out infinite;
+  }
+
+  .float-slow {
+    animation: float-slow 8s ease-in-out infinite;
+  }
 }

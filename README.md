@@ -1,45 +1,75 @@
-# Skyroom
+# EditForge
 
-Skyroom is a Lightroom-inspired starter product for aviation and helicopter photography. It runs as a Next.js app, keeps edits non-destructive in memory, renders preview changes through a browser canvas pipeline, supports undo/redo, before/after compare, presets, and export, and includes a placeholder backend route for future AI enhancement work.
+EditForge is a polished full-stack Next.js MVP that turns multiple uploaded video clips plus one audio track into an exported MP4. The app includes a marketing site, a production-style editor workflow, secure file handling, FFmpeg orchestration, job polling, and downloadable output.
 
 ## Stack
 
 - Next.js App Router
-- React + TypeScript
+- React 19 + TypeScript
 - Tailwind CSS
-- Context-based editor state with undo/redo history
-- Canvas-based preview and export rendering
+- Next.js route handlers for the backend API
+- FFmpeg + FFprobe for media processing
 
-## Features
+## What the MVP does
 
-- Dark, Lightroom-style editor shell with left import rail, center preview stage, right control rail, and bottom filmstrip placeholder
-- Real working sliders for exposure, contrast, highlights, shadows, whites, blacks, temperature, tint, vibrance, saturation, clarity, dehaze, sharpness, and noise reduction
-- Crop, rotate, straighten, reset all, undo, redo, before/after, side-by-side compare, zoom, and fit-to-screen
-- Built-in presets: Clear Sky, Golden Hour, Aircraft Pop, Helicopter Detail, Cool Overcast, Spotter Sharp, Soft Neutral
-- Drag-and-drop upload with file validation and clear error states
-- JPG and PNG export with adjustable JPG quality
-- Histogram panel, keyboard shortcuts, local autosave of slider state, history stack, and mask/brush placeholder
-- Placeholder AI Enhance modal and backend route at `/api/ai-enhance`
+- Landing page with hero, features, pricing mockup, FAQ, and footer
+- Editor page with drag-and-drop uploads for multiple clips and one soundtrack
+- Client-side validation for supported file types and file sizes
+- Output presets for vertical `9:16`, horizontal `16:9`, and square `1:1`
+- Edit styles for `Fast`, `Cinematic`, `Smooth`, and `Hype`
+- Clip ordering controls for upload order or randomized ordering
+- Background render job creation with polling-based status updates
+- FFmpeg pipeline that:
+  - probes audio and clip durations
+  - trims and repeats clips to cover the audio duration
+  - normalizes clips to a shared resolution and frame rate
+  - concatenates the generated timeline
+  - overlays the uploaded soundtrack
+  - exports a downloadable MP4
+- Cleanup of uploaded and intermediate files after successful renders
+- TTL-based cleanup for stale job folders
 
-## Local Install
+## Local setup
 
-1. Install dependencies:
+### 1. Install dependencies
 
 ```bash
 npm install
 ```
 
-2. Start the development server:
+### 2. Install FFmpeg and FFprobe
+
+EditForge expects `ffmpeg` and `ffprobe` to be available on your machine.
+
+- Windows: install FFmpeg and ensure both binaries are available on `PATH`
+- macOS: `brew install ffmpeg`
+- Ubuntu/Debian: `sudo apt-get install ffmpeg`
+
+If you prefer custom paths, copy `.env.example` to `.env.local` and set:
+
+```bash
+FFMPEG_PATH=ffmpeg
+FFPROBE_PATH=ffprobe
+```
+
+### 3. Optional environment overrides
+
+```bash
+EDITFORGE_STORAGE_DIR=.editforge
+EDITFORGE_MAX_VIDEO_MB=300
+EDITFORGE_MAX_AUDIO_MB=80
+EDITFORGE_JOB_TTL_MINUTES=120
+```
+
+### 4. Start the app
 
 ```bash
 npm run dev
 ```
 
-3. Open `http://localhost:3000`.
+Open [http://localhost:3000](http://localhost:3000).
 
-4. Import a `.jpg`, `.jpeg`, `.png`, or `.webp` file.
-
-## Useful Scripts
+## Useful scripts
 
 ```bash
 npm run dev
@@ -48,77 +78,45 @@ npm run start
 npm run typecheck
 ```
 
-## File Structure
+## Render pipeline summary
+
+1. The editor posts clips, audio, and render options to `POST /api/edit-jobs`.
+2. The backend writes the files into an isolated job folder under `.editforge/<jobId>/`.
+3. The job status is initialized and the FFmpeg render pipeline starts in the background.
+4. The pipeline probes media durations, builds a timeline based on the selected style, renders normalized segments, concatenates them, and overlays the soundtrack.
+5. The frontend polls `GET /api/edit-jobs/:jobId` until the job finishes.
+6. The completed file is streamed from `GET /api/edit-jobs/:jobId/download`.
+
+## Project structure
 
 ```text
 app/
-  api/ai-enhance/route.ts      Placeholder future AI route
-  globals.css                  Tailwind entry + global visual system
-  layout.tsx                   Root layout
-  page.tsx                     App entry
-components/editor/
-  editor-app.tsx               Main client shell and modal/export orchestration
-  editor-provider.tsx          Context state, history stack, autosave, presets
-  filmstrip.tsx                Bottom tray placeholder
-  left-sidebar.tsx             Upload panel and photo metadata
-  preview-stage.tsx            Canvas preview and compare rendering
-  right-sidebar.tsx            Histogram, presets, sliders, crop, geometry
-  top-bar.tsx                  Project actions
-  ui.tsx                       Shared UI primitives
-hooks/
-  use-editor-shortcuts.ts      Keyboard shortcuts
-lib/
-  editor-defaults.ts           Types, defaults, slider definitions
-  editor-presets.ts            Built-in presets
-  file-helpers.ts              Validation, image loading, downloads
-  image-pipeline.ts            Canvas render pipeline
+  api/edit-jobs/                  Render creation, status polling, downloads
+  editor/page.tsx                 Editor route
+  globals.css                     Global theme and utility styling
+  layout.tsx                      Root layout and fonts
+  page.tsx                        Landing page
+components/
+  editor/                         Upload UI and editor workbench
+  marketing/                      Landing page sections
+  ui/                             Shared UI primitives
+lib/editforge/
+  constants.ts                    Shared app constants and option specs
+  types.ts                        Shared types
+  utils.ts                        UI and render helpers
+  server/
+    binaries.ts                   FFmpeg / FFprobe path resolution
+    media.ts                      Process execution and ffprobe helpers
+    pipeline.ts                   End-to-end render orchestration
+    status.ts                     Job status persistence
+    storage.ts                    Job folders, manifests, cleanup
+    validation.ts                 Upload and request validation
+scripts/
+  prepare-standalone.mjs          Copies static assets for standalone builds
 ```
 
-## How Editor State Works
+## Notes and next steps
 
-- `EditorProvider` stores the current source image, the active `settings` object, the active preset id, and `past` / `future` stacks for undo and redo.
-- Slider changes update the live `settings` object immediately for smooth preview feedback.
-- History is committed when a slider interaction ends, so the UI stays responsive without losing undo granularity.
-- The original uploaded image is preserved via the object URL in `sourceImage`; only the edit state changes.
-- Slider state is autosaved to local storage in `skyroom.session`, then restored on the next visit.
-
-## Rendering Pipeline
-
-The rendering pipeline lives in [`lib/image-pipeline.ts`](./lib/image-pipeline.ts).
-
-1. Compute the crop rectangle from the non-destructive crop percentages.
-2. Draw the cropped source image into a working canvas, downscaled for preview but full-size for export.
-3. Read `ImageData` from that working canvas.
-4. Apply tonal and color adjustments in code: exposure, contrast, highlight/shadow shaping, whites/blacks, white balance, vibrance, saturation, and dehaze.
-5. Apply local-contrast and cleanup passes: clarity, noise reduction, and sharpness.
-6. Write the processed pixels back to the working canvas.
-7. Apply rotation and straighten on a final output canvas.
-8. Return the rendered canvas plus histogram data for the sidebar.
-
-Preview renders are intentionally downscaled for responsiveness. Export renders bypass that preview limit and rebuild from the original source dimensions.
-
-## Preset Customization
-
-Built-in presets live in [`lib/editor-presets.ts`](./lib/editor-presets.ts).
-
-- Add a new preset object to `SKYROOM_PRESETS`
-- Tune the `patch` values for the sliders you want to control
-- The preset system resets tonal sliders to defaults but preserves crop and geometry
-
-## AI Hook
-
-- Frontend placeholder: the `AI Enhance` button in the top bar opens a modal
-- Backend placeholder: [`app/api/ai-enhance/route.ts`](./app/api/ai-enhance/route.ts)
-- Replace the `POST` handler with your real enhancement provider
-- The best handoff point is after upload and before export, using the current `sourceImage` plus `settings`
-
-## Deployment
-
-The simplest deployment target is Vercel.
-
-1. Push the repo to GitHub.
-2. Import the repo into Vercel.
-3. Use the default Next.js build settings.
-4. Add any future AI provider secrets to the project environment variables.
-
-You can also deploy anywhere that supports a standard Next.js Node runtime.
+- The current edit styles change pacing and timeline behavior, not semantic shot selection.
+- Uploads are handled through route handlers using `request.formData()`, which is suitable for a local MVP but should move to streamed multipart handling for very large files.
+- If you want smarter editing later, the cleanest extensions are beat detection, scene scoring, and cloud-backed job workers.
