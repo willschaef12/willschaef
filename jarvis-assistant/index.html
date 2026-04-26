@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>JARVIS Assistant</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&family=Rajdhani:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="screen-glow"></div>
+    <div class="grid-overlay"></div>
+
+    <main class="jarvis-shell">
+      <section class="hero-panel">
+        <p class="eyebrow">Desktop Voice Assistant</p>
+        <h1>JARVIS</h1>
+        <p class="subtitle">
+          Speak a command, launch an app, open a website, or search the web.
+        </p>
+
+        <div class="status-card">
+          <span class="status-label">System Status</span>
+          <span id="statusText" class="status-text">Standing by</span>
+        </div>
+
+        <button id="micButton" class="mic-button" type="button" aria-label="Start listening">
+          <span class="mic-ring"></span>
+          <span class="mic-icon">🎤</span>
+        </button>
+
+        <p class="hint">Click the microphone and say: "open youtube"</p>
+      </section>
+
+      <section class="command-panel">
+        <div class="panel-header">
+          <h2>Command Console</h2>
+          <span class="panel-badge">Voice + Text</span>
+        </div>
+
+        <form id="commandForm" class="command-form">
+          <input
+            id="commandInput"
+            type="text"
+            placeholder="Type a command like: search for Iron Man wallpapers"
+            autocomplete="off"
+          />
+          <button type="submit" class="send-button">Send</button>
+        </form>
+
+        <div class="example-row">
+          <span class="example-chip">open youtube</span>
+          <span class="example-chip">open vs code</span>
+          <span class="example-chip">search for tech news</span>
+        </div>
+
+        <div id="commandLog" class="command-log" aria-live="polite">
+          <div class="log-entry jarvis-entry">
+            <span class="speaker">JARVIS</span>
+            <p>System online. Awaiting your command.</p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="script.js"></script>
+  </body>
+</html>

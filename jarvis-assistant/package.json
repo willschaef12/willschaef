@@ -1,0 +1,21 @@
+{
+  "name": "jarvis-assistant",
+  "version": "1.0.0",
+  "description": "A beginner-friendly JARVIS-style desktop assistant built with Node.js, Express, and the Web Speech API.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [
+    "jarvis",
+    "voice-assistant",
+    "express",
+    "web-speech-api"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.21.2",
+    "open": "^8.4.2"
+  }
+}

@@ -1,0 +1,383 @@
+* {
+  box-sizing: border-box;
+}
+
+:root {
+  --bg-dark: #030816;
+  --panel-dark: rgba(6, 20, 48, 0.82);
+  --panel-border: rgba(84, 206, 255, 0.28);
+  --text-primary: #eff7ff;
+  --text-secondary: #8db8d8;
+  --accent: #35c8ff;
+  --accent-strong: #76e2ff;
+  --accent-soft: rgba(53, 200, 255, 0.18);
+  --danger: #ff7b8a;
+  --shadow-glow: 0 0 24px rgba(53, 200, 255, 0.35);
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: "Rajdhani", sans-serif;
+  color: var(--text-primary);
+  background:
+    radial-gradient(circle at top, rgba(40, 102, 180, 0.2), transparent 35%),
+    radial-gradient(circle at bottom, rgba(30, 188, 255, 0.12), transparent 28%),
+    linear-gradient(180deg, #02050f 0%, #071127 100%);
+  overflow-x: hidden;
+}
+
+.screen-glow,
+.grid-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+}
+
+.screen-glow {
+  background: radial-gradient(circle, rgba(66, 231, 255, 0.12), transparent 60%);
+  filter: blur(40px);
+}
+
+.grid-overlay {
+  background-image:
+    linear-gradient(rgba(122, 197, 255, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(122, 197, 255, 0.07) 1px, transparent 1px);
+  background-size: 36px 36px;
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.9), transparent 92%);
+}
+
+.jarvis-shell {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 1fr 1.1fr;
+  gap: 28px;
+  width: min(1200px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 48px 0;
+  min-height: 100vh;
+  align-items: center;
+}
+
+.hero-panel,
+.command-panel {
+  background: var(--panel-dark);
+  border: 1px solid var(--panel-border);
+  border-radius: 28px;
+  padding: 32px;
+  backdrop-filter: blur(18px);
+  box-shadow: var(--shadow-glow), inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+}
+
+.hero-panel {
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-panel::before {
+  content: "";
+  position: absolute;
+  inset: 18px;
+  border-radius: 22px;
+  border: 1px solid rgba(118, 226, 255, 0.12);
+}
+
+.eyebrow,
+.status-label,
+.panel-badge,
+.speaker {
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  color: var(--accent-strong);
+  font-size: 0.9rem;
+}
+
+h1,
+h2 {
+  margin: 0;
+  font-family: "Orbitron", sans-serif;
+}
+
+h1 {
+  font-size: clamp(3.25rem, 8vw, 5.2rem);
+  line-height: 0.95;
+  text-shadow: 0 0 20px rgba(118, 226, 255, 0.6);
+}
+
+.subtitle {
+  max-width: 34rem;
+  margin: 18px auto 0;
+  font-size: 1.2rem;
+  color: var(--text-secondary);
+}
+
+.status-card {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 28px;
+  padding: 14px 18px;
+  border-radius: 18px;
+  background: rgba(7, 22, 48, 0.75);
+  border: 1px solid rgba(84, 206, 255, 0.2);
+}
+
+.status-label {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+}
+
+.status-text {
+  font-size: 1.15rem;
+  color: var(--accent-strong);
+}
+
+.mic-button {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 170px;
+  height: 170px;
+  margin: 34px auto 18px;
+  border: 0;
+  border-radius: 50%;
+  color: var(--text-primary);
+  background:
+    radial-gradient(circle at 30% 30%, rgba(141, 245, 255, 0.32), transparent 30%),
+    radial-gradient(circle at center, rgba(25, 105, 156, 0.95), rgba(3, 16, 40, 0.98));
+  box-shadow:
+    0 0 0 10px rgba(53, 200, 255, 0.08),
+    0 0 0 22px rgba(53, 200, 255, 0.04),
+    0 0 40px rgba(53, 200, 255, 0.45);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.mic-button:hover {
+  transform: translateY(-2px) scale(1.01);
+}
+
+.mic-button:active {
+  transform: scale(0.98);
+}
+
+.mic-button:disabled,
+.mic-button.disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  box-shadow:
+    0 0 0 10px rgba(53, 200, 255, 0.05),
+    0 0 0 22px rgba(53, 200, 255, 0.03),
+    0 0 20px rgba(53, 200, 255, 0.18);
+}
+
+.mic-button.listening {
+  box-shadow:
+    0 0 0 12px rgba(53, 200, 255, 0.12),
+    0 0 0 26px rgba(53, 200, 255, 0.08),
+    0 0 56px rgba(118, 226, 255, 0.65);
+}
+
+.mic-ring {
+  position: absolute;
+  inset: -12px;
+  border: 1px solid rgba(118, 226, 255, 0.34);
+  border-radius: 50%;
+  animation: pulse 2s infinite ease-in-out;
+}
+
+.mic-button.listening .mic-ring {
+  animation-duration: 0.9s;
+}
+
+.mic-icon {
+  position: relative;
+  z-index: 1;
+  font-size: 3.6rem;
+}
+
+.hint {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 1.02rem;
+}
+
+.command-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 620px;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+h2 {
+  font-size: 1.6rem;
+}
+
+.panel-badge {
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(53, 200, 255, 0.12);
+  color: var(--accent-strong);
+  font-size: 0.74rem;
+}
+
+.command-form {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+}
+
+#commandInput {
+  width: 100%;
+  padding: 16px 18px;
+  border: 1px solid rgba(84, 206, 255, 0.22);
+  border-radius: 18px;
+  background: rgba(4, 13, 32, 0.85);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 1.05rem;
+  outline: none;
+  box-shadow: inset 0 0 18px rgba(53, 200, 255, 0.05);
+}
+
+#commandInput:focus {
+  border-color: rgba(118, 226, 255, 0.75);
+  box-shadow: 0 0 0 3px rgba(53, 200, 255, 0.12);
+}
+
+#commandInput::placeholder {
+  color: rgba(191, 222, 246, 0.55);
+}
+
+.send-button {
+  padding: 0 24px;
+  border: 0;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #1e9bcb 0%, #62ebff 100%);
+  color: #03111e;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 0 22px rgba(98, 235, 255, 0.28);
+}
+
+.example-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 16px 0 22px;
+}
+
+.example-chip {
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(84, 206, 255, 0.18);
+  background: rgba(53, 200, 255, 0.08);
+  color: var(--text-secondary);
+}
+
+.command-log {
+  flex: 1;
+  overflow: auto;
+  padding: 18px;
+  border-radius: 22px;
+  background:
+    linear-gradient(180deg, rgba(2, 11, 28, 0.94) 0%, rgba(3, 16, 40, 0.82) 100%);
+  border: 1px solid rgba(84, 206, 255, 0.16);
+}
+
+.log-entry {
+  margin-bottom: 14px;
+  padding: 16px 18px;
+  border-radius: 18px;
+  border: 1px solid rgba(84, 206, 255, 0.16);
+  background: rgba(7, 20, 45, 0.76);
+}
+
+.speaker {
+  display: inline-block;
+  margin-bottom: 6px;
+  font-size: 0.72rem;
+  color: var(--accent-strong);
+}
+
+.log-entry p {
+  margin: 0;
+  font-size: 1.08rem;
+}
+
+.user-entry {
+  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(12, 24, 49, 0.9);
+}
+
+.user-entry .speaker {
+  color: #d4ecff;
+}
+
+.jarvis-entry {
+  box-shadow: inset 0 0 0 1px rgba(118, 226, 255, 0.05);
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.85;
+  }
+
+  50% {
+    transform: scale(1.08);
+    opacity: 0.35;
+  }
+}
+
+@media (max-width: 980px) {
+  .jarvis-shell {
+    grid-template-columns: 1fr;
+    padding: 24px 0 32px;
+  }
+
+  .command-panel {
+    min-height: 520px;
+  }
+}
+
+@media (max-width: 640px) {
+  .jarvis-shell {
+    width: min(100% - 20px, 1200px);
+    gap: 18px;
+  }
+
+  .hero-panel,
+  .command-panel {
+    padding: 22px;
+    border-radius: 24px;
+  }
+
+  .command-form {
+    grid-template-columns: 1fr;
+  }
+
+  .send-button {
+    min-height: 54px;
+  }
+
+  .mic-button {
+    width: 146px;
+    height: 146px;
+  }
+}
